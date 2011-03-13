@@ -1,0 +1,22 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" ctype="Workspace" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="z-score/DataTypes.cs" ctype="Workbench">
+    <Files>
+      <File FileName="z-score/Main.cs" Line="11" Column="4" />
+      <File FileName="z-score/RawRecord.cs" Line="24" Column="23" />
+      <File FileName="z-score/DataTypes.cs" Line="13" Column="23" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State expanded="True">
+          <Node name="z-score" expanded="True">
+            <Node name="DataTypes.cs" selected="True" />
+          </Node>
+        </State>
+      </Pad>
+      <Pad Id="ClassPad">
+        <State expanded="True" selected="True" />
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+</Properties>
