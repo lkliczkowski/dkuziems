@@ -8,13 +8,13 @@ namespace zscore
 		public uint Id { get; set; }
 		public string Gender { get; set; }
 		public double? Income { get; set; }
-		public byte Age { get; set; }
+		public byte? Age { get; set; }
 		public string Owner { get; set; }
 		
 		public RawRecord(uint Id, 
 		                 string Gender, 
 		                 double? Income, 
-		                 byte Age,
+		                 byte? Age,
 		                 string Owner)
 		{
 			this.Id = Id;
@@ -50,15 +50,19 @@ namespace zscore
 		
 		public NormalizedRecord(uint Id,
 		                        double IncomeMissing,
-		                        double IncomePresent)
+		                        double IncomePresent,
+		                        double AgeMissing,
+		                        double AgePresent)
 		{
 			this.Id = Id;
 			
 			this.IncomeMissing = IncomeMissing;
 			this.IncomePresent = IncomePresent;
 			
+			this.AgeMissing = AgeMissing;
+			this.AgePresent = AgePresent;
+			
 			this.GenderMissing = this.GenderM = this.GenderF = 0;
-			this.AgeMissing = this.AgePresent = 0;
 			this.OwnerMissing = this.OwnerYes = this.OwnerNo = 0;
 		}
 	}
