@@ -3,6 +3,15 @@ using System;
 
 namespace zscore
 {
+	public enum Col 
+	{
+		ID,
+		Gender,
+		Income,
+		Age,
+		Owner
+	}
+	
 	public enum GenderEnum
 	{
 		Null = 0,
