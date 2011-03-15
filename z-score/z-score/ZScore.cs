@@ -13,7 +13,7 @@ namespace zscore
 		public static void AddRecord(ref List<RawRecord> RawRecordList,
 		                             string gender, 
 					                 double? income, 
-					                 byte age,
+					                 byte? age,
 					                 string owner)
 		{
 			incCounter();
@@ -49,11 +49,12 @@ namespace zscore
 	{
 		public static void DisplayRecords(List<NormalizedRecord> NormalizedRecordList)
 		{
-			Console.WriteLine("ID \t\tGender \t\t\t\t  Income \t\t\t  Age \t\t  Owner");
-			Console.WriteLine(" \t -\tM\tF \t\t\t -\t\t val \t\t\t-\t val \t\t-\tY\tN");
+			Console.WriteLine("ID \t\tGender \t\t\t\t  Income \t\t\t\t  Age \t\t\t  Owner");
+			Console.WriteLine(" \t -\tM\tF \t\t\t -\t\t val \t\t\t-\t\t val \t\t\t-\tY\tN");
 			foreach (NormalizedRecord ourNormalizedRecord in NormalizedRecordList)
 			{
-				Console.WriteLine("{0}\t {1}\t{2:N2}\t{3:N2} \t\t{4:N1}\t\t{5:N2} \t\t{6}\t{7} \t\t{8}\t{9}\t{10}", 
+				Console.WriteLine("{0}\t {1}\t{2:N2}\t{3:N2} \t\t{4:N1}\t\t{5:N2} " +
+					"\t\t{6:N1}\t\t{7:N2} \t\t{8}\t{9}\t{10}", 
 				                  ourNormalizedRecord.Id,
 				                  ourNormalizedRecord.GenderMissing,
 				                  ourNormalizedRecord.GenderM,
@@ -89,26 +90,41 @@ namespace zscore
 			NormalizedRecordOperator.DisplayRecords(NormalizedRecordList);
 		}
 		
+		
+		
 		public static void Normalize(ref List<NormalizedRecord> NormalizedRecordList, List<RawRecord> RawRecordList)
 		{
-			double incomePresent, incomeMissing;
+			double incomeMissing = 0, incomePresent = 0;
+			double ageMissing = 0, agePresent = 0;
 			foreach (RawRecord ourRawRecord in RawRecordList)
 			{
-				//incomeN = (ourRawRecord.Income - ZScorePreCalc.AverageIncome)/ZScorePreCalc.StandardDeviationIncome;
-				//incomeN = ourRawRecord.Income==null?1:(ourRawRecord.Income - ZScorePreCalc.AverageIncome)/ZScorePreCalc.StandardDeviationIncome;
-				//dodajemy do listy strukture (id, normalized-income)
-				//NormalizedRecordList.Add(new NormalizedRecord(ourRawRecord.Id, incomeN));
+				
+				//Income - wartosc ciagla
 				if( ourRawRecord.Income.HasValue == true )
 				{
+					incomeMissing = 0;
 					incomePresent = ((double)ourRawRecord.Income - ZScorePreCalc.AverageIncome)/ZScorePreCalc.StandardDeviationIncome;
-					//dodajemy do listy strukture (id, normalized-missing-income(0),normalized-income)
-					NormalizedRecordList.Add(new NormalizedRecord(ourRawRecord.Id, 0, incomePresent));
 				}
 				else
 				{
 					incomeMissing = -(ZScorePreCalc.AverageIncome/ZScorePreCalc.StandardDeviationIncome);
-					NormalizedRecordList.Add(new NormalizedRecord(ourRawRecord.Id, incomeMissing, 0));
+					incomePresent = 0;
 				}
+				
+				//Age - wartosc ciagla
+				if( ourRawRecord.Age.HasValue == true )
+				{
+					ageMissing = 0;
+					agePresent = ((double)ourRawRecord.Age - ZScorePreCalc.AverageAge)/ZScorePreCalc.StandardDeviationAge;
+				}
+				else
+				{
+					ageMissing = -(ZScorePreCalc.AverageAge/ZScorePreCalc.StandardDeviationAge);
+					agePresent = 0;
+				}
+				
+				NormalizedRecordList.Add(new NormalizedRecord(ourRawRecord.Id, incomeMissing, incomePresent, ageMissing, agePresent));
+
 			}
 			
 		}

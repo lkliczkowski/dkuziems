@@ -6,10 +6,10 @@ namespace zscore
 	#region Average static class
 	public static class Average
 	{
-		public static double Income(List<RawRecord> RawRecordList)
+		public static double Income(List<RawRecord> MyRecordList)
 		{
 			double average = 0;
-			foreach(RawRecord ourRawRecord in RawRecordList)
+			foreach(RawRecord ourRawRecord in MyRecordList)
 			{
 				if(ourRawRecord.Income.HasValue == true)
 				{
@@ -24,6 +24,26 @@ namespace zscore
 			
 			return average/(double)RawRecordOperator.Counter;
 		}
+		
+		public static double Age(List<RawRecord> MyRecordList)
+		{
+			double average = 0;
+			foreach(RawRecord ourRawRecord in MyRecordList)
+			{
+				if(ourRawRecord.Age.HasValue == true)
+				{
+					average += (double)ourRawRecord.Age;
+				}
+				else
+				{
+					Console.WriteLine(">>>>>>>> null::during avarage.age");
+				}
+				
+			}
+			
+			return average/(double)RawRecordOperator.Counter;
+		}
+		
 	}
 	#endregion
 	
@@ -47,6 +67,25 @@ namespace zscore
 				else
 				{
 					Console.WriteLine(">>>>>>>> null::during standarddeviation.income");
+				}
+			}
+			
+			sumOfDerivation = sumOfDerivation / RawRecordOperator.Counter;
+			return Math.Sqrt(sumOfDerivation - (average*average));
+		}
+		
+		public static double Age(List<RawRecord> MyRecordList, double average)
+		{
+			double sumOfDerivation = 0;
+			foreach(RawRecord ourRawRecord in MyRecordList)
+			{
+				if(ourRawRecord.Age.HasValue == true)
+				{
+					sumOfDerivation += (double)ourRawRecord.Age * (double)ourRawRecord.Age;
+				}
+				else
+				{
+					Console.WriteLine(">>>>>>>> null::during standarddeviation.Age");
 				}
 			}
 			
