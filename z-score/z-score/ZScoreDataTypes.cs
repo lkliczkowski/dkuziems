@@ -3,18 +3,17 @@ using System;
 
 namespace zscore
 {
-	public enum Col 
+	public enum DiscreteType
 	{
-		ID,
-		Gender,
-		Income,
-		Age,
-		Owner
+		Unknown = 0,
+		Gender = 1,
+		Education = 2
+
 	}
 	
 	public enum GenderEnum
 	{
-		Null = 0,
+		Null = -1,
 		Female = 0,
 		Male = 1
 	}

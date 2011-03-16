@@ -19,6 +19,9 @@ namespace zscore
 			Normalize(ref NormalizedRecordList, RawRecordList);
 			NormalizedRecordOperator.DisplayRecords(NormalizedRecordList);
 			
+			//DiscreteType enumDiscrete = DiscreteType.Education;
+			//Console.WriteLine(">>>> {0}", (int)enumDiscrete);
+			
 		}
 		
 		
