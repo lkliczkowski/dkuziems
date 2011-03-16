@@ -22,7 +22,7 @@ namespace zscore
 	public enum OwnerEnum
 	{
 		Null = 0,
-		Yes,
-		No
+		Yes = 1,
+		No = 0
 	}
 }

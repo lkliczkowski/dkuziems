@@ -6,6 +6,35 @@ namespace zscore
 	#region Average static class
 	public static class Average
 	{
+		
+		public static double Gender(List<RawRecord> MyRecordList)
+		{
+			//double average = 0;
+			int state = 0, num_of_states = 0;
+			
+			foreach(RawRecord ourRawRecord in MyRecordList)
+			{
+				switch (ourRawRecord.Gender) 
+				{
+				case "Male":
+					state++;
+					num_of_states++;
+					break;
+				case "Female":
+					num_of_states++;
+					break;
+				case null:
+					Console.WriteLine(">>>>>>>> null::during avarage.gender");
+					break;
+				default:
+					Console.WriteLine(">>>>>>>> unknown::during avarage.gender");
+					break;
+				}
+			}
+			
+			return (double)state/(double)num_of_states;
+		}
+		
 		public static double Income(List<RawRecord> MyRecordList)
 		{
 			double average = 0;
@@ -50,6 +79,10 @@ namespace zscore
 	#region StandardDeviation static class
 	public static class StandardDeviation
 	{
+		public static double Gender(List<RawRecord> MyRecordList, double average)
+		{
+			return Math.Sqrt((average*(1-average)));
+		}
 		
 		/**@param average argument average przesyłamy jako obliczona wartosc 
 		 * aby nie obliczac tej wartosci wielokrotnie, np. dla
@@ -92,6 +125,8 @@ namespace zscore
 			sumOfDerivation = sumOfDerivation / RawRecordOperator.Counter;
 			return Math.Sqrt(sumOfDerivation - (average*average));
 		}
+		
+
 		
 	}
 	#endregion

@@ -14,8 +14,14 @@ namespace zscore
 		public static double AverageAge = 0;
 		public static double StandardDeviationAge = 0;
 		
+		public static double AverageGender = 0;
+		public static double StandardDeviationGender = 0;
+		
 		public static void InitVariables(List<RawRecord> RawRecordList)
 		{
+			AverageGender = Average.Gender(RawRecordList);
+			StandardDeviationGender = StandardDeviation.Gender(RawRecordList, AverageGender);
+			
 			AverageIncome = Average.Income(RawRecordList);
 			StandardDeviationIncome = StandardDeviation.Income(RawRecordList, AverageIncome);
 			
@@ -25,6 +31,8 @@ namespace zscore
 		
 		public static void RecordStats()
 		{
+			Console.WriteLine (">>>>AverageGender: {0}, \n>>>>StdDevGender {1}", 
+			                   ZScorePreCalc.AverageGender, ZScorePreCalc.StandardDeviationGender);
 			Console.WriteLine (">>>>AverageIncome: {0}, \n>>>>StdDevIncome {1}", 
 			                   ZScorePreCalc.AverageIncome, ZScorePreCalc.StandardDeviationIncome);
 			Console.WriteLine (">>>>AverageAge: {0}, \n>>>>StdDevAge {1}", 
@@ -41,7 +49,7 @@ namespace zscore
 			RawRecordOperator.AddRecord(ref RawRecordList, null, 58000, 53, "No");
 			RawRecordOperator.AddRecord(ref RawRecordList, "Female", null, 23, "No");
 			RawRecordOperator.AddRecord(ref RawRecordList, "Male", 59000, null, "Yes");
-			
+			RawRecordOperator.AddRecord(ref RawRecordList, null, 39100, 32, "Yes");
 		}
 		
 	}
