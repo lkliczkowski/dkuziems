@@ -17,16 +17,58 @@ namespace zscore
 		public static double AverageGender = 0;
 		public static double StandardDeviationGender = 0;
 		
+		//public static List<string>DiscreteList = new List<string>();
+		//public static List<double>ContinuousList = new List<double>();
+		
 		public static void InitVariables(List<RawRecord> RawRecordList)
 		{
+			List<string>DiscreteList = new List<string>();
+			List<double>DiscretizedList = new List<double>();
+			List<double>ContinuousList = new List<double>();
+			
+			DiscreteType discreteType;
+
+			discreteType = DiscreteType.Gender;
+			DiscreteList.Clear();
+			foreach(RawRecord ourRawRecord in RawRecordList)
+			{
+				if(ourRawRecord.Gender != null)
+					DiscreteList.Add((string)ourRawRecord.Gender);
+				else
+					DiscreteList.Add("Null");
+			}
+			DiscretizedList = ZScoreDiscretize.Discretize(DiscreteList, discreteType);
+			foreach(double dr in DiscretizedList)
+				Console.WriteLine(">>{0}", dr);
 			AverageGender = Average.Gender(RawRecordList);
 			StandardDeviationGender = StandardDeviation.Gender(RawRecordList, AverageGender);
 			
-			AverageIncome = Average.Income(RawRecordList);
-			StandardDeviationIncome = StandardDeviation.Income(RawRecordList, AverageIncome);
 			
-			AverageAge = Average.Age(RawRecordList);
-			StandardDeviationAge = StandardDeviation.Age(RawRecordList, AverageAge);
+			
+			
+			ContinuousList.Clear();
+			foreach(RawRecord ourRawRecord in RawRecordList)
+			{
+				if(ourRawRecord.Income.HasValue)
+					ContinuousList.Add((double)ourRawRecord.Income);
+			}
+			//AverageIncome = Average.Income(RawRecordList);
+			AverageIncome = Average.AverageContinuous(ContinuousList);
+			//StandardDeviationIncome = StandardDeviation.Income(RawRecordList, AverageIncome);
+			StandardDeviationIncome = StandardDeviation.StdDevContinuous(ContinuousList, AverageIncome);
+			
+			
+			
+			ContinuousList.Clear();
+			foreach(RawRecord ourRawRecord in RawRecordList)
+			{
+				if(ourRawRecord.Age.HasValue)
+					ContinuousList.Add((double)ourRawRecord.Age);
+			}
+			//AverageAge = Average.Age(RawRecordList);
+			AverageAge = Average.AverageContinuous(ContinuousList);
+			//StandardDeviationAge = StandardDeviation.Age(RawRecordList, AverageAge);
+			StandardDeviationAge = StandardDeviation.StdDevContinuous(ContinuousList, AverageAge);
 		}
 		
 		public static void RecordStats()
