@@ -22,7 +22,8 @@ namespace zscore
 				GenderEnum genderOption;
 				foreach(string MyRecord in MyRecordList)
 				{
-					genderOption = (GenderEnum)Enum.Parse(typeof(GenderEnum), MyRecord);
+					genderOption = (GenderEnum)Enum.
+						Parse(typeof(GenderEnum), MyRecord);
 					switch(genderOption)
 					{
 					case GenderEnum.Null:

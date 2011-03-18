@@ -68,7 +68,8 @@ namespace zscore
 				if( MyRecord.Income.HasValue == true )
 				{
 					incomeMissing = 0;
-					incomePresent = ZscoreContinuous((double)MyRecord.Income, ZScorePreCalc.AverageIncome, ZScorePreCalc.StandardDeviationIncome);
+					incomePresent = ZscoreContinuous((double)MyRecord.Income, ZScorePreCalc.AverageIncome, 
+					                                 ZScorePreCalc.StandardDeviationIncome);
 				}
 				else
 				{
@@ -80,7 +81,8 @@ namespace zscore
 				if( MyRecord.Age.HasValue == true )
 				{
 					ageMissing = 0;
-					agePresent = ZscoreContinuous((double)MyRecord.Age, ZScorePreCalc.AverageAge, ZScorePreCalc.StandardDeviationAge);
+					agePresent = ZscoreContinuous((double)MyRecord.Age, ZScorePreCalc.AverageAge, 
+					                              ZScorePreCalc.StandardDeviationAge);
 				}
 				else
 				{

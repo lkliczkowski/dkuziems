@@ -8,7 +8,8 @@ namespace zscore
 	{
 		
 		//srednia dla wartosci dyskretnych
-		public static List<double> AverageDiscrete(List<double> MyRecordList, DiscreteType discreteType)
+		public static List<double> AverageDiscrete(List<double> MyRecordList, 
+		                                           DiscreteType discreteType)
 		{
 			List<double> average = new List<double>();
 			int num_of_states = 0;
@@ -84,7 +85,8 @@ namespace zscore
 		 * 
 		 * sqrt(p(1-p))
 		 */
-		public static List<double> StdDevContinuousDiscrete(List<double> AverageDiscrete, DiscreteType discreteType)
+		public static List<double> StdDevContinuousDiscrete(List<double> AverageDiscrete, 
+		                                                    DiscreteType discreteType)
 		{
 			List<double> stddev = new List<double>();
 			
@@ -99,11 +101,14 @@ namespace zscore
 				stddev.Add(0); stddev.Add(0); stddev.Add(0);
 				
 				stddev[(int)GenderEnum.Female] = 
-					Math.Sqrt((AverageDiscrete[(int)GenderEnum.Female]*(1-AverageDiscrete[(int)GenderEnum.Female])));
+					Math.Sqrt((AverageDiscrete[(int)GenderEnum.Female]*
+					           (1-AverageDiscrete[(int)GenderEnum.Female])));
 				stddev[(int)GenderEnum.Male] = 
-					Math.Sqrt((AverageDiscrete[(int)GenderEnum.Male]*(1-AverageDiscrete[(int)GenderEnum.Male])));
+					Math.Sqrt((AverageDiscrete[(int)GenderEnum.Male]*
+					           (1-AverageDiscrete[(int)GenderEnum.Male])));
 				stddev[(int)GenderEnum.Null] = 
-					Math.Sqrt((AverageDiscrete[(int)GenderEnum.Null]*(1-AverageDiscrete[(int)GenderEnum.Null])));
+					Math.Sqrt((AverageDiscrete[(int)GenderEnum.Null]*
+					           (1-AverageDiscrete[(int)GenderEnum.Null])));
 				break;
 				
 			case DiscreteType.Education:
