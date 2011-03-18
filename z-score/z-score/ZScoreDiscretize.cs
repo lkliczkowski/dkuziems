@@ -11,15 +11,15 @@ namespace zscore
 			(List<string>MyRecordList, DiscreteType discreteType)
 		{
 			List<double>DiscretizedList = new List<double>();
-			GenderEnum genderOption;
 			
 			switch(discreteType)
 			{
 			case DiscreteType.Unknown:
-				Console.WriteLine(">>>> discreteType::unknown");
+				Console.WriteLine(">>>> discretize.discreteType::unknown");
 				break;
 			case DiscreteType.Gender:
-				Console.WriteLine(">>>> discreteType::gender");
+				Console.WriteLine(">>>> discretize.discreteType::gender");
+				GenderEnum genderOption;
 				foreach(string MyRecord in MyRecordList)
 				{
 					genderOption = (GenderEnum)Enum.Parse(typeof(GenderEnum), MyRecord);
@@ -41,10 +41,10 @@ namespace zscore
 					
 				break;
 			case DiscreteType.Education:
-				Console.WriteLine(">>>> discreteType::education");
+				Console.WriteLine(">>>> discretize.discreteType::education");
 				break;
 			default:
-				Console.WriteLine(">>>> discreteType::default");
+				Console.WriteLine(">>>> discretize.discreteType::default");
 				break;
 			}
 			

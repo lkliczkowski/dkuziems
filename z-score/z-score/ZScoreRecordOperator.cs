@@ -46,7 +46,7 @@ namespace zscore
 				else
 					Console.Write("{0}",ourRawRecord.Age);
 				
-				Console.WriteLine("\t{0}", ourRawRecord.Owner);
+				Console.WriteLine("\t{0}", ourRawRecord.Owner == null?"null\t":ourRawRecord.Owner);
 				
 			}
 			Console.WriteLine();
@@ -60,12 +60,12 @@ namespace zscore
 	{
 		public static void DisplayRecords(List<NormalizedRecord> NormalizedRecordList)
 		{
-			Console.WriteLine("ID \t\tGender \t\t\t\t  Income \t\t\t\t  Age \t\t\t  Owner");
-			Console.WriteLine(" \t -\tM\tF \t\t\t -\t\t val \t\t\t-\t\t val \t\t\t-\tY\tN");
+			Console.WriteLine("ID \t|\tGender \t\t|\t\t  Income \t\t|\t\t  Age \t\t|\t  Owner");
+			Console.WriteLine("\t|   -\t\tM \tF \t|\t -\t\t val \t\t|\t-\t\t val \t\t|\t-\tY\tN");
 			foreach (NormalizedRecord ourNormalizedRecord in NormalizedRecordList)
 			{
-				Console.WriteLine("{0}\t {1}\t{2:N2}\t{3:N2} \t\t{4:N1}\t\t{5:N2} " +
-					"\t\t{6:N1}\t\t{7:N2} \t\t{8}\t{9}\t{10}", 
+				Console.WriteLine("{0}\t| {1:N1} \t{2:N1}\t\t{3:N1}\t|\t{4:N1}\t\t{5:N2} " +
+					"\t|\t{6:N1}\t\t{7:N2} \t|\t{8}\t{9}\t{10}", 
 				                  ourNormalizedRecord.Id,
 				                  ourNormalizedRecord.GenderMissing,
 				                  ourNormalizedRecord.GenderM,
@@ -83,5 +83,18 @@ namespace zscore
 	}
 	#endregion
 
+	public static class DisplayOther
+	{
+		public static void DisplayDoubleList(List<double> MyDoubleList, string what)
+		{
+			foreach(double val in MyDoubleList)
+				Console.WriteLine(">>>> {0}: {1}", what, val);
+		}
+		
+		public static void DisplayDoubleList(List<double> MyDoubleList)
+		{
+			DisplayDoubleList(MyDoubleList, "");
+		}
+	}
 
 }

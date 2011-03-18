@@ -13,15 +13,15 @@ namespace zscore
 	
 	public enum GenderEnum
 	{
-		Null = -1,
 		Female = 0,
-		Male = 1
+		Male = 1,
+		Null = 2
 	}
 	
 	public enum OwnerEnum
 	{
-		Null = 0,
+		No = 0,
 		Yes = 1,
-		No = 0
+		Null = 2
 	}
 }
