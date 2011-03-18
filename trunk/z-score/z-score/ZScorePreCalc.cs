@@ -14,13 +14,8 @@ namespace zscore
 		public static double AverageAge = 0;
 		public static double StandardDeviationAge = 0;
 		
-		public static double AverageGender = 0;
 		public static List<double> AverageGenderList = new List<double>();
-		public static double StandardDeviationGender = 0;
 		public static List<double> StandardDeviationGenderList = new List<double>();
-		
-		//public static List<string>DiscreteList = new List<string>();
-		//public static List<double>ContinuousList = new List<double>();
 		
 		public static void InitVariables(List<RawRecord> RawRecordList)
 		{
@@ -70,9 +65,14 @@ namespace zscore
 		
 		public static void RecordStats()
 		{
-			Console.WriteLine (">>>>AverageGender: {0}:{1}:{2}, \n>>>>StdDevGender {3}", 
-			                   ZScorePreCalc.AverageGenderList[(int)GenderEnum.Female], ZScorePreCalc.AverageGenderList[(int)GenderEnum.Male], 
-			                   ZScorePreCalc.AverageGenderList[(int)GenderEnum.Null], ZScorePreCalc.StandardDeviationGender);
+			Console.WriteLine (">>>>AverageGender: {0}:{1}:{2}, \n>>>>StdDevGender {3}:{4}:{5}", 
+			                   ZScorePreCalc.AverageGenderList[(int)GenderEnum.Female], 
+			                   ZScorePreCalc.AverageGenderList[(int)GenderEnum.Male], 
+			                   ZScorePreCalc.AverageGenderList[(int)GenderEnum.Null], 
+			                   ZScorePreCalc.StandardDeviationGenderList[(int)GenderEnum.Female],
+			                   ZScorePreCalc.StandardDeviationGenderList[(int)GenderEnum.Male],
+			                   ZScorePreCalc.StandardDeviationGenderList[(int)GenderEnum.Null]
+			                   );
 			Console.WriteLine (">>>>AverageIncome: {0}, \n>>>>StdDevIncome {1}", 
 			                   ZScorePreCalc.AverageIncome, ZScorePreCalc.StandardDeviationIncome);
 			Console.WriteLine (">>>>AverageAge: {0}, \n>>>>StdDevAge {1}", 

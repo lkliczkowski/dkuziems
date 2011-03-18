@@ -46,7 +46,8 @@ namespace zscore
 				else
 					Console.Write("{0}",ourRawRecord.Age);
 				
-				Console.WriteLine("\t{0}", ourRawRecord.Owner == null?"null\t":ourRawRecord.Owner);
+				Console.WriteLine("\t{0}", ourRawRecord.Owner == null?
+				                  "null\t":ourRawRecord.Owner);
 				
 			}
 			Console.WriteLine();
