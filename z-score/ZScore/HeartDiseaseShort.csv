@@ -1,0 +1,15 @@
+Blood Pressure Level;Systolic Blood Pressure;Tobacco Intake Level;Tobacco Intake (kg);Cholesterol Level;LDL Cholesterol;Adiposity;Family History;Stress Level Type A;Stress Type-A behavior;Obesity Level;Obesity;Alcohol Intake Level;Alcohol Consumption;Age Range;Age Disease;Coronary Heart Disease
+New ;;New;Cumulative Intake;New;Low Density Lipoprotein;Level of Fat tissues;;New;;New;Body Mass Index (BMI);New;;New;Disease Onset Age;
+high;160;high;12;medium;5,73;23,11;Present;medium;49;overweight;25,3;high;97,2;middle aged;52;Present
+medium;144;low;0,01;medium;4,41;28,61;Absent;medium;55;overweight;28,87;medium;2,06;old;63;Present
+low;118;low;0,08;medium;3,48;32,28;Present;medium;52;overweight;29,14;medium;3,81;middle aged;46;Absent
+high;170;high;7,5;high;6,41;38,03;Present;medium;51;clinically obese;31,99;high;24,26;old;58;Present
+medium;134;high;13,6;medium;3,5;27,78;Present;high;60;overweight;25,99;high;57,34;middle aged;49;Present
+medium;132;high;6,2;high;6,47;36,21;Present;high;62;clinically obese;30,77;medium;14,14;middle aged;45;Absent
+medium;142;medium;4,05;medium;3,38;16,2;Absent;medium;59;Healthy;20,81;medium;2,62;middle aged;38;Absent
+low;114;medium;4,08;medium;4,59;14,6;Present;high;62;Healthy;23,11;medium;6,72;old;58;Present
+low;114;low;0;medium;3,83;19,4;Present;medium;49;Healthy;24,86;medium;2,49;middle aged;29;Absent
+medium;132;low;0;high;5,8;30,96;Present;high;69;clinically obese;30,11;low;0;middle aged;53;Present
+high;206;high;6;low;2,95;32,27;Absent;high;72;overweight;26,81;high;56,06;old;60;Present
+medium;134;high;14,1;medium;4,44;22,39;Present;high;65;Healthy;23,09;low;0;middle aged;40;Present
+low;118;low;0;low;1,88;10,05;Absent;medium;59;Healthy;21,57;low;0;young;17;Absent
