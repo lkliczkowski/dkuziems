@@ -31,6 +31,7 @@ namespace ZScore
 
         public T GetByIndex (int i)
         {
+            
             return record[i];
         }
 
