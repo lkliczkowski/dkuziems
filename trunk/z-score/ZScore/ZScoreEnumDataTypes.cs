@@ -24,8 +24,8 @@ namespace ZScore
     {
         unknown = -1,
         low = 0,
-        high = 1,
-        medium = 2
+        medium = 1,
+        high = 2
     }
 
     public enum EnumAbsentPresent

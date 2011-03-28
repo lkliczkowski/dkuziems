@@ -6,9 +6,41 @@ using System.IO;
 
 namespace ZScore
 {
-    class ZScoreCSVread
+    partial class ZScore
     {
-        public static Records<string>[] parseCSV(string path, int record_num)
+
+        public static bool CSVwrite(string path, Records<float>[] toWrite)
+        {
+            bool done = false;
+            try
+            {
+                TextWriter writeFile = new StreamWriter(path);
+
+                for (int j = 0; j < toWrite[1].GetNum(); j++)
+                {
+                    for (int i = 0; i < toWrite.Length; i++)
+                    {
+
+                        writeFile.Write("{0:N2};", toWrite[i].Get(j));
+                        writeFile.Flush();
+                        Console.Write("{0}+{1}\t", i,j);
+                    }
+                    writeFile.WriteLine();
+                    //Console.WriteLine("\n==========================");
+                }
+                writeFile.Close();
+                return true;
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Failed Writing to file: \n{0}", e);
+            }
+
+            return done;
+        }
+
+        public static Records<string>[] CSVread(string path, int record_num)
         {
 
             Records<string>[] Data = new Records<string>[record_num];
@@ -30,14 +62,15 @@ namespace ZScore
                         {
                             Data[i].AddRecord(row[i]);
                         }
-                        //parsedData.Add(row);
                     }
+                    readFile.Close();
                 }
             }
             catch(Exception e)
             {
                 Console.WriteLine(">>>> StreamReaderError::Wrong file path? \n\n{0}\n", e);
             }
+            
             return Data;
         }
 
