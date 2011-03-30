@@ -9,7 +9,7 @@ namespace ZScore
     partial class ZScore
     {
 
-        public static bool CSVwrite(string path, Records<float>[] toWrite)
+        public static bool CSVwrite(string path, Column<float>[] toWrite)
         {
             bool done = false;
             try
@@ -40,12 +40,12 @@ namespace ZScore
             return done;
         }
 
-        public static Records<string>[] CSVread(string path, int record_num)
+        public static Column<string>[] CSVread(string path, int column_num)
         {
 
-            Records<string>[] Data = new Records<string>[record_num];
-            for (int i = 0; i < record_num; i++)
-                Data[i] = new Records<string>();
+            Column<string>[] Data = new Column<string>[column_num];
+            for (int i = 0; i < column_num; i++)
+                Data[i] = new Column<string>();
 
             try
             {
@@ -60,7 +60,7 @@ namespace ZScore
                         row = GetRidOf(row);
                         for (int i = 0; i < row.Length; i++)
                         {
-                            Data[i].AddRecord(row[i]);
+                            Data[i].AddData(row[i]);
                         }
                     }
                     readFile.Close();

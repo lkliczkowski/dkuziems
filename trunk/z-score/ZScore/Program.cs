@@ -23,26 +23,26 @@ namespace ZScore
         {
             string FILE1 = "HeartDiseaseShort.csv",
                 FILE2 = "Normalized.csv";
-            Records<string>[] rawData = ZScore.CSVread(FILE1, RecordTypes.HeartDisease.Length);
+            Column<string>[] rawData = ZScore.CSVread(FILE1, ColumnTypes.HeartDisease.Length);
 
             Console.WriteLine(">>{0}", rawData.Length);
             RemoveFromRecords(ref rawData, 0, 2);
 
-            Records<float>[] discretizedData = ZScoreDiscretize.Discretize
-                (rawData, EnumDataTypes.HeartDisease, RecordTypes.HeartDisease);
+            Column<float>[] discretizedData = ZScoreDiscretize.Discretize
+                (rawData, EnumDataTypes.HeartDisease, ColumnTypes.HeartDisease);
 
             PrintList(discretizedData);
 
-            Records<float>[] normalizedData = new Records<float>
-                [GetNormalizeLength(RecordTypes.HeartDisease, EnumDataTypes.HeartDisease)];
-            Normalize(ref normalizedData, discretizedData, EnumDataTypes.HeartDisease, RecordTypes.HeartDisease);
+            Column<float>[] normalizedData = new Column<float>
+                [GetNormalizeLength(ColumnTypes.HeartDisease, EnumDataTypes.HeartDisease)];
+            Normalize(ref normalizedData, discretizedData, EnumDataTypes.HeartDisease, ColumnTypes.HeartDisease);
 
             PrintList(normalizedData);
 
             CSVwrite(FILE2, normalizedData);
         }
 
-        public static void PrintList<T>(Records<T>[] toPrint)
+        public static void PrintList<T>(Column<T>[] toPrint)
         {
             for (int j = 0; j < toPrint[0].GetNum(); j++)
             {
@@ -54,7 +54,7 @@ namespace ZScore
             }
         }
 
-        public static void RemoveFromRecords<T>(ref Records<T>[] toRemove, int from, int to)
+        public static void RemoveFromRecords<T>(ref Column<T>[] toRemove, int from, int to)
         {
             for(int i = 0; i < toRemove.Length; i++)
             {
