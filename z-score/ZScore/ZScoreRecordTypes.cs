@@ -5,7 +5,7 @@ using System.Text;
 
 namespace ZScore
 {
-    public static class RecordTypes
+    public static class ColumnTypes
     {
         public static int[] HeartDisease =
             {

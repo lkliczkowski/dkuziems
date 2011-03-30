@@ -5,34 +5,34 @@ using System.Text;
 
 namespace ZScore
 {
-    class Records<T>
+    class Column<T>
     {
-        private List<T> record;
+        private List<T> cell;
 
-        public Records()
+        public Column()
         {
-            record = new List<T>();
+            cell = new List<T>();
         }
 
-        public void AddRecord(T val)
+        public void AddData(T val)
         {
-            record.Add(val);
+            cell.Add(val);
         }
 
-        public List<T> GetRecord()
+        public List<T> GetColumn()
         {
-            return record;
+            return cell;
         }
 
-        public T[] RecordTable()
+        public T[] ColumnToArray()
         {
-            return record.ToArray();
+            return cell.ToArray();
         }
 
         public T GetByIndex (int i)
         {
             
-            return record[i];
+            return cell[i];
         }
 
         public T Get(int i)
@@ -42,13 +42,13 @@ namespace ZScore
 
         public int GetNum()
         {
-            return record.Count();
+            return cell.Count();
         }
 
         public void RemoveRange(int from, int to)
         {
             if(from <= to)
-                record.RemoveRange(from, to);
+                cell.RemoveRange(from, to);
         }
     }
 
