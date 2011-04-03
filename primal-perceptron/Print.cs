@@ -33,8 +33,10 @@ namespace PrimalPerceptronAlgorithm
 
         public static void PrintList(List<double[]> toPrint)
         {
+			int i = new int();
             foreach (double[] line in toPrint)
             {
+				Console.Write("{0}:\t", i++);
                 foreach (double cell in line)
                 {
                     Console.Write("{0:N2} \t", cell);
@@ -45,8 +47,10 @@ namespace PrimalPerceptronAlgorithm
 
         public static void PrintList(List<double> toPrint)
         {
+			int i = new int();
             foreach (double cell in toPrint)
             {
+				Console.Write("{0}:\t", i++);
                 Console.WriteLine("{0:N2} \t", cell);
             }
             Console.WriteLine();
