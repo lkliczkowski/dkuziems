@@ -10,6 +10,9 @@ namespace PrimalPerceptronAlgorithm
         static void Main(string[] args)
         {
             const string DATAFILE = "perc.txt";
+
+            /* eta 		wspolczynnik uczenia
+             */
             const double eta = 1;
 
             run(initData(DATAFILE), eta);
@@ -24,26 +27,80 @@ namespace PrimalPerceptronAlgorithm
 
         private static void run(List<double[]> learningSet, double eta)
         {
-
+            /*
+             * bias(b_t) 		tzw parametr sterujacy
+             */
             List<double> bias = new List<double>();
+
+            /*
+             * weights(w_t) 	wagi
+             */
             List<double[]> weights = new List<double[]>();
+
+            /* 
+             * maks norma wektora (potrzebna przy zmianach bias
+             */ 
             double R = new Double();
 
+
+            /* <x,y> 
+             * x 	przyklady (set[][0] do set[][n-1])
+             * y 	etykiety przykladu (data[n] - ostatni w kazdym wierszu)
+             * 
+             * podzielimy set[n] na zbiory uczacy(treningowy) i walidacyjny 
+             * w stosunku 1:4, 
+             * probka rownomierna - SplitSetEqually
+             * probka losowa - SplitSetRandomly
+             */
             const int percent = 20;
-            List<double[]> validateSet = SplitSetEqually(ref learningSet, percent);
-			//List<double[]> validateSet = SplitSetRandomly(ref learningSet, percent);
+            //List<double[]> validateSet = SplitSetEqually(ref learningSet, percent);
+			List<double[]> validateSet = SplitSetRandomly(ref learningSet, percent);
 			
             //Print("LEARNING SET", learningSet.Count.ToString());
             //PrintList(learningSet);
             //Print("TESTING SET", validateSet.Count.ToString());
             //PrintList(validateSet);
+			
+			int t = new int(); //licznik iteracji
 
-            initValues(ref weights, ref bias, ref R, learningSet);
+            /* 
+             * (a) Inicjalizacja
+             */ 
+            initValues(ref t, ref weights, ref bias, ref R, learningSet);
 
-            for (int t = 0, k = 0, success_count = 0; t < learningSet.Count; )
+            /*
+             * (b) Powtarzaj...
+             * =================================================================
+             * t		iterator po kolejno dobieranych wagach i biasach,
+             * 
+             * dodatkowo:
+             * k				iterator po trainingSet 
+             * 					(bedziemy brali kolejne przyklady sprawdzajac poprawnosc klasyfikatora)
+             * success_count	warunek stopu -> jesli poprawnie sklasyfikuje caly zbior 
+             * 					walidacyjny przerwij nauke	
+             * =================================================================
+             *
+             * if(sukces w klasyfikacji)
+             * {
+             * 		zwieksz iteracje sukcesow
+             * 		jesli == wielkosci zbioru walidacyjnego -> stop
+             * }
+             * else
+             * {
+             * 		(i) 	w_{t+1} = w_t + eta*y_i*x_i	//dla kazdej wagi w_i
+             * 		(ii) 	b_{t+1} = b_t + eta*y_i*R^2
+             * 		(iii) 	t++
+             * }
+             * ...dopoki perceptron nie popelni zadnego bledu 
+             * (tu: przejdzie bezblednie przez caly zbior walidacyjny lub przez caly zbior uczacy)
+             * 
+             * Koniec
+             * 
+             */
+            for (int k = 0, success_count = 0; t < learningSet.Count; )
             {
                 Console.WriteLine("\n:::::::::::::: [i == {0}] ::::::::::::::::", t + 1);
-				//if (Classify(validateSet[k], weights[t], bias.Last() == validateSet[k][validateSet[k].Length - 1]) 
+				//if (Classify(validateSet[k], weights[t], bias.Last() == validateSet[k][validateSet[k].Length - 1]) //w .net 2.0 nie ma List<T>.Last()
                 if (Classify(validateSet[k], weights[t], bias[bias.Count - 1]) == validateSet[k][validateSet[k].Length - 1])
                 {
 					success_count++;
@@ -84,7 +141,7 @@ namespace PrimalPerceptronAlgorithm
 					Print("Poprawnie rozpoznano wszystkie przypadki walidacyjne");
 					break;
 				}
-                if (++k >= validateSet.Count) k = 0; 
+                if (++k >= validateSet.Count) k = 0; //elementy z validate od poczatku
             }
 			
 			Println();
@@ -93,7 +150,9 @@ namespace PrimalPerceptronAlgorithm
 			Println();
             Print("BIAS'y");
             PrintList(bias);
-
+			
+			Println();
+			Print("Liczba iteracji na zbiorze uczacym", t.ToString());
 
         }
 
@@ -101,6 +160,7 @@ namespace PrimalPerceptronAlgorithm
         {
             double fx = 0;
 
+            //f(x) = <x,w> + b = (Suma_{i=1}^{n}x_i * w_i) + b
             for (int i = 0; i < Xs.Length - 1; i++)
                 fx += Xs[i] * w[i];
 
@@ -110,13 +170,14 @@ namespace PrimalPerceptronAlgorithm
                 return -1;
         }
 
-        private static void initValues(ref List<double[]> weights,
+        private static void initValues(ref int t, ref List<double[]> weights,
             ref List<double> bias, ref double R, List<double[]> learningSet)
         {
+			t = 0; //formalizm...
             double[] w = new double[learningSet[0].Length - 1];
             for (int j = 0; j < w.Length; j++)
                 w[j] = 0;
-
+			
             weights.Add(w);
             bias.Add(0);
             R = MaxFromArray(VectorNorm(learningSet).ToArray());
@@ -125,8 +186,8 @@ namespace PrimalPerceptronAlgorithm
         private static List<double[]> SplitSetEqually(ref List<double[]> Set, int percent)
         {
             List<double[]> validateSet = new List<double[]>();
-            int multiple = 100 / percent; 
-			
+            int multiple = 100 / percent;   //co ktory przyklad bierzemy...
+
             for (int i = Set.Count - 1; i > 1; i--)
             {
                 if (((i + 1) % multiple) == 0)
@@ -149,6 +210,9 @@ namespace PrimalPerceptronAlgorithm
             int j;
             for(int i = 0; i < validateSetLength; i++)
             {
+                /*(int)DateTime.Now.Ticks - "zapewnia losowosc",
+                na MonoDev sie sypie, w niektórych godzinach (-:
+                wina srodowiska OS: Unix + .NET?*/
                 //j = r.Next((((int)DateTime.Now.Ticks) % Set.Count)); 
 				
                 //pseudolosowe
@@ -170,7 +234,7 @@ namespace PrimalPerceptronAlgorithm
             foreach (double[] xList in vectorList)
             {
                 double val = 1;
-
+                //bierzemy x-y bez ostatniego elementu y
                 for (int i = 0; i < xList.Length - 1; i++)
                 {
                     val *= xList[i];
