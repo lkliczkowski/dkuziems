@@ -11,11 +11,23 @@ namespace PrimalPerceptronAlgorithm
         {
             const string DATAFILE = "perc.txt";
 
+
             /* eta 		wspolczynnik uczenia
              */
-            const double eta = 1;
-
-            run(initData(DATAFILE), eta);
+            const double eta_02 = 0.2;
+			const string OUTPUTGNUPLOT_02 = "graphs_02.gp", graphName_02 = "perceptron02";
+            run(initData(DATAFILE), eta_02, OUTPUTGNUPLOT_02, graphName_02);
+			
+			/*
+			const double eta_06 = 0.6;
+			const string OUTPUTGNUPLOT_06 = "graphs_06.gp", graphName_06 = "perceptron06";
+            run(initData(DATAFILE), eta_06, OUTPUTGNUPLOT_06, graphName_06);
+			
+			const double eta_10 = 1;
+			const string OUTPUTGNUPLOT_10 = "graphs_10.gp", graphName_10 = "perceptron10";
+            run(initData(DATAFILE), eta_10, OUTPUTGNUPLOT_10, graphName_10);
+            */
+			
         }
 
         private static List<double[]> initData(string filePath)
@@ -25,7 +37,7 @@ namespace PrimalPerceptronAlgorithm
             return data;
         }
 
-        private static void run(List<double[]> learningSet, double eta)
+        private static void run(List<double[]> learningSet, double eta, string outputGnuplot, string graphName)
         {
             /*
              * bias(b_t) 		tzw parametr sterujacy
@@ -52,9 +64,10 @@ namespace PrimalPerceptronAlgorithm
              * probka rownomierna - SplitSetEqually
              * probka losowa - SplitSetRandomly
              */
-            const int percent = 20;
+            const int percent = 15; //or number
+			List<double[]> validateSet = SplitSetTakeNumber(ref learningSet, percent);
             //List<double[]> validateSet = SplitSetEqually(ref learningSet, percent);
-			List<double[]> validateSet = SplitSetRandomly(ref learningSet, percent);
+			//List<double[]> validateSet = SplitSetRandomly(ref learningSet, percent);
 			
             //Print("LEARNING SET", learningSet.Count.ToString());
             //PrintList(learningSet);
@@ -128,7 +141,8 @@ namespace PrimalPerceptronAlgorithm
 					
                     /* (ii) aktualizujemy bias */
                     double b = new double();
-                    b = bias[bias.Count - 1] + eta * learningSet[t][learningSet[t].Length - 1] * Math.Pow(R, 2);
+                    //b = bias[bias.Count - 1] + eta * learningSet[t][learningSet[t].Length - 1] * Math.Pow(R, 2);
+					b = bias[bias.Count - 1] + eta * learningSet[t][learningSet[t].Length - 1] * Math.Pow(R, 2);
 					Print("bias w_t: ", bias[bias.Count - 1]);
                     bias.Add(b);
 					Print("bias w_t+1: ", bias[bias.Count - 1]);
@@ -153,7 +167,13 @@ namespace PrimalPerceptronAlgorithm
 			
 			Println();
 			Print("Liczba iteracji na zbiorze uczacym", t.ToString());
-
+			Print("zbiór walidacyjny", validateSet.Count);
+			Print("uczacy", learningSet.Count);
+			
+			const int multipleGraph = 10;
+			SaveToGnuplot.Save(outputGnuplot, graphName, weights, bias, multipleGraph, eta);
+			//SaveToGnuplot.SaveWithAdd(outputGnuplot, graphName, weights, bias, multipleGraph, eta);
+			
         }
 
         private static double Classify(double[] Xs, double[] w, double b)
@@ -183,7 +203,24 @@ namespace PrimalPerceptronAlgorithm
             R = MaxFromArray(VectorNorm(learningSet).ToArray());
         }
 
-        private static List<double[]> SplitSetEqually(ref List<double[]> Set, int percent)
+        private static List<double[]> SplitSetTakeNumber(ref List<double[]> Set, int how_many)
+        {
+			int m = Set.Count / how_many;
+            List<double[]> validateSet = new List<double[]>();
+
+            for (int i = Set.Count - 1; i > 1; i--)
+            {
+                if (((i+1) % m) == 0)
+                {
+                    validateSet.Add(Set[i]);
+                    Set.RemoveAt(i);
+                }
+            }
+
+            return validateSet;
+        }
+		
+		private static List<double[]> SplitSetEqually(ref List<double[]> Set, int percent)
         {
             List<double[]> validateSet = new List<double[]>();
             int multiple = 100 / percent;   //co ktory przyklad bierzemy...
