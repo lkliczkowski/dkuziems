@@ -64,7 +64,7 @@ namespace PrimalPerceptronAlgorithm
              * probka rownomierna - SplitSetEqually
              * probka losowa - SplitSetRandomly
              */
-            const int percent = 15; //or number
+            const int percent = 12; //or number
 			List<double[]> validateSet = SplitSetTakeNumber(ref learningSet, percent);
             //List<double[]> validateSet = SplitSetEqually(ref learningSet, percent);
 			//List<double[]> validateSet = SplitSetRandomly(ref learningSet, percent);
@@ -153,7 +153,10 @@ namespace PrimalPerceptronAlgorithm
 					
                     t++;
                 }
-
+				
+				/*
+				 * warunek stopu
+				 */
                 if (success_count == validateSet.Count) 
 				{
 					Print("Poprawnie rozpoznano wszystkie przypadki walidacyjne");
@@ -170,15 +173,18 @@ namespace PrimalPerceptronAlgorithm
             PrintList(bias);
 			
 			Println();
-			Print("Liczba iteracji na zbiorze uczacym", t.ToString());
+			Print("Liczba iteracji na zbiorze uczacym", (t+1).ToString());
 			Print("zbiór walidacyjny", validateSet.Count);
 			Print("uczacy", learningSet.Count);
 			
-			const int multipleGraph = 10;
+			const int multipleGraph = 15;
+			const string set1 = "class1.dat", set2 = "class2.dat";
 			
 			//if(SaveToGnuplot.SaveWithAdd(outputGnuplot, graphName, weights, bias, multipleGraph, eta))
-			if(SaveToGnuplot.Save(outputGnuplot, graphName, weights, bias, multipleGraph, eta))
-				Print("Savint gnuplot script success!", outputGnuplot);
+			//if(SaveToGnuplot.Save(outputGnuplot, graphName, weights, bias, multipleGraph, eta))
+			if(SaveToGnuplot.SaveWithSet(outputGnuplot, graphName, weights, bias, multipleGraph, 
+			                             eta, validateSet, learningSet, set1, set2))
+				Print("Saving gnuplot script success!", outputGnuplot);
 			else 
 				Print("Fail occured while saving script", outputGnuplot);
 			
