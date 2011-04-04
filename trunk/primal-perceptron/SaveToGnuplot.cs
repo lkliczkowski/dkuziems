@@ -14,7 +14,8 @@ namespace PrimalPerceptronAlgorithm
 			Print("Using SaveToGnuplot class (supposed to work with 2 weights)");
 		}
 		
-		public static bool Save(string path, string graphName, List<double[]> weights, List<double> bias, int multiply, double learningRate)
+		public static bool Save(string path, string graphName, List<double[]> weights, 
+		                        List<double> bias, int multiply, double learningRate)
         {
             try
             {
@@ -32,8 +33,12 @@ namespace PrimalPerceptronAlgorithm
 				{
 					if((j%m) == 1)
 					{
-						string output = String.Format("-(" + weights[j][0] + "* x + " + bias[j] + ")/" 
-						                              + weights[j][1] + " title \"iteracja t = " + j + "\"");
+						string output = String.Format("-(" + weights[j][0] 
+						                              + "* x + " 
+						                              + bias[j] + ")/" 
+						                              + weights[j][1] 
+						                              + " title \"iteracja t = " 
+						                              + j + "\"");
 
 						output = ChangeFormat(output);
 						writeFile.Write(output);
@@ -62,7 +67,8 @@ namespace PrimalPerceptronAlgorithm
 		/*
 		 * Pozwala na zapisanie teoretycznie lepszych wykresow
 		 */ 
-		public static bool SaveWithAdd(string path, string graphName, List<double[]> weights, List<double> bias, int multiply, double learningRate)
+		public static bool SaveWithAdd(string path, string graphName, List<double[]> weights, 
+		                               List<double> bias, int multiply, double learningRate)
         {
             try
             {
@@ -84,23 +90,32 @@ namespace PrimalPerceptronAlgorithm
 						string output = "";
 						if(j == 1)
 						{
-							output = String.Format("-(" + weights[j][0] + "* x + " + bias[j] + ")/" 
-							                       + weights[j][1] + " title \"iteracja t = " + j + "\"");
+							output = String.Format("-(" + weights[j][0] 
+							                       + "* x + " + bias[j] 
+							                       + ")/" 
+							                       + weights[j][1] 
+							                       + " title \"iteracja t = " 
+							                       + j + "\"");
 							Print("Saving results from iteration:", j.ToString());
 						}
 						else
 							try
 							{
 								t = j + addition;
-								output = String.Format("-(" + weights[t][0] + "* x + " + bias[t] + ")/" 
-								                       + weights[t][1] + " title \"iteracja t = " + t + "\"");
+								output = String.Format("-(" + weights[t][0] 
+							                       + "* x + " + bias[t] 
+							                       + ")/" + weights[t][1] 
+							                       + " title \"iteracja t = " 
+							                       + t + "\"");
 								Print("Saving results from iteration:", t.ToString());
 							}
 							catch (Exception ep)
 							{
-								Console.WriteLine("Out of Range in SaveWithAdd, Gnuplot set normal", ep.Message);
-								output = String.Format("-(" + weights[j][0] + "* x + " + bias[j] + ")/" 
-								                       + weights[j][1] + " title \"iteracja t = " + j + "\"");
+								Console.WriteLine("{0} Gnuplot set normal", ep.Message);
+								output = String.Format("-(" + weights[j][0] 
+							                       + "* x + " + bias[j] + ")/"
+							                       + weights[j][1] + " title \"iteracja t = " 
+							                       + j + "\"");
 								Print("Saving results from iteration:", j.ToString());
 							}
 						

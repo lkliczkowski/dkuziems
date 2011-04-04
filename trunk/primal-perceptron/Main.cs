@@ -113,8 +113,10 @@ namespace PrimalPerceptronAlgorithm
             for (int k = 0, success_count = 0; t < learningSet.Count; )
             {
                 Console.WriteLine("\n:::::::::::::: [i == {0}] ::::::::::::::::", t + 1);
-				//if (Classify(validateSet[k], weights[t], bias.Last() == validateSet[k][validateSet[k].Length - 1]) //w .net 2.0 nie ma List<T>.Last()
-                if (Classify(validateSet[k], weights[t], bias[bias.Count - 1]) == validateSet[k][validateSet[k].Length - 1])
+				//if (Classify(validateSet[k], weights[t], bias.Last() == 
+				//	validateSet[k][validateSet[k].Length - 1]) //w .net 2.0 nie ma List<T>.Last()
+                if (Classify(validateSet[k], weights[t], bias[bias.Count - 1]) == 
+				    validateSet[k][validateSet[k].Length - 1])
                 {
 					success_count++;
                     Print("Klasyfikacja udana", success_count.ToString());
@@ -133,7 +135,8 @@ namespace PrimalPerceptronAlgorithm
                         tmp_weight[j] = 0;
                     for (int j = 0; j < tmp_weight.Length; j++)
                     {
-                        tmp_weight[j] = weights[weights.Count - 1][j] + eta * learningSet[t][learningSet[t].Length - 1] * learningSet[t][j];
+                        tmp_weight[j] = weights[weights.Count - 1][j] + eta *
+							learningSet[t][learningSet[t].Length - 1] * learningSet[t][j];
                     }
 					PrintArray<double>(weights[weights.Count - 1], "wagi w_t");
                     weights.Add(tmp_weight);
@@ -141,8 +144,9 @@ namespace PrimalPerceptronAlgorithm
 					
                     /* (ii) aktualizujemy bias */
                     double b = new double();
-                    //b = bias[bias.Count - 1] + eta * learningSet[t][learningSet[t].Length - 1] * Math.Pow(R, 2);
-					b = bias[bias.Count - 1] + eta * learningSet[t][learningSet[t].Length - 1] * Math.Pow(R, 2);
+                    //b = bias[bias.Count - 1] + eta * learningSet[t][learningSet[t].Length - 1] * R;
+					b = bias[bias.Count - 1] + eta * 
+						learningSet[t][learningSet[t].Length - 1] * Math.Pow(R, 2);
 					Print("bias w_t: ", bias[bias.Count - 1]);
                     bias.Add(b);
 					Print("bias w_t+1: ", bias[bias.Count - 1]);
@@ -171,8 +175,14 @@ namespace PrimalPerceptronAlgorithm
 			Print("uczacy", learningSet.Count);
 			
 			const int multipleGraph = 10;
-			SaveToGnuplot.Save(outputGnuplot, graphName, weights, bias, multipleGraph, eta);
-			//SaveToGnuplot.SaveWithAdd(outputGnuplot, graphName, weights, bias, multipleGraph, eta);
+			
+			//if(SaveToGnuplot.SaveWithAdd(outputGnuplot, graphName, weights, bias, multipleGraph, eta))
+			if(SaveToGnuplot.Save(outputGnuplot, graphName, weights, bias, multipleGraph, eta))
+				Print("Savint gnuplot script success!", outputGnuplot);
+			else 
+				Print("Fail occured while saving script", outputGnuplot);
+			
+			
 			
         }
 
