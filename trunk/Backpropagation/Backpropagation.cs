@@ -29,7 +29,6 @@ namespace Backpropagation
             initNeurons();
             initWeights();
             initDelta();
-            initGradient();
 
             Epoch = new int();
             MaxEpoch = 500;
@@ -46,23 +45,33 @@ namespace Backpropagation
             return false;
         }
 
+        /// <summary>
+        /// Inicjuje wyliczenie nowych wag
+        /// </summary>
         private void calculateNewWeights()
         {
-            weightsHiddenOutput = calculateWeights(weightsHiddenOutput, learningRate, outputErrorGradient, hiddenNeurons);
-            weightsInputHidden = calculateWeights(weightsInputHidden, learningRate, hiddenErrorGradient, inputNeurons);
+            weightsHiddenOutput = calculateWeights(weightsHiddenOutput, learningRate, deltaOutput, hiddenNeurons);
+            weightsInputHidden = calculateWeights(weightsInputHidden, learningRate, deltaHidden, inputNeurons);
 
         }
 
-        private static float[][] calculateWeights(float[][] weightList, float l, float[] errorGradient, float[] neurons)
+        /// <summary>
+        /// Oblicza nowe wagi weg reguly delta
+        /// </summary>
+        /// <param name="weightList">lista wag</param>
+        /// <param name="l">parametr uczacy</param>
+        /// <param name="delta">lista gradientow</param>
+        /// <param name="neurons">lista neronow x_i</param>
+        /// <returns></returns>
+        private static float[][] calculateWeights(float[][] weightList, float l, float[] delta, float[] neurons)
         {
             for (int i = 0; i < weightList.Length; i++)
             {
                 for (int j = 0; j < weightList[i].Length; j++)
                 {
-                    weightList[i][j] += l * errorGradient[j] * neurons[i];
+                    weightList[i][j] += l * delta[j] * neurons[i];
                 }
             }
-
             return weightList;
         }
 
@@ -79,11 +88,11 @@ namespace Backpropagation
 
             //obliczamy wartosci w hiddenLayer
             hiddenNeurons = calculateOfOutputs
-                (inputNeurons, hiddenNeurons, weightsInputHidden, ref deltaInputHidden, false);
+                (inputNeurons, hiddenNeurons, weightsInputHidden, false);
             
             //wyliczamy wartosci na WY
             outputNeurons = calculateOfOutputs
-                (hiddenNeurons, outputNeurons, weightsHiddenOutput, ref deltaHiddenOutput, true);
+                (hiddenNeurons, outputNeurons, weightsHiddenOutput,  true);
         }
 
         //private static float[] calculateOfError(float[] inputs) { return inputs; }
@@ -95,13 +104,12 @@ namespace Backpropagation
         /// <param name="layerFrom">warstwa WE (z ktorej przychodzi sygnal</param>
         /// <param name="currLayer">warstwa, dla ktorej wyliczamy wartosci</param>
         /// <param name="weightList">wagi pomiedzy warstwami</param>
-        /// <param name="deltaArr">przechowyje wyliczone sume wag [0]</param>
         /// <param name="useSigmoid">okresla ktora funkcje aktywacji uzywamy:
         /// dla hiddenLayer Tanh(x), dla outputLayer sigmoid(x)</param>
         /// <returns>obliczone wartosci dla currLayer</returns>
         private static float[] calculateOfOutputs
             (float[] layerFrom, float[] currLayer, float[][] weightList, 
-            ref float[][] deltaArr, bool useSigmoid)
+            bool useSigmoid)
         {
             for (int i = 0; i < currLayer.Length; i++)
             {
@@ -114,18 +122,17 @@ namespace Backpropagation
                     currLayer[i] = activationFunctionSigmoid(tmp_val);
                 else
                     currLayer[i] = activationFunctionTanh(tmp_val);
-
-                deltaArr[i][0] = tmp_val;
- 
             }
             return currLayer;
         }
 
+        // output Err_i = o_i*(1-o_i)*(y_i - o_i)
+        // hidden Err_i = o_i*(1-o_i)*Sum(Err_j*w_ij)
 
         /// <summary>
         /// sum-of-squares error,
-        /// output Err_i = o_i*(1-o_i)*(y_i - o_i)
-        /// hidden Err_i = o_i*(1-o_i)*Sum(Err_j*w_ij)
+        /// delta_k = y_k * (1 - y_k) * (d_k - y_k)
+        /// delta_j = y_j * (1 - y_j) * Sum (w_jk * delta_k)
         /// </summary>
         /// <param name="inputs">lista wartosci na WE, 
         /// zakladamy, ze ostatni element jest WY</param>
@@ -133,9 +140,9 @@ namespace Backpropagation
         {
             for (int i = 0; i < numOutput; i++)
             {
-                deltaHiddenOutput[i][1] = (inputs[inputs.Length - 1 - i] - outputErrorGradient[i]);
-                outputErrorGradient[i] = outputNeurons[i] * (1 - outputNeurons[i])
-                    * deltaHiddenOutput[i][1];
+                //desiredValueMinusActualValueOutput[i] = (inputs[inputs.Length - 1] - deltaOutput[i]);
+                deltaOutput[i] = outputNeurons[i] * (1 - outputNeurons[i])
+                    * (inputs[inputs.Length - 1] - deltaOutput[i]);
             }
 
             for (int i = 0; i < numHidden + 1; i++)
@@ -144,9 +151,9 @@ namespace Backpropagation
                 float tmp_val = new float();
                 for (int j = 0; j < numOutput; j++)
                 {
-                    tmp_val = outputErrorGradient[j] * weightsHiddenOutput[i][j];
+                    tmp_val = deltaOutput[j] * weightsHiddenOutput[i][j];
                 }
-                hiddenErrorGradient[i] = hiddenNeurons[i] * (1 - hiddenNeurons[i]) * tmp_val;
+                deltaHidden[i] = hiddenNeurons[i] * (1 - hiddenNeurons[i]) * tmp_val;
             }
         }
 
@@ -222,7 +229,7 @@ namespace Backpropagation
                 for (int j = 0; j < numLayerTo; j++)
                 {
                     //zainicjuj wagi, ostatnia to bias
-                    if (i != numLayerFrom)
+                    if (i != numLayerFrom - 1)
                         weightList[i][j] = (float)(r.NextDouble() * 2 - 1);
                     else
                         weightList[i][j] = BIAS;
@@ -232,21 +239,12 @@ namespace Backpropagation
         }
 
         /// <summary>
-        /// Inicjalizacja list z obl. delta-reguly
+        /// Inicjalizacja list przechowywujacych wyliczenia dla delty
         /// </summary>
         protected void initDelta()
         {
-            deltaInputHidden = initArray(deltaInputHidden, numInput + 1, 2);
-            deltaHiddenOutput = initArray(deltaHiddenOutput, numHidden + 1, 2);
-        }
-
-        /// <summary>
-        /// Inicjalizacja list przechowywujacych wyliczenia dla bledu
-        /// </summary>
-        protected void initGradient()
-        {
-            hiddenErrorGradient = new float[numHidden + 1];
-            outputErrorGradient = new float[numOutput];
+            deltaHidden = new float[numHidden + 1];
+            deltaOutput = new float[numOutput];
         }
 
         /// <summary>
