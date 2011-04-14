@@ -34,10 +34,7 @@ namespace Backpropagation
         public float DesiredAccuracy {get; set;}
 
         //wyniki z obl. delta-reguly
-        protected float[][] deltaInputHidden, deltaHiddenOutput;
-
-        //gradient bledu
-        protected float[] hiddenErrorGradient, outputErrorGradient;
+        protected float[] deltaHidden, deltaOutput;
 
         //pomocnicze fnkcje
         public void Stats()
