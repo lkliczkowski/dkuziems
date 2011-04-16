@@ -79,6 +79,8 @@ namespace ZScore
                         Enum.GetValues(typeof(EnumObesity)).Length - 1);
                     foreach (float cell in discretizedList)
                     {
+                        if ((int)cell == (int)EnumObesity.unknown)
+                            continue;
                         probabilityList[(int)cell]++;
                     }
                     break;
@@ -87,6 +89,8 @@ namespace ZScore
                         Enum.GetValues(typeof(EnumAgeRange)).Length - 1);
                     foreach (float cell in discretizedList)
                     {
+                        if ((int)cell == (int)EnumAgeRange.unknown)
+                            continue;
                         probabilityList[(int)cell]++;
                     }
                     break;

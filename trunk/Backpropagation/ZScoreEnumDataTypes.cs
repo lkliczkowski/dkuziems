@@ -37,9 +37,10 @@ namespace ZScore
     public enum EnumObesity
     {
         unknown = -1,
-        Healthy = 0,
-        overweight = 1,
-        clinicallyobese = 2
+        underweight = 0,
+        Healthy = 1,
+        overweight = 2,
+        clinicallyobese = 3
     }
 
     public enum EnumAgeRange
@@ -47,6 +48,6 @@ namespace ZScore
         unknown = -1,
         young = 0,
         middleaged = 1,
-        old = 2
+        old = 2,
     }
 }

@@ -25,7 +25,6 @@ namespace ZScore
                         switch (tabType[i])
                         {
 
-
                             case (int)EnumHeartDisease.Value:
                                 float mean = discretized[i].ColumnToArray().Average();
                                 float sigma = StdDevContinuous(discretized[i].ColumnToArray());
@@ -82,7 +81,7 @@ namespace ZScore
                                             break;
                                         default:
                                             Print("in Normalize.switch(dataType).case (int)EnumHeartDisease.LowMediumHigh",
-                                                "default EnumLowMediumHigh :: unhandled");
+                                               "default EnumLowMediumHigh :: unhandled");
                                             break;
                                     }
                                     
@@ -117,9 +116,23 @@ namespace ZScore
                                 {
                                     switch ((int)cell)
                                     {
+                                        case (int)EnumObesity.underweight:
+                                            val = ZScoreDiscrete(probability[(int)EnumObesity.underweight],
+                                                StdDevDiscrete(probability[(int)EnumObesity.underweight]));
+                                            normalized[normalized_index + (int)EnumObesity.underweight].
+                                                AddData(val);
+                                            normalized[normalized_index + (int)EnumObesity.Healthy].
+                                                AddData(-val);
+                                            normalized[normalized_index + (int)EnumObesity.overweight].
+                                                AddData(-val);
+                                            normalized[normalized_index + (int)EnumObesity.clinicallyobese].
+                                                AddData(-val);
+                                            break;
                                         case (int)EnumObesity.Healthy:
                                             val = ZScoreDiscrete(probability[(int)EnumObesity.Healthy],
                                                 StdDevDiscrete(probability[(int)EnumObesity.Healthy]));
+                                            normalized[normalized_index + (int)EnumObesity.underweight].
+                                                AddData(-val);
                                             normalized[normalized_index + (int)EnumObesity.Healthy].
                                                 AddData(val);
                                             normalized[normalized_index + (int)EnumObesity.overweight].
@@ -130,6 +143,8 @@ namespace ZScore
                                         case (int)EnumObesity.overweight:
                                             val = ZScoreDiscrete(probability[(int)EnumObesity.overweight],
                                                 StdDevDiscrete(probability[(int)EnumObesity.overweight]));
+                                            normalized[normalized_index + (int)EnumObesity.underweight].
+                                                AddData(-val);
                                             normalized[normalized_index + (int)EnumObesity.Healthy].
                                                 AddData(-val);
                                             normalized[normalized_index + (int)EnumObesity.overweight].
@@ -140,6 +155,8 @@ namespace ZScore
                                         case (int)EnumObesity.clinicallyobese:
                                             val = ZScoreDiscrete(probability[(int)EnumObesity.clinicallyobese],
                                                 StdDevDiscrete(probability[(int)EnumObesity.clinicallyobese]));
+                                            normalized[normalized_index + (int)EnumObesity.underweight].
+                                                AddData(-val);
                                             normalized[normalized_index + (int)EnumObesity.Healthy].
                                                 AddData(-val);
                                             normalized[normalized_index + (int)EnumObesity.overweight].
@@ -148,12 +165,12 @@ namespace ZScore
                                                 AddData(val);
                                             break;
                                         case (int)EnumObesity.unknown:
-                                            Print("in Normalize.switch(dataType).case (int)EnumHeartDisease.Obesity",
+                                          Print("in Normalize.switch(dataType).case (int)EnumHeartDisease.Obesity",
                                                 "unknown EnumObesity :: unhandled");
                                             break;
                                         default:
-                                            Print("in Normalize.switch(dataType).case (int)EnumHeartDisease.Obesity",
-                                                "default EnumObesity :: unhandled");
+                                          Print("in Normalize.switch(dataType).case (int)EnumHeartDisease.Obesity",
+                                               "default EnumObesity :: unhandled");
                                             break;
                                     }
 
