@@ -22,9 +22,14 @@ namespace Backpropagation
         protected float[] inputNeurons,
             hiddenNeurons, outputNeurons;
 
-        //wagi pomiedzy warstwami
+        //wagi pomiedzy warstwami, aktualizowane na koniec kazdej epoki (Batch learning)
         protected float[][] weightsInputHidden,
             weightsHiddenOutput;
+
+        //wagi pomiedzy warstwami, zmieniaja sie na biezaco, ich wartosci na koniec epoki 
+        //sa przypisywane wagom weightsInputHidden, weightsHiddenOutput;
+        protected float[][] tempWeightsInputHidden,
+            tempWeightsHiddenOutput;
 
         //licznik epok i limit
         public int Epoch { get; set; } 
@@ -41,13 +46,13 @@ namespace Backpropagation
         {
             Print(String.Format("Epoch " + Epoch));
             Print("Input-Hidden weights");
-            foreach (float[] f in weightsInputHidden)
+            foreach (float[] f in tempWeightsInputHidden)
                 Print(f);
 
             Print();
 
             Print("Hidden-Output weights");
-            foreach (float[] f in weightsHiddenOutput)
+            foreach (float[] f in tempWeightsHiddenOutput)
                 Print(f);
 
             Print();

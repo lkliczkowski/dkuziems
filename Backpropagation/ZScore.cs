@@ -15,6 +15,10 @@ namespace ZScore
         private EnumDataTypes dataType;
         private int[] columnType;
         private Column<float>[] normalizedData;
+        public Column<float>[] Data
+        {
+            get { return normalizedData; }
+        }
 
         //TODO: example data
         public ZScore()

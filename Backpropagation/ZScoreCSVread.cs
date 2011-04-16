@@ -23,7 +23,8 @@ namespace ZScore
                         row = GetRidOf(row);
                         for (int i = 0; i < row.Length; i++)
                         {
-                            Data[i].AddData(row[i]);
+                            if(checkTheCompleteness(row))
+                                Data[i].AddData(row[i]);
                         }
                     }
                     readFile.Close();
@@ -79,6 +80,16 @@ namespace ZScore
                 toClear[i] = toClear[i].Replace(" ", "");
             }
             return toClear;
+        }
+
+        protected static bool checkTheCompleteness(string[] toCheck)
+        {
+            foreach (string s in toCheck)
+            {
+                if (s == "")
+                    return false;
+            }
+            return true;
         }
     }
 }

@@ -45,13 +45,21 @@ namespace Backpropagation
             return false;
         }
 
+        private void endEpoch()
+        {
+            Epoch++;
+
+            weightsInputHidden = tempWeightsInputHidden;
+            weightsHiddenOutput = tempWeightsHiddenOutput;
+        }
+
         /// <summary>
         /// Inicjuje wyliczenie nowych wag
         /// </summary>
         private void calculateNewWeights()
         {
-            weightsHiddenOutput = calculateWeights(weightsHiddenOutput, learningRate, deltaOutput, hiddenNeurons);
-            weightsInputHidden = calculateWeights(weightsInputHidden, learningRate, deltaHidden, inputNeurons);
+            tempWeightsHiddenOutput = calculateWeights(tempWeightsHiddenOutput, learningRate, deltaOutput, hiddenNeurons);
+            tempWeightsInputHidden = calculateWeights(tempWeightsInputHidden, learningRate, deltaHidden, inputNeurons);
 
         }
 
@@ -88,11 +96,11 @@ namespace Backpropagation
 
             //obliczamy wartosci w hiddenLayer
             hiddenNeurons = calculateOfOutputs
-                (inputNeurons, hiddenNeurons, weightsInputHidden, false);
+                (inputNeurons, hiddenNeurons, tempWeightsInputHidden, false);
             
             //wyliczamy wartosci na WY
             outputNeurons = calculateOfOutputs
-                (hiddenNeurons, outputNeurons, weightsHiddenOutput,  true);
+                (hiddenNeurons, outputNeurons, tempWeightsHiddenOutput,  true);
         }
 
         //private static float[] calculateOfError(float[] inputs) { return inputs; }
@@ -151,7 +159,7 @@ namespace Backpropagation
                 float tmp_val = new float();
                 for (int j = 0; j < numOutput; j++)
                 {
-                    tmp_val = deltaOutput[j] * weightsHiddenOutput[i][j];
+                    tmp_val = deltaOutput[j] * tempWeightsHiddenOutput[i][j];
                 }
                 deltaHidden[i] = hiddenNeurons[i] * (1 - hiddenNeurons[i]) * tmp_val;
             }
@@ -209,6 +217,13 @@ namespace Backpropagation
 
             weightsInputHidden = setRandomWeightPlusBIAS(weightsInputHidden, numInput + 1, numHidden + 1);
             weightsHiddenOutput = setRandomWeightPlusBIAS(weightsHiddenOutput, numHidden + 1, numOutput);
+
+
+            tempWeightsInputHidden = initArray(tempWeightsInputHidden, numInput + 1, numHidden + 1);
+            tempWeightsHiddenOutput = initArray(tempWeightsHiddenOutput, numHidden + 1, numOutput);
+
+            tempWeightsInputHidden = setRandomWeightPlusBIAS(tempWeightsInputHidden, numInput + 1, numHidden + 1);
+            tempWeightsHiddenOutput = setRandomWeightPlusBIAS(tempWeightsHiddenOutput, numHidden + 1, numOutput);
         }
 
         /// <summary>
