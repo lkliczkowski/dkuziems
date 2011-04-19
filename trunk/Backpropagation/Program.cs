@@ -15,8 +15,7 @@ namespace Backpropagation
 
             Print(heartDiseaseData.Data[0].GetNum().ToString());
 
-            SetsOperate temp = new SetsOperate(20
-                );
+            SetsOperate temp = new SetsOperate(20);
             //TEST
             //float learningRate = 0.8f;
             //Backpropagation bp = new Backpropagation(learningRate, 3, 2, 1);

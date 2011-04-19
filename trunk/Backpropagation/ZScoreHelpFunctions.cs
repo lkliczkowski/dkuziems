@@ -71,6 +71,8 @@ namespace ZScore
                         Enum.GetValues(typeof(EnumLowMediumHigh)).Length - 1);
                     foreach (float cell in discretizedList)
                     {
+                        if ((int)cell == (int)EnumLowMediumHigh.unknown)
+                            continue;
                         probabilityList[(int)cell]++;
                     }
                     break;
