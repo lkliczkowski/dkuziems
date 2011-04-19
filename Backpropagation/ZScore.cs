@@ -68,7 +68,7 @@ namespace ZScore
 
                 Print(String.Format("ZScore on " + DATAFILE), "completed!");
                 //PrintList(normalizedData);
-                //CSVwrite(FILE2, normalizedData);
+                CSVwrite(OUTPUTFILE, normalizedData);
             }
             else
             {
