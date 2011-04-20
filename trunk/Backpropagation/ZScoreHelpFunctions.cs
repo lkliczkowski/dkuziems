@@ -7,48 +7,7 @@ namespace ZScore
 {
     partial class ZScore
     {
-        public static void Print(float toPrint)
-        {
-            Print(toPrint.ToString());
-        }
-
-        public static void Print(string toPrint)
-        {
-            Console.WriteLine(">>>> {0}", toPrint);
-        }
-
-        public static void Print(float[] toPrint)
-        {
-            foreach (float f in toPrint)
-                Console.WriteLine(">>>> {0}", f);
-        }
-
-        private static void Print(string what, string where)
-        {
-            Console.WriteLine(">>>> {0}::{1}", what, where);
-        }
-
-        public static void PrintList<T>(Column<T>[] toPrint)
-        {
-            for (int j = 0; j < toPrint[0].GetNum(); j++)
-            {
-                for (int i = 0; i < toPrint.Length; i++)
-                {
-                    Console.Write("{0:N2}\t", toPrint[i].Get(j));
-                }
-                Console.WriteLine("\n==========================");
-            }
-        }
-
-        private static void RemoveFromRecords<T>(ref Column<T>[] toRemove, int from, int to)
-        {
-            for (int i = 0; i < toRemove.Length; i++)
-            {
-                toRemove[i].RemoveRange(from, to);
-            }
-        }
-
-        private static float StdDevContinuous(float[] floatList)
+        private static float stdDevContinuous(float[] floatList)
         {
             float average = floatList.Average();
             float sumOfDerivation = 0;
@@ -60,14 +19,14 @@ namespace ZScore
             return (float)Math.Sqrt(sumOfDerivationAverage - (average * average));
         }
 
-        private static float[] ProbabilityDiscrete(float[] discretizedList,
+        private static float[] probabilityDiscrete(float[] discretizedList,
             EnumHeartDisease discreteType)
         {
             List<float> probabilityList = new List<float>();
             switch (discreteType)
             {
                 case EnumHeartDisease.LowMediumHigh:
-                    AddZero(ref probabilityList,
+                    addZero(ref probabilityList,
                         Enum.GetValues(typeof(EnumLowMediumHigh)).Length - 1);
                     foreach (float cell in discretizedList)
                     {
@@ -77,7 +36,7 @@ namespace ZScore
                     }
                     break;
                 case EnumHeartDisease.Obesity:
-                    AddZero(ref probabilityList,
+                    addZero(ref probabilityList,
                         Enum.GetValues(typeof(EnumObesity)).Length - 1);
                     foreach (float cell in discretizedList)
                     {
@@ -87,7 +46,7 @@ namespace ZScore
                     }
                     break;
                 case EnumHeartDisease.AgeRange:
-                    AddZero(ref probabilityList,
+                    addZero(ref probabilityList,
                         Enum.GetValues(typeof(EnumAgeRange)).Length - 1);
                     foreach (float cell in discretizedList)
                     {
@@ -108,13 +67,13 @@ namespace ZScore
             return probabilityList.ToArray();
         }
 
-        private static float StdDevDiscrete(float probability)
+        private static float stdDevDiscrete(float probability)
         {
             return (float)Math.Sqrt(probability * (1 - probability));
         }
 
 
-        private static void AddZero(ref List<float> list, int times)
+        private static void addZero(ref List<float> list, int times)
         {
             for (int i = 0; i < times; i++)
                 list.Add(0);
@@ -155,6 +114,35 @@ namespace ZScore
             return len;
         }
 
+        private static void RemoveFromRecords<T>(ref Column<T>[] toRemove, int from, int to)
+        {
+            for (int i = 0; i < toRemove.Length; i++)
+            {
+                toRemove[i].RemoveRange(from, to);
+            }
+        }
+
+        private static void Print(string what, string where)
+        {
+            Console.WriteLine(">>>> {0}::{1}", what, where);
+        }
+
+        private static void Print(float[] toPrint)
+        {
+            foreach (float f in toPrint)
+                Console.Write("{0:N2}\t", f);
+            Console.WriteLine();
+        }
+
+        private static void Print(string toPrint)
+        {
+            Console.WriteLine(">>>> {0}", toPrint);
+        }
+
+        private static void Print()
+        {
+            Console.WriteLine();
+        }
 
     }
 }

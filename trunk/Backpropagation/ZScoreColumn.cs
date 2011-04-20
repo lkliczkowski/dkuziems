@@ -53,7 +53,7 @@ namespace ZScore
             }
             catch (Exception ex)
             {
-                Console.WriteLine("In RemoveRange: {0} : nothing to remove?", ex.Message);
+                Console.WriteLine("In RemoveRange: {0}", ex.Message);
             }
         }
     }
