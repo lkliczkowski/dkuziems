@@ -45,9 +45,9 @@ namespace Backpropagation
         public void Stats()
         {
             Print(String.Format("Epoch " + Epoch));
-            Print("Input-Hidden weights");
-            foreach (float[] f in tempWeightsInputHidden)
-                Print(f);
+            //Print("Input-Hidden weights");
+            //foreach (float[] f in tempWeightsInputHidden)
+            //    Print(f);
 
             Print();
 

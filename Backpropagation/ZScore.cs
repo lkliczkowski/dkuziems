@@ -22,7 +22,7 @@ namespace ZScore
 
         //TODO: example data
         public ZScore()
-            :this("exampleData.cvs", "Normalized.cvs", EnumDataTypes.HeartDisease)
+            : this("ExampleData.csv", "normalizedExample.csv", EnumDataTypes.HeartDisease)
         {}
 
         public ZScore(string f1, string f2, EnumDataTypes dt)
@@ -47,7 +47,6 @@ namespace ZScore
 
         public void NormalizeHeartDisease()
         {
-
             Column<string>[] rawData = new Column<string>[columnType.Length];
             for (int i = 0; i < columnType.Length; i++)
                 rawData[i] = new Column<string>();
@@ -57,6 +56,9 @@ namespace ZScore
                 //Console.WriteLine(rawData.Length.ToString());
                 RemoveFromRecords(ref rawData, 0, 2);
 
+                Console.WriteLine(">> DataSetSize {0}:{1}", rawData.Length, rawData[0].GetNum());
+
+
                 Column<float>[] discretizedData = Discretize
                     (rawData, dataType, columnType);
 
@@ -64,9 +66,13 @@ namespace ZScore
 
                 normalizedData = new Column<float>
                     [GetNormalizeLength(columnType, dataType)];
-                Normalize(ref normalizedData, discretizedData, dataType, columnType);
+                normalize(ref normalizedData, discretizedData, dataType, columnType);
 
                 Print(String.Format("ZScore on " + DATAFILE), "completed!");
+
+                Print(String.Format("DataSetSize \t{0}:{1}", rawData.Length, rawData[0].GetNum()));
+                Print(String.Format("NormalizedSetSize\t{0}:{1}", normalizedData.Length, normalizedData[0].GetNum()));
+
                 //PrintList(normalizedData);
                 CSVwrite(OUTPUTFILE, normalizedData);
             }
@@ -77,11 +83,11 @@ namespace ZScore
             }
         }
 
-        public Column<float>[] NormalizedData()
-        {
-            return normalizedData;
-        }
-
+        /// <summary>
+        /// Funkcja pozwalajaca "wydobyc" pojedynczy rekord z danych
+        /// </summary>
+        /// <param name="f"></param>
+        /// <returns></returns>
         public float[] SingleRecord(int f)
         {
             float[] record = new float[normalizedData.Length];
@@ -92,6 +98,15 @@ namespace ZScore
             }
 
             return record;
+        }
+
+        /// <summary>
+        /// Funkcja zwracajaca dane
+        /// </summary>
+        /// <returns>znormalizowana tablica danych</returns>
+        public Column<float>[] NormalizedData()
+        {
+            return normalizedData;
         }
     }
 }

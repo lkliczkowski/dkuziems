@@ -23,7 +23,7 @@ namespace ZScore
                         row = GetRidOf(row);
                         for (int i = 0; i < row.Length; i++)
                         {
-                            if(checkTheCompleteness(row))
+                            if (checkTheCompleteness(row))
                                 Data[i].AddData(row[i]);
                         }
                     }

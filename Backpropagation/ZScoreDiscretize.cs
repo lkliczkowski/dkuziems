@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ZScore
 {
@@ -117,6 +114,16 @@ namespace ZScore
             return discretizedData;
         }
 
+/*        public static void Print(string what, string where)
+        {
+            Console.WriteLine(">>>> {0}::{1}", what, where);
+        }
+
+        public static void Print(string what)
+        {
+            Print(what, null);
+        }
+*/
         private static void failParseInfo(string where)
         {
             Console.WriteLine(">> Failed at ParseToEnum::{0} set to unknown", where);
@@ -130,6 +137,11 @@ namespace ZScore
         private static void failParseInfo(string where, int no, int col_num)
         {
             Console.WriteLine(">> Failed at ParseToEnum::{0} set to unknown [{1},{2}]", where, no, col_num);
+        }
+
+        public static void PrintInfo(string what, float val)
+        {
+            Console.Write(">> {0}::[{1}]\t", what, val);
         }
     }
 }

@@ -7,8 +7,11 @@ namespace Backpropagation
 {
     class Backpropagation : FFNNStructure
     {
-        public Backpropagation()
-            : this(0, 0, 0, 0)
+        private ZScore.ZScore Dataset;
+
+        private DatasetOperate DatasetIndexes;// = new GrowingDatasetOperate(10000);
+
+        private Backpropagation()
         { }
 
         /// <summary>
@@ -18,13 +21,18 @@ namespace Backpropagation
         /// <param name="nI">liczba neuronow warstwy WE</param>
         /// <param name="nH">liczba neuronow warstwy ukrytej</param>
         /// <param name="nO">liczba neuronow warstwy WY</param>
-        public Backpropagation(float lr, int nI, int nH, int nO)
+        /// <param name="Data">dane</param>
+        public Backpropagation(ZScore.ZScore dataset, int nH, float lr)
         {
-            learningRate = lr;
+            Dataset = dataset;
+            DatasetIndexes = new DatasetOperate(Dataset.Data[0].GetNum());
 
-            numInput = nI;
+            learningRate = lr;
+            DesiredAccuracy = 0.5f;
+
+            numInput = Dataset.Data.Length - 2; //2 ostatnie kolumny to y_i (tu 0/1)
             numHidden = nH;
-            numOutput = nO;
+            numOutput = 1;
 
             initNeurons();
             initWeights();
@@ -33,21 +41,38 @@ namespace Backpropagation
             Epoch = new int();
             MaxEpoch = 500;
 
-            DesiredAccuracy = 0.9f;
+            for (int i = 0; i < Dataset.Data.Length - 1; i++)
+            {
+                Console.Write("{0}\t", Dataset.SingleRecord(0)[i]);
+            }
         }
+
+        
 
         public bool Run()
         {
-            float[] sample = { 1, 1, 1, 1 };
-            calculateOfOutputsForOutputAndHiddenLayer(sample);
-            calculateOfErrorsForHiddenAndOutputLayer(sample);
-            calculateNewWeights();
+            for (int j = 0; j < 10; j++)
+            {
+                for (int i = 0; i < DatasetIndexes.TrainingSet.Length; i++)
+                {
+                    Print("epoch", i.ToString());
+                    float[] sample = Dataset.SingleRecord(DatasetIndexes.TrainingSet[i]);
+                    calculateOfOutputsForOutputAndHiddenLayer(sample);
+                    calculateOfErrorsForHiddenAndOutputLayer(sample);
+                    calculateNewWeights();
+                }
+                endEpoch();
+                Stats();
+                Console.ReadKey();
+            }
+
             return false;
         }
 
         private void endEpoch()
         {
             Epoch++;
+            DatasetIndexes.IncreaseRange();
 
             weightsInputHidden = tempWeightsInputHidden;
             weightsHiddenOutput = tempWeightsHiddenOutput;
@@ -134,9 +159,6 @@ namespace Backpropagation
             return currLayer;
         }
 
-        // output Err_i = o_i*(1-o_i)*(y_i - o_i)
-        // hidden Err_i = o_i*(1-o_i)*Sum(Err_j*w_ij)
-
         /// <summary>
         /// sum-of-squares error,
         /// delta_k = y_k * (1 - y_k) * (d_k - y_k)
@@ -146,11 +168,11 @@ namespace Backpropagation
         /// zakladamy, ze ostatni element jest WY</param>
         private void calculateOfErrorsForHiddenAndOutputLayer(float[] inputs)
         {
+            int placeOf_y_i = 2; //drugi od konca to kolumna z przewidywana wartoscia w danych
             for (int i = 0; i < numOutput; i++)
             {
-                //desiredValueMinusActualValueOutput[i] = (inputs[inputs.Length - 1] - deltaOutput[i]);
                 deltaOutput[i] = outputNeurons[i] * (1 - outputNeurons[i])
-                    * (inputs[inputs.Length - 1] - deltaOutput[i]);
+                    * (inputs[inputs.Length - placeOf_y_i] - deltaOutput[i]);
             }
 
             for (int i = 0; i < numHidden + 1; i++)
