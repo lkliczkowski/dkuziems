@@ -7,28 +7,28 @@ namespace ZScore
 {
     partial class ZScore
     {
-        private static float stdDevContinuous(float[] floatList)
+        private static double stdDevContinuous(double[] doubleList)
         {
-            float average = floatList.Average();
-            float sumOfDerivation = 0;
-            foreach (float value in floatList)
+            double average = doubleList.Average();
+            double sumOfDerivation = 0;
+            foreach (double value in doubleList)
             {
                 sumOfDerivation += (value) * (value);
             }
-            float sumOfDerivationAverage = sumOfDerivation / floatList.Count();
-            return (float)Math.Sqrt(sumOfDerivationAverage - (average * average));
+            double sumOfDerivationAverage = sumOfDerivation / doubleList.Count();
+            return Math.Sqrt(sumOfDerivationAverage - (average * average));
         }
 
-        private static float[] probabilityDiscrete(float[] discretizedList,
+        private static double[] probabilityDiscrete(double[] discretizedList,
             EnumHeartDisease discreteType)
         {
-            List<float> probabilityList = new List<float>();
+            List<double> probabilityList = new List<double>();
             switch (discreteType)
             {
                 case EnumHeartDisease.LowMediumHigh:
                     addZero(ref probabilityList,
                         Enum.GetValues(typeof(EnumLowMediumHigh)).Length - 1);
-                    foreach (float cell in discretizedList)
+                    foreach (double cell in discretizedList)
                     {
                         if ((int)cell == (int)EnumLowMediumHigh.unknown)
                             continue;
@@ -38,7 +38,7 @@ namespace ZScore
                 case EnumHeartDisease.Obesity:
                     addZero(ref probabilityList,
                         Enum.GetValues(typeof(EnumObesity)).Length - 1);
-                    foreach (float cell in discretizedList)
+                    foreach (double cell in discretizedList)
                     {
                         if ((int)cell == (int)EnumObesity.unknown)
                             continue;
@@ -48,7 +48,7 @@ namespace ZScore
                 case EnumHeartDisease.AgeRange:
                     addZero(ref probabilityList,
                         Enum.GetValues(typeof(EnumAgeRange)).Length - 1);
-                    foreach (float cell in discretizedList)
+                    foreach (double cell in discretizedList)
                     {
                         if ((int)cell == (int)EnumAgeRange.unknown)
                             continue;
@@ -67,13 +67,13 @@ namespace ZScore
             return probabilityList.ToArray();
         }
 
-        private static float stdDevDiscrete(float probability)
+        private static double stdDevDiscrete(double probability)
         {
-            return (float)Math.Sqrt(probability * (1 - probability));
+            return Math.Sqrt(probability * (1 - probability));
         }
 
 
-        private static void addZero(ref List<float> list, int times)
+        private static void addZero(ref List<double> list, int times)
         {
             for (int i = 0; i < times; i++)
                 list.Add(0);
@@ -107,6 +107,10 @@ namespace ZScore
                         }
                     }
                     break;
+
+                case EnumDataTypes.LetterRecognitionA:
+                    len = tabTypes.Length;
+                    break;
                 default:
                     break;
             }
@@ -127,9 +131,9 @@ namespace ZScore
             Console.WriteLine(">>>> {0}::{1}", what, where);
         }
 
-        private static void Print(float[] toPrint)
+        private static void Print(double[] toPrint)
         {
-            foreach (float f in toPrint)
+            foreach (double f in toPrint)
                 Console.Write("{0:N2}\t", f);
             Console.WriteLine();
         }

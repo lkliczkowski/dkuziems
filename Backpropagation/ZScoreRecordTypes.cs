@@ -27,5 +27,10 @@ namespace ZScore
                 (int)EnumHeartDisease.Value,//Age Disease;
                 (int)EnumHeartDisease.AbsentPresent//Coronary Heart Disease
             };
+
+        public static int[] LetterRecognition =
+        {
+            1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0
+        };
     }
 }

@@ -4,7 +4,8 @@ namespace ZScore
     public enum EnumDataTypes
     {
         unknown = 0,
-        HeartDisease = 1
+        HeartDisease = 1,
+        LetterRecognitionA = 2
     }
     public enum EnumHeartDisease
     {

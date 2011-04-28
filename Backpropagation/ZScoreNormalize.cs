@@ -7,27 +7,28 @@ namespace ZScore
 {
     partial class ZScore
     {
-        private static void normalize(ref Column<float>[] normalized, 
-            Column<float>[] discretized, EnumDataTypes dataType, int[] tabType)
+        private static void normalize(ref Column<double>[] normalized, 
+            Column<double>[] discretized, EnumDataTypes dataType, int[] tabType)
         {
             for (int i = 0; i < normalized.Length; i++)
-                normalized[i] = new Column<float>();
+                normalized[i] = new Column<double>();
             int normalized_index = 0;
 
             switch(dataType)
             {
+                #region heart disease
                 case EnumDataTypes.HeartDisease:
                     Print("ZScore.Normalize", "case EnumDataTypes.HeartDisease");
-                    float[] probability;
+                    double[] probability;
                     for (int i = 0; i < tabType.Length; i++)
                     {
                         switch (tabType[i])
                         {
                             case (int)EnumHeartDisease.Value:
-                                float mean = discretized[i].ColumnToArray().Average();
-                                float sigma = stdDevContinuous(discretized[i].ColumnToArray());
+                                double mean = discretized[i].ColumnToArray().Average();
+                                double sigma = stdDevContinuous(discretized[i].ColumnToArray());
 
-                                foreach (float cell in discretized[i].ColumnToArray())
+                                foreach (double cell in discretized[i].ColumnToArray())
                                 {
                                     normalized[normalized_index].AddData(zScoreContinuous(cell, mean, sigma));
                                 }
@@ -38,7 +39,7 @@ namespace ZScore
                             case (int)EnumHeartDisease.LowMediumHigh:
                                 probability = probabilityDiscrete
                                     (discretized[i].ColumnToArray(), EnumHeartDisease.LowMediumHigh);
-                                foreach (float cell in discretized[i].ColumnToArray())
+                                foreach (double cell in discretized[i].ColumnToArray())
                                 {
                                     switch((int)cell)
                                     {
@@ -69,7 +70,7 @@ namespace ZScore
                                 break;
 
                             case (int)EnumHeartDisease.AbsentPresent: //binary 1/0 -> YES/NO
-                                foreach (float cell in discretized[i].ColumnToArray())
+                                foreach (double cell in discretized[i].ColumnToArray())
                                 {
                                     normalized[normalized_index].AddData((cell == 1?1:0));
                                     normalized[normalized_index + 1].AddData((cell == 1?0:1));
@@ -81,7 +82,7 @@ namespace ZScore
                                 probability = probabilityDiscrete
                                     (discretized[i].ColumnToArray(), EnumHeartDisease.Obesity);
 
-                                foreach (float cell in discretized[i].ColumnToArray())
+                                foreach (double cell in discretized[i].ColumnToArray())
                                 {
                                     switch ((int)cell)
                                     {
@@ -119,7 +120,7 @@ namespace ZScore
                                 probability = probabilityDiscrete
                                     (discretized[i].ColumnToArray(), EnumHeartDisease.AgeRange);
 
-                                foreach (float cell in discretized[i].ColumnToArray())
+                                foreach (double cell in discretized[i].ColumnToArray())
                                 {
                                     switch ((int)cell)
                                     {
@@ -148,28 +149,56 @@ namespace ZScore
                         }
                     }
                     break;
+                #endregion
+                case EnumDataTypes.LetterRecognitionA:
+                    for (int i = 0; i < tabType.Length; i++)
+                    {
+                        switch (tabType[i])
+                        {
+                            case 1:
+                                double mean = discretized[i].ColumnToArray().Average();
+                                double sigma = stdDevContinuous(discretized[i].ColumnToArray());
 
+                                foreach (double cell in discretized[i].ColumnToArray())
+                                {
+                                    normalized[normalized_index].AddData(zScoreContinuous(cell, mean, sigma));
+                                    //normalized[normalized_index].AddData(cell); //oryginalna wartość
+                                }
+
+                                normalized_index++;
+                                break;
+                            case 0:
+                                foreach (double cell in discretized[i].ColumnToArray())
+                                {
+                                    normalized[normalized_index].AddData(cell);
+                                    //normalized[normalized_index + 1].AddData((cell == 1?0:1));
+                                }
+                                normalized_index++;
+                                break;
+                        }
+                    }
+                    break;
                 default:
                     break;
             }
 
         }
 
-        private static float zScoreContinuous(float val, float mu, float sigma)
+        private static double zScoreContinuous(double val, double mu, double sigma)
 		{
 			return ((val - mu)/sigma);
 		}
 
-        private static float zScoreDiscrete(float mu, float sigma)
+        private static double zScoreDiscrete(double mu, double sigma)
         {
             return ((1 - mu) / sigma);
         }
 
 
-        private static void addNormalizedLMH(ref Column<float>[] normalizedTable, 
-            float[] probabilityList, EnumLowMediumHigh ourCase, int normalized_index)
+        private static void addNormalizedLMH(ref Column<double>[] normalizedTable, 
+            double[] probabilityList, EnumLowMediumHigh ourCase, int normalized_index)
         {
-            float val;
+            double val;
             val = zScoreDiscrete(probabilityList[(int)ourCase],
                 stdDevDiscrete(probabilityList[(int)ourCase]));
 
@@ -180,10 +209,10 @@ namespace ZScore
             }
         }
 
-        private static void addNormalizedObesity(ref Column<float>[] normalizedTable,
-            float[] probabilityList, EnumObesity ourCase, int normalized_index)
+        private static void addNormalizedObesity(ref Column<double>[] normalizedTable,
+            double[] probabilityList, EnumObesity ourCase, int normalized_index)
         {
-            float val;
+            double val;
             val = zScoreDiscrete(probabilityList[(int)ourCase], 
                 stdDevDiscrete(probabilityList[(int)ourCase]));
 
@@ -194,10 +223,10 @@ namespace ZScore
             }
         }
 
-        private static void addNormalizedAgeRange(ref Column<float>[] normalizedTable,
-            float[] probabilityList, EnumAgeRange ourCase, int normalized_index)
+        private static void addNormalizedAgeRange(ref Column<double>[] normalizedTable,
+            double[] probabilityList, EnumAgeRange ourCase, int normalized_index)
         {
-            float val;
+            double val;
             val = zScoreDiscrete(probabilityList[(int)ourCase],
                 stdDevDiscrete(probabilityList[(int)ourCase]));
 
