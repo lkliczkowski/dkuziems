@@ -10,45 +10,64 @@ namespace Backpropagation
     /// </summary>
     abstract class DatasetStructure
     {
+        /// <summary>
+        /// zbior uczacy (trenujacy) uzywany takze do aktualizowania wag
+        /// </summary>
         protected List<int> trainingSet;
+
+        /// <summary>
+        /// zbior sprawdzajacy poprawnosc sieci pod koniec kazdej epoki
+        /// </summary>
         protected List<int> generalizationSet;
-        protected List<int> validationSet;
+
+        /// <summary>
+        /// Ustalana w konstruktorze stala wyznaczajaca wielkosc przyrostu zbioru uczacego
+        /// </summary>
+        protected readonly int step;
+
+        /// <summary>
+        /// Stala informujaca nas o ile % zwieksza sie w kolejnej epoce zbior uczacy
+        /// </summary>
+        protected readonly double STEP_SIZE; //1 = 1%
+
+        /// <summary>
+        /// Zmienna wskazujaca obecny zakres zbioru uczacego dostepnego dla metody nauczania sieci
+        /// </summary>
+        protected int actualRange;
 
         protected DatasetStructure() { }
 
-        protected DatasetStructure(int setLength, int tPercent, int gPercent, int vPercent)
+        protected DatasetStructure(int setLength, int gPercent)
+            :this (setLength, gPercent, 1)
+        { }
+        protected DatasetStructure(int setLength, int gPercent, double sz)
         {
+            STEP_SIZE = sz;
+
             List<int> indexes = new List<int>();
             for (int i = 0; i < setLength; i++)
                 indexes.Add(i);
 
-            Print("Creating subsets...");
-            trainingSet = drawIndexes(tPercent * setLength / 100, ref indexes);
-            Print("\b\b\b\tTraining set - finished!");
+            Program.PrintInfo("Tworzenie podzbiorow");
+
+            step = ((setLength * STEP_SIZE / 100) < 1) ? 1 : (int)(setLength * STEP_SIZE / 100);
+
             generalizationSet = drawIndexes(gPercent * setLength / 100, ref indexes);
-            Print("\b\b\b\tGeneralization set - finished!");
-            validationSet = indexes;
-            Print(String.Format("\b\b\b\tValidation set created of remaining (size: {0}%)", vPercent));
+            Print(String.Format("\b\b\b\tZbiór walidacyjny - zakończono!\t{0} cases\t({1:N2}%)", generalizationSet.Count, gPercent));
+
+            trainingSet = indexes;
+            Print(String.Format("\b\b\b\tZbiór uczący - zakończono!\t{0} cases\t({1:N2}%)", trainingSet.Count, (100 - gPercent)));
         }
 
-        /// <summary>
-        /// Metoda losujaca dostepne indeksy ze zbioru
-        /// </summary>
-        /// <param name="howMany">Jak wiele indeksow ma wziac</param>
-        /// <param name="fromSet"></param>
-        /// <returns></returns>
-        protected static List<int> drawIndexes(int howMany, ref List<int> fromSet)
+        protected virtual List<int> drawIndexes(int howMany, ref List<int> fromSet)
         {
             List<int> newIndexSet = new List<int>();
-            Random r = new Random();
+            //Random r = new Random();
             int tmp = 0;
 
             while (howMany != 0)
             {
-                //if (fromSet.Count == 0)
-                //    return newIndexSet;
-
-                tmp = r.Next(fromSet.Last());
+                tmp = fromSet.First();
                 if (fromSet.Contains(tmp))
                 {
                     newIndexSet.Add(tmp);
@@ -58,6 +77,41 @@ namespace Backpropagation
             }
 
             return newIndexSet;
+        }
+
+        public virtual int[] TrainingSet
+        {
+            get
+            {
+                return trainingSet.GetRange(actualRange, step).ToArray(); 
+            }
+        }
+
+        public int[] GeneralizationSet
+        {
+            get { return generalizationSet.ToArray(); }
+        }
+
+        /// <summary>
+        /// Zwieksza zakres zbioru, nie dopuszcza przekroczenia wartosci gornej czy ogolnej wielkosci zbioru
+        /// </summary>
+        public virtual void IncreaseRange()
+        {
+            if (actualRange + step >= trainingSet.Count)
+                actualRange = 0;
+            else
+                actualRange += step;
+        }
+
+
+        public void PrintSetIndexes()
+        {
+            foreach (int i in trainingSet)
+                Console.Write("{0}\t", i);
+            Console.WriteLine("\n");
+            foreach (int i in generalizationSet)
+                Console.Write("{0}\t", i);
+            Console.WriteLine("\n");
         }
 
         protected static void Print(string toPrint)

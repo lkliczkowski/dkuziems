@@ -10,6 +10,8 @@ namespace ZScore
     {
         private static bool CSVread(string path, ref Column<string>[] Data)
         {
+            const char DELIMETER_IN_DATA = ';';
+            int count = 0;
             try
             {
                 using (StreamReader readFile = new StreamReader(path))
@@ -19,15 +21,20 @@ namespace ZScore
 
                     while ((line = readFile.ReadLine()) != null)
                     {
-                        row = SplitBy(line, (int)';');
-                        row = GetRidOf(row);
+                        count++;
+                        row = SplitBy(line, DELIMETER_IN_DATA);
+                        row = SReplace(row);
                         for (int i = 0; i < row.Length; i++)
                         {
                             if (checkTheCompleteness(row))
                                 Data[i].AddData(row[i]);
+                            //else Console.WriteLine("not-completed data");
                         }
                     }
                     readFile.Close();
+
+                    Print(String.Format("RawSetSize/DataSetSize\t{0}/{1}\t({2:N2}% skipped)", count, Data[0].GetNum(), (double)(count - Data[0].GetNum()) / count));
+                    
                     return true;
                 }
             }
@@ -39,7 +46,7 @@ namespace ZScore
             return false;
         }
 
-        private static bool CSVwrite(string path, Column<float>[] toWrite)
+        private static bool CSVwrite(string path, Column<double>[] toWrite)
         {
             try
             {
@@ -66,13 +73,13 @@ namespace ZScore
             return false;
         }
 
-        public static string[] SplitBy(string toParse, int delimiter)
+        public static string[] SplitBy(string toParse, char delimiter)
         {
-            char[] delimiterOption = new char[] { (char)delimiter };
+            char[] delimiterOption = new char[] { delimiter };
             return toParse.Split(delimiterOption, StringSplitOptions.None);
         }
 
-        public static string[] GetRidOf(string[] toClear)
+        public static string[] SReplace(string[] toClear)
         {
             for (int i = 0; i < toClear.Length; i++)
             {
