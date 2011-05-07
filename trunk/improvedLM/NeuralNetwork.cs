@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.IO;
+
 
 namespace ImprovedLM
 {
@@ -42,43 +41,38 @@ namespace ImprovedLM
         private double decideOutputRangeA;
         private double decideOutputRangeB;
 
-        public neuralNetwork(int nInput, int nHidden, int nOutput, ZScore.EnumDataTypes dataType)
+        bool inputHiddenActivationSigmoid, hiddenOutputActivationSigmoid;
+
+        public neuralNetwork(int nInput, int nHidden, int nOutput, ZScore.EnumDataTypes dataType, 
+            bool firstActivationFunc, bool secondActivationFunc)
         {
             numInput = nInput;
             numHidden = nHidden;
             numOutput = nOutput;
 
             inputNeurons = new double[numInput + 1];
-            for ( int i=0; i < numInput; i++ ) inputNeurons[i] = 0;
             inputNeurons[numInput] = BIAS;
 
             hiddenNeurons = new double[numHidden + 1];
-            for ( int i=0; i < numHidden; i++ ) hiddenNeurons[i] = 0;
             hiddenNeurons[numHidden] = BIAS;
-//TODO spr. czy trzeba zerowac tu czy kompilator sam zeruje
             outputNeurons = new double[numOutput];
-            for ( int i=0; i < numOutput; i++ ) outputNeurons[i] = 0;
 
             //net_ij
             hiddenNets = new double[numHidden + 1];
-            for (int i = 0; i < numHidden; i++) hiddenNets[i] = 0;
             hiddenNets[numHidden] = BIAS;
 
             outputNets = new double[numOutput];
-            for (int i = 0; i < numOutput; i++) outputNets[i] = 0;
 
 	        wInputHidden = new double[numInput + 1][];
 	        for ( int i=0; i <= numInput; i++ ) 
 	        {
 		        wInputHidden[i] = new double[numHidden];
-		        for ( int j=0; j < numHidden; j++ ) wInputHidden[i][j] = 0;		
 	        }
 
             wHiddenOutput = new double[numHidden + 1][];
 	        for ( int i=0; i <= numHidden; i++ ) 
 	        {
 		        wHiddenOutput[i] = new double[numOutput];			
-		        for ( int j=0; j < numOutput; j++ ) wHiddenOutput[i][j] = 0;		
 	        }
 
             //zakresy klasyfikacji
@@ -97,6 +91,9 @@ namespace ImprovedLM
                     decideOutputRangeB = 0.9;
                     break;
             }
+
+            inputHiddenActivationSigmoid = firstActivationFunc;
+            hiddenOutputActivationSigmoid = secondActivationFunc;
         }
 
         /// <summary>
@@ -157,26 +154,6 @@ namespace ImprovedLM
             return mse / (numOutput * setIndex.Length);
         }
 
-//TODO usunac po testach
-        public double calcMSE(XORDataset Dataset, int[] setIndex)
-        {
-            double mse = 0;
-
-            //wykonujemy dla wszystkich elementow podzbioru
-            for (int i = 0; i < setIndex.Length; i++)
-            {
-                //wyliczamy WY
-                feedForward(Dataset.sample(setIndex[i]));
-
-                //wyliczamy Set Mean Squared Error
-                foreach (double actualVal in outputNeurons)
-                    mse += Math.Pow((actualVal - Dataset.target(setIndex[i])), 2);
-            }
-
-            //procentowa wartosc bledu
-            return mse / (numOutput * setIndex.Length);
-        }
-
         /// <summary>
         /// Inicjalizacja wag
         /// </summary>
@@ -224,7 +201,7 @@ namespace ImprovedLM
         /// </summary>
         /// <param name="x">argument</param>
         /// <returns>1/(1+e^(-x)), wartosci w przedziale (0,1)</returns>
-        static double activationFunctionSigmoid(double x)
+        public static double activationFunctionSigmoid(double x)
         {
             return 1 / (1 + Math.Exp(-x));
         }
@@ -234,7 +211,7 @@ namespace ImprovedLM
         /// </summary>
         /// <param name="x">argument</param>
         /// <returns>Tanh(x), wartosci w przedziale (-1,1)</returns>
-        static double activationFunctionTanh(double x)
+        public static double activationFunctionTanh(double x)
         {
             return Math.Tanh(x);
         }
@@ -261,12 +238,15 @@ namespace ImprovedLM
             for (int i = 0; i < numInput; i++) inputNeurons[i] = sample[i];
 
             //obliczamy wartosci w hiddenLayer
-            hiddenNeurons = calculateOfOutputs(numInput, numHidden, inputNeurons, hiddenNeurons, wInputHidden, ref hiddenNets, true);
-//dla sigmoid            hiddenNeurons = calculateOfOutputs(numInput, numHidden, inputNeurons, hiddenNeurons, wInputHidden, false);
+            //hiddenNeurons = calculateOfOutputs(numInput, numHidden, inputNeurons, hiddenNeurons, wInputHidden, ref hiddenNets, true);
 
+            //dla sigmoid 
+            hiddenNeurons = calculateOfOutputs(numInput, numHidden, inputNeurons, hiddenNeurons, wInputHidden, 
+                ref hiddenNets, true);
 
             //wyliczamy wartosci na WY
-            outputNeurons = calculateOfOutputs(numHidden, numOutput, hiddenNeurons, outputNeurons, wHiddenOutput, ref outputNets, true);
+            outputNeurons = calculateOfOutputs(numHidden, numOutput, hiddenNeurons, outputNeurons, wHiddenOutput, 
+                ref outputNets, true);
 
         }
         
@@ -281,7 +261,8 @@ namespace ImprovedLM
         /// <param name="useSigmoid">okresla funkcje aktywacji (true dla sigmoid, false dla Tanh)</param>
         /// <returns>obliczone wartosci dla neuronsCurrentLayer</returns>
         private static double[] calculateOfOutputs
-            (int nLayerFrom, int nCurrentLayer, double[] neuronsLayerFrom, double[] neuronsCurrentLayer, double[][] wWithinLayers, ref double[] currNets, bool useSigmoid)
+            (int nLayerFrom, int nCurrentLayer, double[] neuronsLayerFrom, double[] neuronsCurrentLayer, 
+            double[][] wWithinLayers, ref double[] currNets, bool useSigmoid)
         {
             for (int j = 0; j < nCurrentLayer; j++)
             {
@@ -301,6 +282,140 @@ namespace ImprovedLM
                     neuronsCurrentLayer[j] = activationFunctionTanh(neuronsCurrentLayer[j]);
             }
             return neuronsCurrentLayer;
+        }
+
+        public void PrintWeights()
+        {
+            
+            Console.WriteLine("weights input(+bias):hidden ({0}:{1})", numInput + 1, numHidden);
+            foreach (double[] dd in wInputHidden)
+            {
+                foreach (double d in dd)
+                {
+                    Console.WriteLine("{0}", d);
+                }
+                Console.WriteLine();
+            }
+            Console.WriteLine();
+            Console.WriteLine("weights hidden(+bias):output ({0}:{1})", numHidden + 1, numOutput);
+            foreach (double[] dd in wHiddenOutput)
+            {
+                foreach (double d in dd)
+                {
+                    Console.WriteLine("{0}", d);
+                }
+                Console.WriteLine();
+
+            }
+        }
+
+        /// <summary>
+        /// Wczytuje wagi z pliku  nazwie filename
+        /// </summary>
+        /// <param name="filename">nazwa pliku z wagami</param>
+        public void LoadWeights(string filename)
+        {
+            try
+            {
+                using (StreamReader readFile = new StreamReader(filename))
+                {
+                    string line;
+                    int i = 0, j = 0;
+                    bool inputHidden = false;
+                    bool hiddenOutput = false;
+
+                    while ((line = readFile.ReadLine()) != null)
+                    {
+                        Console.WriteLine(line);
+                        if (line.Contains("input") && line.Contains("hidden"))
+                        {
+                            inputHidden = true;
+                        }
+
+                        while (inputHidden)
+                        {
+                            line = readFile.ReadLine();
+                            if (line.Contains("hidden") && line.Contains("output"))
+                            {
+                                i = j = 0;
+                                hiddenOutput = true;
+                                inputHidden = false;
+                            }
+                            else if (line.Equals(""))
+                            {
+                                i++;
+                                j = 0;
+                            }
+                            else
+                            {
+                                double d = Double.Parse(line);
+                                wInputHidden[i][j] = d;
+                                j++;
+                            }
+                        }
+
+                        while (hiddenOutput)
+                        {
+                            line = readFile.ReadLine();
+                            if (line == null)
+                            {
+                                hiddenOutput = false;
+                                inputHidden = false;
+                                Console.WriteLine("Wczytywanie wag zakończone sukcesem!");
+                            }
+                            else if (line.Equals(""))
+                            {
+                                i++;
+                                j = 0;
+                            }
+                            else
+                            {
+                                double d = Double.Parse(line);
+                                wHiddenOutput[i][j] = d;
+                                j++;
+                            }
+                        }
+                    }
+                    readFile.Close();
+                }
+            }
+            catch
+            {
+                Console.WriteLine("Niepowodzenie!");
+            }
+            Console.WriteLine("[Enter] by kontynuować...");
+            Console.ReadKey();
+        }
+
+        /// <summary>
+        /// Zapisuje wagi do pliku filename
+        /// </summary>
+        public void SaveWeights(string filename)
+        {
+            TextWriter saveWeights = new StreamWriter(filename);
+            saveWeights.WriteLine("weights input(+bias):hidden ({0}:{1})", numInput + 1, numHidden);
+            foreach (double[] dd in wInputHidden)
+            {
+                foreach (double d in dd)
+                {
+                    saveWeights.WriteLine("{0}", d);
+                }
+                saveWeights.WriteLine();
+                saveWeights.Flush();
+            }
+            saveWeights.WriteLine();
+            saveWeights.WriteLine("weights hidden(+bias):output ({0}:{1})", numHidden + 1, numOutput);
+            foreach (double[] dd in wHiddenOutput)
+            {
+                foreach (double d in dd)
+                {
+                    saveWeights.WriteLine("{0}", d);
+                }
+                saveWeights.WriteLine();
+                saveWeights.Flush();
+            }
+            saveWeights.Close();
+            Console.WriteLine("Zapisano wagi!");
         }
 
     }

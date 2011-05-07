@@ -48,15 +48,36 @@ namespace Backpropagation
             for (int i = 0; i < setLength; i++)
                 indexes.Add(i);
 
-            Program.PrintInfo("Tworzenie podzbiorow");
+//            Program.PrintInfo("Tworzenie podzbiorow");
 
             step = ((setLength * STEP_SIZE / 100) < 1) ? 1 : (int)(setLength * STEP_SIZE / 100);
+            //step = 100;
 
             generalizationSet = drawIndexes(gPercent * setLength / 100, ref indexes);
-            Print(String.Format("\b\b\b\tZbiór walidacyjny - zakończono!\t{0} cases\t({1:N2}%)", generalizationSet.Count, gPercent));
+            Print(String.Format("\b\b\b\tZbiór walidacyjny - zakończono!\t{0} przypadków\t({1:N2}%)", generalizationSet.Count, gPercent));
 
             trainingSet = indexes;
-            Print(String.Format("\b\b\b\tZbiór uczący - zakończono!\t{0} cases\t({1:N2}%)", trainingSet.Count, (100 - gPercent)));
+            Print(String.Format("\b\b\b\tZbiór uczący - zakończono!\t{0} przypadków\t({1:N2}%)", trainingSet.Count, (100 - gPercent)));
+            Print(String.Format("\b\b\b\tWIelkosc pojedynczej próbki uczącej:\t{0}", step));
+
+        }
+
+        public virtual void MixAgainTrainingData()
+        {
+            List<int> newIndexSet = new List<int>();
+            Random r = new Random();
+            int tmp = 0;
+
+            while (trainingSet.Count != 0)
+            {
+                tmp = r.Next(trainingSet.Count);
+
+                newIndexSet.Add(trainingSet[tmp]);
+                trainingSet.RemoveAt(tmp);
+
+            }
+
+            trainingSet = newIndexSet;
         }
 
         protected virtual List<int> drawIndexes(int howMany, ref List<int> fromSet)

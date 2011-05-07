@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.IO;
+
 
 namespace Backpropagation
 {
@@ -17,13 +16,35 @@ namespace Backpropagation
         public double[] hiddenNeurons { get; set; }
         public double[] outputNeurons { get; set; }
 
+        /// <summary>
+        /// net_ij - przechowuje wartosci sum wazonych,
+        /// odwoluje sie do nich algorytm LM
+        /// </summary>
+        private double[] hiddenNets;
+        public double[] HiddenNets { get { return hiddenNets; } }
+        /// <summary>
+        /// net_ij - przechowuje wartosc sumy wazonej dla WY,
+        /// odwoluje sie do niej algorytm LM
+        /// </summary>
+        private double[] outputNets;
+        public double[] OutputNets { get { return outputNets; } }
+
         public double[][] wInputHidden { get; set; }
         public double[][] wHiddenOutput { get; set; }
+
+        public double[][] bestWeightInputHidden { get; set; }
+        public double[][] bestWeightHiddenOutput { get; set; }
+
+        public double[][] previousWeightsInputHidden { get; set; }
+        public double[][] previousWeightsHiddenOutput { get; set; }
 
         private double decideOutputRangeA;
         private double decideOutputRangeB;
 
-        public neuralNetwork(int nInput, int nHidden, int nOutput, ZScore.EnumDataTypes dataType)
+        bool inputHiddenActivationSigmoid, hiddenOutputActivationSigmoid;
+
+        public neuralNetwork(int nInput, int nHidden, int nOutput, ZScore.EnumDataTypes dataType, 
+            bool firstActivationFunc, bool secondActivationFunc)
         {
             numInput = nInput;
             numHidden = nHidden;
@@ -36,9 +57,17 @@ namespace Backpropagation
             hiddenNeurons = new double[numHidden + 1];
             for ( int i=0; i < numHidden; i++ ) hiddenNeurons[i] = 0;
             hiddenNeurons[numHidden] = BIAS;
-
+//TODO spr. czy trzeba zerowac tu czy kompilator sam zeruje
             outputNeurons = new double[numOutput];
             for ( int i=0; i < numOutput; i++ ) outputNeurons[i] = 0;
+
+            //net_ij
+            hiddenNets = new double[numHidden + 1];
+            for (int i = 0; i < numHidden; i++) hiddenNets[i] = 0;
+            hiddenNets[numHidden] = BIAS;
+
+            outputNets = new double[numOutput];
+            for (int i = 0; i < numOutput; i++) outputNets[i] = 0;
 
 	        wInputHidden = new double[numInput + 1][];
 	        for ( int i=0; i <= numInput; i++ ) 
@@ -58,6 +87,9 @@ namespace Backpropagation
             switch (dataType)
             {
                 case ZScore.EnumDataTypes.unknown:
+                    decideOutputRangeA = 0;
+                    decideOutputRangeB = 0;
+                    break;
                 case ZScore.EnumDataTypes.HeartDisease:
                     decideOutputRangeA = 0.5;
                     decideOutputRangeB = 0.5;
@@ -67,6 +99,9 @@ namespace Backpropagation
                     decideOutputRangeB = 0.9;
                     break;
             }
+
+            inputHiddenActivationSigmoid = firstActivationFunc;
+            hiddenOutputActivationSigmoid = secondActivationFunc;
         }
 
         /// <summary>
@@ -155,8 +190,9 @@ namespace Backpropagation
                     if (i != numLayerFrom)
                     {
                         //losowe wagi
-                        //weightList[i][j] = (r.NextDouble() * 2 - 1); // (-1.1)
-                        weightList[i][j] = (r.NextDouble() * 1 - 0.5); // (-0.5,0.5)
+                        weightList[i][j] = (r.NextDouble() * 2 - 1); // (-1.1)
+                        //weightList[i][j] = (r.NextDouble() * 1 - 0.5); // (-0.5,0.5)
+                        //weightList[i][j] = 0.1;
                     }
                     else
                     {
@@ -173,7 +209,7 @@ namespace Backpropagation
         /// </summary>
         /// <param name="x">argument</param>
         /// <returns>1/(1+e^(-x)), wartosci w przedziale (0,1)</returns>
-        static double activationFunctionSigmoid(double x)
+        public static double activationFunctionSigmoid(double x)
         {
             return 1 / (1 + Math.Exp(-x));
         }
@@ -183,7 +219,7 @@ namespace Backpropagation
         /// </summary>
         /// <param name="x">argument</param>
         /// <returns>Tanh(x), wartosci w przedziale (-1,1)</returns>
-        static double activationFunctionTanh(double x)
+        public static double activationFunctionTanh(double x)
         {
             return Math.Tanh(x);
         }
@@ -210,10 +246,15 @@ namespace Backpropagation
             for (int i = 0; i < numInput; i++) inputNeurons[i] = sample[i];
 
             //obliczamy wartosci w hiddenLayer
-            hiddenNeurons = calculateOfOutputs(numInput, numHidden, inputNeurons, hiddenNeurons, wInputHidden, false);
+            //hiddenNeurons = calculateOfOutputs(numInput, numHidden, inputNeurons, hiddenNeurons, wInputHidden, ref hiddenNets, true);
+
+            //dla sigmoid 
+            hiddenNeurons = calculateOfOutputs(numInput, numHidden, inputNeurons, hiddenNeurons, wInputHidden, 
+                ref hiddenNets, inputHiddenActivationSigmoid);
 
             //wyliczamy wartosci na WY
-            outputNeurons = calculateOfOutputs(numHidden, numOutput, hiddenNeurons, outputNeurons, wHiddenOutput, true);
+            outputNeurons = calculateOfOutputs(numHidden, numOutput, hiddenNeurons, outputNeurons, wHiddenOutput, 
+                ref outputNets, hiddenOutputActivationSigmoid);
 
         }
         
@@ -228,7 +269,8 @@ namespace Backpropagation
         /// <param name="useSigmoid">okresla funkcje aktywacji (true dla sigmoid, false dla Tanh)</param>
         /// <returns>obliczone wartosci dla neuronsCurrentLayer</returns>
         private static double[] calculateOfOutputs
-            (int nLayerFrom, int nCurrentLayer, double[] neuronsLayerFrom, double[] neuronsCurrentLayer, double[][] wWithinLayers, bool useSigmoid)
+            (int nLayerFrom, int nCurrentLayer, double[] neuronsLayerFrom, double[] neuronsCurrentLayer, 
+            double[][] wWithinLayers, ref double[] currNets, bool useSigmoid)
         {
             for (int j = 0; j < nCurrentLayer; j++)
             {
@@ -236,7 +278,10 @@ namespace Backpropagation
                 neuronsCurrentLayer[j] = 0;
 
                 //get weighted sum of pattern and bias neuron
-                for (int i = 0; i <= nLayerFrom; i++) neuronsCurrentLayer[j] += neuronsLayerFrom[i] * wWithinLayers[i][j];
+                for (int i = 0; i <= nLayerFrom; i++) 
+                    neuronsCurrentLayer[j] += neuronsLayerFrom[i] * wWithinLayers[i][j];
+
+                currNets[j] = neuronsCurrentLayer[j];
 
                 //set to result of sigmoid
                 if(useSigmoid)
@@ -245,6 +290,140 @@ namespace Backpropagation
                     neuronsCurrentLayer[j] = activationFunctionTanh(neuronsCurrentLayer[j]);
             }
             return neuronsCurrentLayer;
+        }
+
+        public void PrintWeights()
+        {
+            
+            Console.WriteLine("weights input(+bias):hidden ({0}:{1})", numInput + 1, numHidden);
+            foreach (double[] dd in wInputHidden)
+            {
+                foreach (double d in dd)
+                {
+                    Console.WriteLine("{0}", d);
+                }
+                Console.WriteLine();
+            }
+            Console.WriteLine();
+            Console.WriteLine("weights hidden(+bias):output ({0}:{1})", numHidden + 1, numOutput);
+            foreach (double[] dd in wHiddenOutput)
+            {
+                foreach (double d in dd)
+                {
+                    Console.WriteLine("{0}", d);
+                }
+                Console.WriteLine();
+
+            }
+        }
+
+        /// <summary>
+        /// Wczytuje wagi z pliku  nazwie filename
+        /// </summary>
+        /// <param name="filename">nazwa pliku z wagami</param>
+        public void LoadWeights(string filename)
+        {
+            try
+            {
+                using (StreamReader readFile = new StreamReader(filename))
+                {
+                    string line;
+                    int i = 0, j = 0;
+                    bool inputHidden = false;
+                    bool hiddenOutput = false;
+
+                    while ((line = readFile.ReadLine()) != null)
+                    {
+                        Console.WriteLine(line);
+                        if (line.Contains("input") && line.Contains("hidden"))
+                        {
+                            inputHidden = true;
+                        }
+
+                        while (inputHidden)
+                        {
+                            line = readFile.ReadLine();
+                            if (line.Contains("hidden") && line.Contains("output"))
+                            {
+                                i = j = 0;
+                                hiddenOutput = true;
+                                inputHidden = false;
+                            }
+                            else if (line.Equals(""))
+                            {
+                                i++;
+                                j = 0;
+                            }
+                            else
+                            {
+                                double d = Double.Parse(line);
+                                wInputHidden[i][j] = d;
+                                j++;
+                            }
+                        }
+
+                        while (hiddenOutput)
+                        {
+                            line = readFile.ReadLine();
+                            if (line == null)
+                            {
+                                hiddenOutput = false;
+                                inputHidden = false;
+                                Console.WriteLine("Wczytywanie wag zakończone sukcesem!");
+                            }
+                            else if (line.Equals(""))
+                            {
+                                i++;
+                                j = 0;
+                            }
+                            else
+                            {
+                                double d = Double.Parse(line);
+                                wHiddenOutput[i][j] = d;
+                                j++;
+                            }
+                        }
+                    }
+                    readFile.Close();
+                }
+            }
+            catch
+            {
+                Console.WriteLine("Niepowodzenie!");
+            }
+            Console.WriteLine("[Enter] by kontynuować...");
+            Console.ReadKey();
+        }
+
+        /// <summary>
+        /// Zapisuje wagi do pliku filename
+        /// </summary>
+        public void SaveWeights(string filename)
+        {
+            TextWriter saveWeights = new StreamWriter(filename);
+            saveWeights.WriteLine("weights input(+bias):hidden ({0}:{1})", numInput + 1, numHidden);
+            foreach (double[] dd in wInputHidden)
+            {
+                foreach (double d in dd)
+                {
+                    saveWeights.WriteLine("{0}", d);
+                }
+                saveWeights.WriteLine();
+                saveWeights.Flush();
+            }
+            saveWeights.WriteLine();
+            saveWeights.WriteLine("weights hidden(+bias):output ({0}:{1})", numHidden + 1, numOutput);
+            foreach (double[] dd in wHiddenOutput)
+            {
+                foreach (double d in dd)
+                {
+                    saveWeights.WriteLine("{0}", d);
+                }
+                saveWeights.WriteLine();
+                saveWeights.Flush();
+            }
+            saveWeights.Close();
+            Console.WriteLine("Zapisano wagi!");
         }
 
     }
