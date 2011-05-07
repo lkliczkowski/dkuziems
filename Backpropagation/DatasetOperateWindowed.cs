@@ -27,8 +27,7 @@ namespace Backpropagation
          * Konstruktor glowny
          */
         public DatasetOperateWindowed(int setLength, int gPercent)
-            : base (setLength, gPercent, 20
-            )
+            : base (setLength, gPercent, 20)
         {
             actualRange = 0;
             
@@ -46,7 +45,7 @@ namespace Backpropagation
         /// </summary>
         public override void IncreaseRange()
         {
-            if (actualRange + step >= trainingSet.Count)
+            if (actualRange + step >= trainingSet.Count - 1)
                 actualRange = 0;
             else
                 actualRange += step;
@@ -80,5 +79,6 @@ namespace Backpropagation
 
             return newIndexSet;
         }
+
     }
 }

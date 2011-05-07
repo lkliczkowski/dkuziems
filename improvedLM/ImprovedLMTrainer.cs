@@ -41,11 +41,6 @@ namespace ImprovedLM
         private double[] vectorJ;
 
         /// <summary>
-        /// macierz jednostkowa (identycznosciowa)
-        /// </summary>
-        //private double[][] matrixI;
-
-        /// <summary>
         /// Główny parametr algorytmu, 
         /// wspolczynnik tlumienia, wykorzystywany w trakcie aktualizacji wag,
         /// najczesciej oznaczany jako \mi lub \lambda
@@ -178,10 +173,14 @@ namespace ImprovedLM
         #region dodatkowe parametry
 
         /// <summary>
-        /// plik z wynikami dla trainingSetMSE, trainingSetAcc,
-        /// generalizationSetMSE, generalizationSetAcc
+        /// nazwa pliku z wynikami pomiarów
         /// </summary>
-        readonly string RESULTS;
+        string RESULTS;
+
+        /// <summary>
+        /// nazwa pliku do ktorego zostana zapisane najlepsze wagi oraz wybrane (customWeightsOutputFile)
+        /// </summary>
+        string weightsOutputFile, customWeightsOutputFile;
 
         /// <summary>
         /// Przyrost - dla metody skonczonych roznic
@@ -193,21 +192,29 @@ namespace ImprovedLM
         /// </summary>
         bool showAdditionalOutputMsgs = true;
 
+        /// <summary>
+        /// flaga czy kontynuowac nauczanie
+        /// </summary>
+        bool trainingComplete;
+
         #endregion
 
         #region konstruktory
+
+        public ImprovedLMTrainer(ZScore.ZScore dataset)
+            : this(dataset, dataset.sample(0).Length / 2 - 1, 1500, 99)
+            //:this (dataset, dataset.sample(0).Length/2-1, 1500, 99)
+        {}
         public ImprovedLMTrainer(ZScore.ZScore dataset, int hiddenNodeRatio, ulong mE, double dAcc)
         {
-
 
             Dataset = dataset;
             DatasetIndexes = new Backpropagation.DatasetOperateWindowed(Dataset.Data[0].GetNum());
 
-            NN = new neuralNetwork(Dataset.sample(0).Length, hiddenNodeRatio, 1, Dataset.DataType);
+            ///ostatnie 2 argumenty - false, false dla funkcji aktywacji ktore maja byc tanh(x)
+            NN = new neuralNetwork(Dataset.sample(0).Length, hiddenNodeRatio, 1, Dataset.DataType, false, false);
 
-
-            RESULTS = String.Format("wynik_{0}_LM.txt",
-                Enum.GetName(typeof(ZScore.EnumDataTypes), (int)Dataset.DataType));
+            createFileNames();
 
             trainingSetMSE = generalizationSetMSE = double.MaxValue;
             maxEpochs = mE;
@@ -225,33 +232,42 @@ namespace ImprovedLM
             submatrixQ = initArray(submatrixQ, N, N);
             initializeForNewEpoch(false);
 
-            //matrixI = initArray(matrixI, N, N);
-            //for (int i = 0; i < N; i++)
-            //    matrixI[i][i] = 1;
-
             NN.initializeWeights();
 
+            Program.PrintInfo("Utworzona sieć neuronową");
+            networkStats();
         }
 
         #endregion
-        public bool trainNetwork()
-        {
-            
-            networkStats();
 
+        /// <summary>
+        /// Funkcja nadzorujaca procesem uczenia sieci
+        /// </summary>
+        public bool TrainNetwork()
+        {
+            //uchwyt do pliku w ktorym zapisujemy wyniki
             TextWriter saveResult = new StreamWriter(RESULTS);
 
+            //inicjalizacja licznika epok oraz wag oraz flagi
             epochCounter = 0;
             totalFailEpochInARow = 0;
+            trainingComplete = false;
 
             Console.Write("\nNaciśnij dowolny przycisk by rozpocząć nauczanie sieci...\n");
             Console.ReadKey();
 
+            showOptions();
+
+            //naglowki w pliku z wynikami
             saveResult.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}", "epoch", "tMSE", "tAcc", "gMSE", "gAcc");
             saveResult.Flush();
 
-            //while ((trainingSetAccuracy < desiredAccuracy || generalizationSetAccuracy < desiredAccuracy) && epochCounter < maxEpochs)
-            while (epochCounter < maxEpochs || coefficientMI > 10000 || coefficientMI < 0.00000000001)
+            saveResultsToFile(saveResult);
+
+            PrintStatus();
+
+            while ((trainingSetAccuracy < desiredAccuracy || generalizationSetAccuracy < desiredAccuracy)
+                && epochCounter < maxEpochs && !trainingComplete)
             {
                 //pojedyncza epoka
                 if (runTrainingEpoch(DatasetIndexes.TrainingSet))
@@ -262,39 +278,41 @@ namespace ImprovedLM
 
                     double previousGeneralizationSetMSE = generalizationSetAccuracy;
 
-                    //pobieramy celnosc modelu i sume kwadratow bledu uczenia
-                    generalizationSetAccuracy = NN.getAccuracy(Dataset, DatasetIndexes.GeneralizationSet);
-                    generalizationSetMSE = NN.calcMSE(Dataset, DatasetIndexes.GeneralizationSet);
+                    //zapisujemy wyniki do pliku
+                    saveResultsToFile(saveResult);
 
-                    //zachowujemy wagi dla najnizszego MSE dla zbioru testujacego
+                    //dodatkowo zachowujemy wagi dla najnizszego MSE dla zbioru testujacego
                     if (previousGeneralizationSetMSE > generalizationSetAccuracy)
                     {
                         NN.bestWeightInputHidden = NN.wInputHidden;
                         NN.bestWeightHiddenOutput = NN.wHiddenOutput;
+                        //zapis wag do pliku pod warunkiem, ze minelo wiecej niz n-epok
+                        if (epochCounter > 5)
+                        {
+                            NN.SaveWeights(weightsOutputFile);
+                        }
                     }
 
                     //zmieniamy zakres indeksu podzbioru dla zbioru trenujacego
                     DatasetIndexes.IncreaseRange();
 
-
                     PrintStatus();
 
-                    saveResult.WriteLine("{0}\t{1:N4}\t{2:N2}\t{3:N4}\t{4:N2}", 
-                        epochCounter, trainingSetMSE, trainingSetAccuracy, generalizationSetMSE, generalizationSetAccuracy);
-                    saveResult.Flush();
-
+                    //co n-ta epoke pyta co zrobic
+                    if (epochCounter % 5 == 0)
+                    {
+                        showOptions();
+                    }
                 }
                 else
                 {
                     if (++totalFailEpochInARow > MAX_TOTAL_EPOCH_FAIL_IN_A_ROW)
                     {
                         Console.WriteLine("Osiagnieto maksymalna ilość epok bez zmian w modelu ({0})", MAX_TOTAL_EPOCH_FAIL_IN_A_ROW);
+                        showOptions();
+                        saveResult.Close();
                         return false;
                     }
-
-                    additionalEpochFailCounter++;
-
-                    
 
                     Console.WriteLine("\nEpoka {0} niepowodzenie [{1}x z rzędu]! Powtarzam dla nastepnej probki danych!",
                         epochCounter + 1, totalFailEpochInARow);
@@ -303,18 +321,45 @@ namespace ImprovedLM
                     {
                         coefficientMI = MI_DEFAULT;
                     }
+
+                    //zwiekszamy licznik niepowodzen - jezeli osiagnie max - przemieszamy dane treningowe
+                    additionalEpochFailCounter++;
                     if (additionalEpochFailCounter > MAX_ADD_EPOCH_FAIL_COUNT - 1)
                     {
                         DatasetIndexes.MixAgainTrainingData();
                         initializeForNewEpoch(false);
                         Console.WriteLine("Dane przemieszane!");
                     }
-
-                    //Console.ReadKey();
                 }
             }
             saveResult.Close();
             return true;
+        }
+
+        /// <summary>
+        /// Zapis pomiarow do pliku
+        /// </summary>
+        /// <param name="saveResult">uchwyt do pliku z wynikami</param>
+        private void saveResultsToFile(TextWriter saveResult)
+        {
+            //pobieramy celnosc modelu i sume kwadratow bledu uczenia
+            generalizationSetAccuracy = NN.getAccuracy(Dataset, DatasetIndexes.GeneralizationSet);
+            generalizationSetMSE = NN.calcMSE(Dataset, DatasetIndexes.GeneralizationSet);
+
+            trainingSetAccuracy = NN.getAccuracy(Dataset, DatasetIndexes.TrainingSet);
+            trainingSetMSE = NN.calcMSE(Dataset, DatasetIndexes.TrainingSet);
+
+            try
+            {
+                saveResult.WriteLine("{0}\t{1:N4}\t{2:N2}\t{3:N4}\t{4:N2}",
+                    epochCounter, trainingSetMSE, trainingSetAccuracy, generalizationSetMSE, generalizationSetAccuracy);
+
+                saveResult.Flush();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Nieudany zapis do pliku wyników:\n{0}", e.Message);
+            }
         }
 
 
@@ -395,7 +440,9 @@ namespace ImprovedLM
                             //generalizationSetMSE = previousGeneralizationSetMSE;
                             if (!miMsgShown)
                             {
-                                Console.WriteLine("\nNieudana zmiana wag, aktualna wartość współczynnika μ:");
+                                Console.WriteLine("\nNieudana zmiana wag" 
+                                    + " (błąd dla zmienionych wag przyjmuje większa wartość)\n"
+                                    + "zmiany wag cofnięte, zmiana wartości współczynnika μ:");
                                 miMsgShown = true;
                             }
                             Console.Write("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b{0:N6}", coefficientMI);
@@ -421,7 +468,7 @@ namespace ImprovedLM
                     if (showAdditionalOutputMsgs) { 
                         if (!matrixInverseMsgShown)
                         {
-                            Console.Write("Macierz osobliwa ({0}), biorę kolejną próbkę danych! Proba:  ", e.Message);
+                            Console.Write("Macierz osobliwa ({0}), zwiekszam współczynnik μ! \nPróba:  ", e.Message);
                             matrixInverseMsgShown = true;
                         }
                         Console.Write("\b{0}", matrixInverseFailCounter);
@@ -461,10 +508,10 @@ namespace ImprovedLM
             //lista pochodnych dla funkcji bledu oraz sum wazonych 
             //D(e_ij)/D(net_ij)
             double[] s = new double[NN.numHidden + NN.numOutput];
-            s[s.Length - 1] =  derivativeOfNets(NN.OutputNets[0]);
+            s[s.Length - 1] =  derivativeOfNetsTanh(NN.OutputNets[0]);
             for (int i = s.Length - 2; i >= 0; --i)
             {
-                s[i] = derivativeOfNets(NN.HiddenNets[i]) * NN.wHiddenOutput[i][0] * (-s.Last());
+                s[i] = derivativeOfNetsTanh(NN.HiddenNets[i]) * NN.wHiddenOutput[i][0] * (-s.Last());
             }
 
             //obliczamy wektor j
@@ -575,6 +622,19 @@ namespace ImprovedLM
             coefficientMI /= adjustmentFactorV;
         }
 
+        /// <summary>
+        /// utworz nazwy plikow (zwiazane z typem danych)
+        /// </summary>
+        private void createFileNames()
+        {
+            RESULTS = String.Format("wynik_{0}_LM.txt",
+                Enum.GetName(typeof(ZScore.EnumDataTypes), (int)Dataset.DataType));
+            weightsOutputFile = String.Format("weights_{0}_LM.txt",
+                Enum.GetName(typeof(ZScore.EnumDataTypes), (int)Dataset.DataType));
+            customWeightsOutputFile = String.Format("customWeights_{0}_LM.txt",
+                Enum.GetName(typeof(ZScore.EnumDataTypes), (int)Dataset.DataType));
+        }
+
         private void networkStats()
         {
             Console.WriteLine("Liczba neuronow w warstwie wejsciowej:\t{0}", NN.numInput);
@@ -613,9 +673,30 @@ namespace ImprovedLM
         /// </summary>
         /// <param name="netIJ">suma wazona wejsc i wag</param>
         /// <returns>wartosc pochodnej w punkcie netIJ</returns>
-        private double derivativeOfNets(double netIJ)
+        private double derivativeOfNetsTanh(double netIJ)
         {
             return -((activationFunctionTanh(netIJ + h) - activationFunctionTanh(netIJ)) / h);
+        }
+
+        /// <summary>
+        /// Pochodna z funkcji bledu e, metoda skonczonych roznic
+        /// </summary>
+        /// <param name="netIJ">suma wazona wejsc i wag</param>
+        /// <returns>wartosc pochodnej w punkcie netIJ</returns>
+        private double derivativeOfNetsSigmoid(double netIJ)
+        {
+            return -((activationFunctionSigmoid(netIJ + h) - activationFunctionSigmoid(netIJ)) / h);
+
+        }
+
+        /// <summary>
+        /// Funkcja aktywacji sigmoidalna unipolarna
+        /// </summary>
+        /// <param name="x">argument</param>
+        /// <returns>1/(1+e^(-x)), wartosci w przedziale (0,1)</returns>
+        public static double activationFunctionSigmoid(double x)
+        {
+            return 1 / (1 + Math.Exp(-x));
         }
 
         /// <summary>
@@ -623,7 +704,7 @@ namespace ImprovedLM
         /// </summary>
         /// <param name="x">argument</param>
         /// <returns>Tanh(x), wartosci w przedziale (-1,1)</returns>
-        static double activationFunctionTanh(double x)
+        public static double activationFunctionTanh(double x)
         {
             return Math.Tanh(x);
         }
@@ -642,6 +723,84 @@ namespace ImprovedLM
                 array[i] = new double[num];
 
             return array;
+        }
+
+        /// <summary>
+        /// pokazuje i obsluguje opcje podczas procesu nauczania
+        /// </summary>
+        private void showOptions()
+        {
+            Console.WriteLine("[Enter] by kontynuować, [1] Zapisac wagi, [2] Wczytac wagi, [3] Przerwac");
+            int option;
+            try
+            {
+                option = Int32.Parse(Console.ReadLine());
+                string filename;
+                switch (option)
+                {
+                    case 1:
+                        Console.WriteLine("Podaj nazwę pliku, lub Enter dla domyślnej nazwy \"{0}\"",
+                            customWeightsOutputFile);
+                        filename = Console.ReadLine();
+                        if (String.Equals(filename, ""))
+                        {
+                            Console.WriteLine("Nie podano nazwy, domyślna nazwa pliku (\"{0}\")",
+                                customWeightsOutputFile);
+                            filename = customWeightsOutputFile;
+                        }
+                        NN.SaveWeights(customWeightsOutputFile);
+                        showOptions();
+                        break;
+                    case 2:
+                        Console.WriteLine("UWAGA! Wagi zostaną poprawnie wczytane "
+                            + "jeżeli rozmiar sieci będzie taki sam jak w momencie zapisu wag.");
+                        Console.WriteLine("Podaj nazwę pliku, lub Enter dla domyślnej nazwy \"{0}\"",
+                            customWeightsOutputFile);
+                        filename = Console.ReadLine();
+                        if (String.Equals(filename, ""))
+                        {
+                            Console.WriteLine("Nie podano nazwy, domyślna nazwa pliku (\"{0}\")",
+                                customWeightsOutputFile);
+                            filename = customWeightsOutputFile;
+                        }
+                        NN.LoadWeights(filename);
+                        showOptions();
+                        break;
+                    case 3:
+                        Console.WriteLine("Wybrano koniec nauczania sieci");
+                        trainingComplete = true;
+                        break;
+                    default:
+                        Console.WriteLine("Nie wybrano żadnej z powyższych opcji, kontynuować nauczanie sieci?"
+                            + "[Enter] Kontynuuj\t [1] Pokaż menu");
+                        try
+                        {
+                            option = Int32.Parse(Console.ReadLine());
+                            if (option == 1)
+                                showOptions();
+                        }
+                        catch
+                        {
+                            Console.WriteLine("Kontynuuje nauczanie...");
+                        }
+                        break;
+                }
+            }
+            catch
+            {
+                Console.WriteLine("Nie wybrano żadnej z powyższych opcji, kontynuować nauczanie sieci?"
+                    + "\n[Enter] Kontynuuj\t [1] Pokaż menu");
+                try
+                {
+                    option = Int32.Parse(Console.ReadLine());
+                    if (option == 1)
+                        showOptions();
+                }
+                catch
+                {
+                    Console.WriteLine("Kontynuuje nauczanie...");
+                }
+            }
         }
 
         private static double[][] multidimensionalArrayToJaggedArray(double[,] mArray)

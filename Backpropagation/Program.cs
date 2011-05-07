@@ -10,7 +10,7 @@ namespace Backpropagation
         static string inputFile = "";
         static ZScore.ZScore dataset;
         static ZScore.EnumDataTypes dataType = ZScore.EnumDataTypes.unknown;
-        static neuralNetworkTrainer nT;
+        static BPlearning nT;
 
         //flagi menu
         static bool end = false, 
@@ -51,7 +51,7 @@ namespace Backpropagation
                         "- współczynnik uczenia,\n\t\t" +
                         "- maksymalną liczbę epok,\n\t\t" +
                         "- docelowa dokładność modelu."), SetConfig);
-                    menu.Add(">> Utworz sieć neuronową oraz zbiory trenujący i walidacyjny", CreateNN);
+                    menu.Add(">> Utworz nową sieć neuronową oraz zbiory trenujący i walidacyjny", CreateNN);
 
                     menu.Remove("Wystartuj sieć dla domyślnego zestawu danych i konfiguracji", quickStart);
                     menu.Remove("Ustaw Opcje dla HeartDisease", SetToHeartDisease);
@@ -62,7 +62,7 @@ namespace Backpropagation
                 if (readyToBackpropagate)
                 {
                     menu.Remove("Zakończ", End);
-                    menu.Add(">> Rozpocznij działanie sieci", Backpropagate);
+                    menu.Add(">> Rozpocznij/kontynuuj działanie sieci", Backpropagate);
                     menu.Add("Zakończ", End);
                 }
 
@@ -180,16 +180,16 @@ namespace Backpropagation
         public static void CreateNN()
         {
             if (configured)
-                nT = new neuralNetworkTrainer(dataset, hiddenNodeRatioPar, learningRatePar, maxEpochsPar, desiredAccuracyPar);
+                nT = new BPlearning(dataset, hiddenNodeRatioPar, learningRatePar, maxEpochsPar, desiredAccuracyPar);
             else
-                nT = new neuralNetworkTrainer(dataset);
+                nT = new BPlearning(dataset);
 
             readyToBackpropagate = true;
         }
 
         public static void Backpropagate()
         {
-            nT.trainNetwork();
+            nT.TrainNetwork();
         }
 
         public static void ShowConfig()
