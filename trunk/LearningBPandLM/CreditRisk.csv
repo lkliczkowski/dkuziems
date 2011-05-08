@@ -1,0 +1,426 @@
+Checking Acct;Credit Hist;Purpose;Savings Acct;Employment;Gender;Personal Status;Housing;Job;Telephone;Foreign;Months Acct;Residence Time;Age;Credit Standing
+0Balance;Current;Small Appliance;Low;Short;M;Single;Own;Unskilled;Yes;Yes;13;3;23;Good
+0Balance;Current;Furniture;MedLow;Unemployed;M;Divorced;Own;Skilled;Yes;Yes;25;1;32;Bad
+No Acct;Bank Paid;Car New;Low;Long;M;Single;Own;Management;No;Yes;19;4;38;Bad
+Low;Current;Furniture;Low;Short;M;Single;Own;Unskilled;Yes;Yes;13;2;36;Bad
+Low;Delay;Education;MedLow;Medium;M;Single;Rent;Skilled;No;Yes;40;3;31;Good
+No Acct;Critical;Furniture;No Acct;Short;M;Married;Own;Skilled;Yes;No;11;1;25;Good
+0Balance;Current;Car New;Low;Short;M;Married;Own;Unskilled;Yes;Yes;13;3;26;Good
+0Balance;Critical;Business;Low;Very Short;M;Single;Own;Unskilled;Yes;Yes;14;1;27;Good
+High;Current;Small Appliance;Low;Short;M;Single;Own;Skilled;Yes;Yes;37;2;25;Bad
+No Acct;Current;Small Appliance;No Acct;Very Short;F;Divorced;Own;Skilled;No;Yes;25;1;43;Bad
+No Acct;Current;Business;Low;Unemployed;M;Single;Rent;Management;No;Yes;49;2;32;Bad
+No Acct;Current;Car New;MedLow;Short;M;Single;Rent;Unskilled;Yes;No;11;2;34;Good
+Low;Current;Business;Low;Short;M;Married;Own;Skilled;No;Yes;10;1;26;Good
+0Balance;Current;Car New;Low;Long;M;Single;Own;Skilled;Yes;Yes;25;1;44;Bad
+Low;Critical;Car New;Low;Medium;M;Single;Own;Unskilled;Yes;Yes;13;3;46;Good
+0Balance;Current;Car Used;Low;Short;M;Divorced;Own;Management;No;Yes;31;4;39;Good
+Low;Current;Furniture;Low;Very Short;F;Divorced;Own;Skilled;No;Yes;49;2;25;Bad
+Low;Current;Car New;Low;Medium;M;Single;Own;Skilled;Yes;Yes;13;2;31;Good
+No Acct;Current;Repairs;No Acct;Long;M;Single;Own;Skilled;No;Yes;28;4;47;Good
+Low;Bank Paid;Education;High;Very Short;F;Divorced;Rent;Skilled;Yes;Yes;7;2;23;Bad
+0Balance;Critical;Furniture;MedHigh;Short;F;Divorced;Own;Skilled;Yes;Yes;34;4;22;Bad
+Low;Current;Furniture;MedLow;Very Short;F;Divorced;Rent;Skilled;Yes;Yes;13;4;26;Bad
+0Balance;Current;Furniture;No Acct;Short;M;Married;Own;Skilled;Yes;Yes;25;4;19;Bad
+No Acct;Current;Furniture;Low;Short;F;Divorced;Own;Management;No;Yes;37;2;27;Bad
+No Acct;Current;Car New;MedHigh;Short;M;Single;Rent;Unskilled;Yes;No;11;2;39;Good
+Low;Critical;Business;Low;Medium;M;Single;Own;Skilled;Yes;Yes;22;3;26;Good
+0Balance;Current;Car Used;No Acct;Long;M;Single;Other;Skilled;No;Yes;19;4;50;Bad
+No Acct;Critical;Car Used;No Acct;Medium;M;Single;Other;Skilled;No;Yes;49;1;34;Good
+Low;Current;Small Appliance;Low;Medium;M;Single;Rent;Skilled;Yes;Yes;37;4;23;Good
+No Acct;Critical;Small Appliance;Low;Short;M;Single;Own;Skilled;Yes;Yes;19;2;23;Good
+Low;Current;Education;MedLow;Short;M;Single;Other;Skilled;No;Yes;37;4;46;Bad
+No Acct;Critical;Small Appliance;No Acct;Medium;M;Single;Own;Skilled;Yes;Yes;31;3;35;Good
+No Acct;Current;Small Appliance;Low;Very Short;F;Divorced;Own;Skilled;Yes;Yes;13;2;28;Good
+High;Current;Business;Low;Medium;M;Single;Rent;Skilled;No;Yes;16;4;25;Good
+0Balance;Bank Paid;Business;Low;Medium;F;Divorced;Rent;Skilled;Yes;Yes;49;4;36;Bad
+No Acct;Critical;Small Appliance;Low;Medium;M;Single;Own;Unskilled;Yes;Yes;5;1;41;Good
+0Balance;Bank Paid;Furniture;Low;Very Short;M;Divorced;Own;Skilled;No;Yes;25;1;54;Bad
+Low;Current;Small Appliance;Low;Medium;F;Divorced;Own;Unskilled;Yes;Yes;9;2;43;Good
+0Balance;Current;Small Appliance;Low;Medium;M;Married;Own;Skilled;No;Yes;49;1;33;Bad
+0Balance;Critical;Car New;Low;Long;M;Single;Own;Skilled;Yes;Yes;13;3;34;Bad
+Low;Current;Other;No Acct;Unemployed;M;Single;Other;Unemployed;No;Yes;49;4;39;Good
+No Acct;Delay;Car Used;Low;Medium;M;Single;Own;Unskilled;No;Yes;25;3;34;Good
+High;Current;Small Appliance;Low;Long;M;Single;Own;Skilled;Yes;Yes;37;2;30;Good
+Low;Critical;Furniture;Low;Medium;M;Single;Own;Skilled;Yes;Yes;31;2;48;Bad
+Low;Current;Furniture;High;Very Short;F;Divorced;Own;Skilled;Yes;Yes;12;1;19;Good
+No Acct;Critical;Small Appliance;Low;Long;M;Married;Rent;Skilled;Yes;Yes;7;2;29;Good
+Low;Current;Furniture;No Acct;Very Short;F;Divorced;Rent;Skilled;Yes;Yes;19;3;26;Bad
+0Balance;Critical;Car New;Low;Long;M;Single;Rent;Skilled;No;Yes;17;4;42;Bad
+0Balance;Bank Paid;Business;Low;Short;M;Single;Rent;Skilled;No;Yes;25;2;30;Bad
+No Acct;Current;Small Appliance;Low;Very Short;M;Married;Own;Skilled;No;Yes;19;4;38;Good
+Low;Current;Small Appliance;Low;Very Short;M;Married;Own;Skilled;No;Yes;25;1;21;Bad
+No Acct;Current;Furniture;No Acct;Medium;F;Divorced;Rent;Unskilled;Yes;Yes;16;4;32;Good
+Low;Current;Business;Low;Short;M;Single;Own;Skilled;No;Yes;28;2;35;Bad
+Low;Delay;Car New;Low;Short;M;Divorced;Own;Skilled;Yes;Yes;22;4;46;Good
+No Acct;Current;Car Used;Low;Medium;M;Single;Own;Management;No;Yes;25;3;37;Good
+0Balance;Current;Education;No Acct;Long;M;Single;Own;Management;No;Yes;37;4;39;Bad
+0Balance;Current;Furniture;Low;Short;F;Divorced;Own;Skilled;Yes;Yes;13;3;29;Good
+Low;Current;Car New;Low;Medium;M;Single;Rent;Unskilled;Yes;Yes;19;3;27;Good
+0Balance;Current;Car New;Low;Very Short;F;Divorced;Rent;Skilled;No;Yes;19;3;22;Bad
+0Balance;Current;Furniture;Low;Long;M;Single;Own;Skilled;Yes;Yes;37;2;40;Bad
+0Balance;Current;Car New;Low;Short;M;Single;Own;Unskilled;Yes;Yes;29;2;44;Bad
+No Acct;Current;Car New;No Acct;Short;M;Single;Own;Unskilled;Yes;Yes;11;4;26;Bad
+0Balance;Critical;Small Appliance;Low;Medium;F;Divorced;Own;Unskilled;No;Yes;13;3;57;Good
+0Balance;Current;Car New;MedLow;Short;M;Single;Own;Unskilled;No;Yes;19;4;34;Good
+0Balance;Delay;Small Appliance;Low;Very Short;M;Married;Own;Skilled;Yes;Yes;25;4;47;Bad
+No Acct;Current;Small Appliance;MedHigh;Long;M;Single;Own;Skilled;No;Yes;16;3;46;Good
+Low;Current;Business;MedLow;Medium;M;Single;Own;Unskilled;Yes;Yes;13;4;38;Good
+No Acct;Bank Paid;Car Used;No Acct;Unemployed;F;Divorced;Own;Management;No;Yes;31;1;52;Bad
+Low;Delay;Furniture;Low;Unemployed;M;Single;Own;Management;No;Yes;7;1;34;Good
+0Balance;Bank Paid;Furniture;MedHigh;Very Short;M;Single;Other;Skilled;No;Yes;25;4;29;Bad
+0Balance;Bank Paid;Car New;No Acct;Short;M;Single;Own;Unskilled;Yes;Yes;22;2;39;Bad
+Low;Critical;Small Appliance;Low;Long;M;Single;Own;Unskilled;Yes;Yes;10;4;36;Good
+No Acct;Delay;Business;Low;Medium;M;Single;Own;Skilled;Yes;Yes;28;4;25;Good
+0Balance;Critical;Furniture;Low;Long;M;Single;Own;Skilled;Yes;Yes;13;3;59;Bad
+No Acct;Current;Small Appliance;Low;Long;M;Single;Own;Skilled;Yes;Yes;37;2;27;Good
+Low;Current;Car New;Low;Very Short;F;Divorced;Rent;Skilled;Yes;Yes;13;1;24;Bad
+High;Bank Paid;Business;Low;Very Short;F;Divorced;Own;Unemployed;Yes;Yes;13;1;25;Bad
+Low;Bank Paid;Business;MedLow;Medium;M;Single;Own;Skilled;Yes;Yes;49;2;29;Good
+0Balance;Critical;Repairs;Low;Unemployed;M;Single;Own;Unemployed;Yes;Yes;43;4;64;Good
+No Acct;Delay;Business;No Acct;Short;M;Single;Own;Skilled;No;Yes;25;4;31;Good
+No Acct;Critical;Car New;Low;Short;M;Single;Own;Unskilled;Yes;Yes;12;4;38;Good
+Low;Current;Education;Low;Short;M;Single;Other;Skilled;Yes;Yes;61;4;41;Bad
+0Balance;Current;Car New;Low;Very Short;F;Divorced;Own;Unskilled;Yes;Yes;19;2;22;Bad
+No Acct;Critical;Education;MedLow;Short;F;Divorced;Own;Skilled;Yes;Yes;19;2;29;Bad
+0Balance;All Paid;Car New;Low;Long;M;Single;Rent;Skilled;Yes;Yes;16;3;32;Bad
+0Balance;Current;Small Appliance;Low;Very Short;F;Divorced;Own;Skilled;No;Yes;25;4;34;Bad
+0Balance;Critical;Car Used;Low;Medium;M;Single;Own;Skilled;No;Yes;37;4;23;Bad
+Low;Current;Small Appliance;Low;Very Short;M;Single;Own;Skilled;Yes;Yes;13;1;21;Bad
+Low;Current;Small Appliance;MedLow;Short;F;Divorced;Other;Skilled;Yes;Yes;37;4;49;Bad
+0Balance;All Paid;Furniture;Low;Short;M;Divorced;Own;Skilled;Yes;Yes;31;2;31;Good
+No Acct;Critical;Education;No Acct;Long;F;Divorced;Rent;Unskilled;Yes;Yes;10;4;40;Good
+No Acct;Current;Small Appliance;Low;Short;F;Divorced;Own;Skilled;Yes;Yes;7;1;28;Good
+Low;Current;Repairs;Low;Very Short;M;Married;Own;Unskilled;Yes;Yes;7;1;21;Good
+Low;Critical;Business;Low;Long;M;Divorced;Own;Skilled;No;Yes;25;4;30;Bad
+No Acct;Current;Small Appliance;Low;Very Short;F;Divorced;Own;Skilled;No;Yes;25;3;37;Good
+No Acct;Critical;Small Appliance;High;Long;M;Single;Own;Skilled;Yes;Yes;25;2;33;Good
+0Balance;Current;Small Appliance;Low;Short;M;Single;Other;Skilled;No;Yes;46;4;22;Bad
+0Balance;Current;Car New;Low;Short;F;Divorced;Own;Unskilled;Yes;Yes;13;2;23;Bad
+Low;Current;Small Appliance;Low;Short;F;Divorced;Own;Skilled;Yes;Yes;49;2;21;Bad
+Low;Critical;Furniture;Low;Long;M;Single;Own;Skilled;No;Yes;19;1;40;Good
+High;Current;Small Appliance;Low;Short;M;Single;Own;Skilled;Yes;Yes;19;2;36;Bad
+No Acct;Critical;Car New;Low;Short;M;Single;Own;Skilled;Yes;Yes;10;1;29;Good
+Low;Current;Retraining;No Acct;Long;M;Single;Own;Skilled;Yes;Yes;13;4;37;Good
+Low;Critical;Furniture;Low;Very Short;F;Divorced;Own;Skilled;Yes;Yes;19;1;26;Good
+High;Current;Car New;Low;Medium;;Single;Other;Skilled;Yes;Yes;25;3;37;Bad
+0Balance;Current;Education;Low;Short;M;Single;Rent;Unskilled;Yes;Yes;13;4;39;Bad
+No Acct;Delay;Business;Low;Short;M;Married;Own;Skilled;No;Yes;19;2;27;Bad
+No Acct;Current;Furniture;MedHigh;Short;F;Divorced;Rent;Skilled;Yes;Yes;16;4;19;Good
+0Balance;Current;Car New;Low;Medium;M;Single;Other;Skilled;Yes;Yes;49;4;45;Bad
+0Balance;Current;Car Used;Low;Long;M;Single;Other;Skilled;No;Yes;13;4;34;Bad
+High;Current;Small Appliance;Low;Short;F;Divorced;Rent;Unskilled;No;Yes;13;2;43;Good
+High;Current;Furniture;Low;Short;M;Single;Own;Unskilled;Yes;Yes;19;1;33;Bad
+Low;All Paid;Business;Low;Short;M;Single;Own;Unskilled;No;Yes;25;4;35;Bad
+No Acct;Current;Car Used;Low;Short;M;Single;Other;Management;No;Yes;37;2;31;Good
+High;Current;Furniture;Low;Short;M;Single;Own;Skilled;Yes;Yes;25;2;25;Good
+No Acct;Critical;Furniture;Low;Short;F;Divorced;Own;Skilled;Yes;Yes;19;2;27;Good
+0Balance;Critical;Small Appliance;High;Long;F;Divorced;Rent;Management;No;Yes;25;4;56;Good
+No Acct;Critical;Car Used;No Acct;Short;M;Single;Own;Management;No;Yes;25;4;45;Good
+0Balance;Current;Large Appliance;Low;Short;M;Single;Own;Skilled;Yes;Yes;49;4;53;Bad
+Low;Current;Furniture;Low;Short;F;Divorced;Own;Skilled;Yes;Yes;9;4;23;Bad
+No Acct;Current;Furniture;Low;Short;F;Divorced;Own;Skilled;No;Yes;13;1;25;Good
+Low;Current;Small Appliance;Low;Short;F;Divorced;Own;Skilled;Yes;Yes;7;3;63;Good
+No Acct;Current;Small Appliance;MedHigh;Long;M;Single;Own;Skilled;No;Yes;25;2;34;Bad
+0Balance;Current;Furniture;Low;Unemployed;M;Single;Own;Unemployed;Yes;Yes;19;1;24;Bad
+Low;Critical;Car New;Low;Long;M;Single;Own;Skilled;No;Yes;19;4;35;Bad
+0Balance;Current;Car New;Low;Medium;M;Single;Own;Skilled;No;Yes;25;3;30;Bad
+Low;Delay;Car New;MedLow;Long;M;Single;Other;Skilled;Yes;Yes;37;3;29;Good
+Low;Current;Furniture;MedLow;Short;F;Divorced;Rent;Skilled;Yes;Yes;31;4;20;Bad
+Low;Critical;Small Appliance;No Acct;Long;M;Single;Own;Skilled;No;Yes;16;4;49;Good
+No Acct;Critical;Business;No Acct;Long;M;Single;Rent;Unskilled;Yes;Yes;13;4;56;Good
+No Acct;Critical;Furniture;No Acct;Long;M;Single;Rent;Skilled;No;Yes;13;4;48;Good
+0Balance;Current;Small Appliance;Low;Short;F;Divorced;Own;Skilled;No;Yes;22;2;24;Bad
+Low;Critical;Small Appliance;MedHigh;Short;M;Single;Own;Unskilled;Yes;Yes;28;2;22;Bad
+No Acct;Current;Small Appliance;MedLow;Long;M;Single;Own;Skilled;Yes;Yes;25;4;30;Bad
+0Balance;Bank Paid;Other;No Acct;Long;M;Single;Own;Management;No;Yes;25;3;39;Bad
+0Balance;Current;Business;Low;Short;M;Married;Own;Unskilled;Yes;Yes;25;2;20;Good
+No Acct;Current;Repairs;Low;Very Short;F;Divorced;Own;Skilled;Yes;Yes;19;4;22;Bad
+Low;Bank Paid;Car New;MedLow;Short;M;Married;Rent;Skilled;Yes;Yes;16;2;24;Bad
+0Balance;Current;Furniture;Low;Short;M;Divorced;Own;Skilled;Yes;Yes;13;1;41;Good
+No Acct;Critical;Furniture;Low;Long;M;Single;Own;Skilled;No;Yes;25;4;32;Good
+0Balance;Current;Small Appliance;Low;Short;F;Divorced;Own;Skilled;Yes;Yes;19;2;23;Bad
+High;Bank Paid;Small Appliance;High;Short;F;Divorced;Rent;Skilled;Yes;Yes;13;3;41;Good
+0Balance;Current;Furniture;Low;Long;M;Single;Other;Management;No;Yes;13;4;52;Bad
+Low;Current;Small Appliance;MedHigh;Short;M;Single;Own;Unskilled;Yes;Yes;13;3;65;Bad
+No Acct;Critical;Business;Low;Short;F;Divorced;Own;Skilled;Yes;Yes;13;2;26;Good
+0Balance;Current;Repairs;Low;Very Short;M;Divorced;Own;Unskilled;No;Yes;31;1;33;Bad
+No Acct;Critical;Small Appliance;MedLow;Unemployed;F;Divorced;Own;Unskilled;Yes;Yes;12;4;56;Good
+Low;Critical;Furniture;Low;Very Short;F;Divorced;Own;Unskilled;Yes;Yes;25;4;24;Bad
+No Acct;Current;Car New;Low;Short;F;Divorced;Rent;Skilled;Yes;Yes;28;3;20;Bad
+0Balance;Current;Car New;Low;Very Short;M;Single;Own;Skilled;Yes;Yes;16;3;35;Good
+No Acct;Critical;Car Used;Low;Medium;M;Single;Own;Skilled;No;Yes;25;3;34;Good
+No Acct;Current;Car New;Low;Long;M;Single;Own;Management;No;Yes;13;4;38;Good
+No Acct;Current;Car Used;Low;Long;M;Single;Own;Management;No;Yes;25;4;34;Good
+Low;Current;Car New;MedLow;Medium;M;Single;Own;Skilled;No;Yes;25;3;37;Good
+No Acct;Current;Small Appliance;Low;Short;M;Single;Other;Management;No;Yes;19;2;31;Good
+No Acct;Current;Car New;No Acct;Short;M;Single;Rent;Skilled;Yes;Yes;19;4;67;Bad
+No Acct;Critical;Car Used;High;Short;M;Single;Own;Skilled;Yes;Yes;25;2;26;Good
+0Balance;Critical;Education;Low;Short;F;Divorced;Own;Management;No;Yes;37;2;24;Bad
+0Balance;Current;Furniture;Low;Very Short;M;Single;Other;Skilled;Yes;Yes;25;1;21;Good
+0Balance;Current;Large Appliance;Low;Short;M;Married;Own;Unskilled;No;Yes;19;3;46;Bad
+0Balance;All Paid;Furniture;Low;Long;M;Single;Rent;Skilled;Yes;Yes;25;4;22;Bad
+0Balance;Critical;Furniture;Low;Very Short;F;Divorced;Rent;Skilled;Yes;Yes;19;4;20;Good
+Low;Current;Business;MedLow;Long;M;Divorced;Rent;Unskilled;Yes;Yes;22;2;60;Bad
+0Balance;Current;Car Used;Low;Medium;M;Single;Own;Skilled;Yes;Yes;49;3;25;Good
+0Balance;Current;Small Appliance;Low;Very Short;F;Divorced;Rent;Skilled;Yes;Yes;10;4;21;Bad
+0Balance;Current;Small Appliance;Low;Short;F;Divorced;Own;Skilled;Yes;Yes;13;1;22;Good
+Low;Delay;Car Used;Low;Long;M;Single;Own;Management;No;Yes;28;2;29;Good
+0Balance;Current;Small Appliance;Low;Long;M;Single;Own;Unskilled;Yes;Yes;13;4;56;Bad
+Low;Current;Repairs;Low;Very Short;M;Single;Rent;Unskilled;Yes;Yes;37;1;32;Bad
+Low;Current;Furniture;Low;Short;M;Divorced;Own;Unskilled;Yes;Yes;11;2;30;Good
+Low;Current;Car Used;Low;Very Short;M;Married;Rent;Management;No;Yes;37;4;27;Bad
+No Acct;Critical;Car New;Low;Unemployed;F;Divorced;Own;Unemployed;Yes;Yes;13;2;37;Good
+0Balance;Critical;Car New;Low;Very Short;M;Single;Own;Unskilled;Yes;No;7;4;39;Good
+High;Current;Car New;High;Very Short;M;Married;Own;Unemployed;Yes;No;7;2;26;Good
+No Acct;Critical;Repairs;Low;Short;M;Divorced;Own;Skilled;No;Yes;25;2;32;Good
+Low;Critical;Furniture;High;Medium;M;Single;Own;Skilled;No;Yes;22;2;31;Good
+High;Critical;Car Used;MedHigh;Short;M;Single;Own;Skilled;No;Yes;16;2;35;Good
+No Acct;Critical;Small Appliance;MedHigh;Long;M;Single;Own;Management;No;Yes;19;3;31;Good
+0Balance;Critical;Car New;Low;Long;M;Single;Own;Skilled;Yes;Yes;22;4;64;Good
+No Acct;Delay;Business;Low;Very Short;M;Divorced;Own;Skilled;Yes;Yes;37;1;27;Bad
+0Balance;Current;Small Appliance;MedLow;Short;F;Divorced;Own;Unskilled;Yes;Yes;25;2;31;Bad
+0Balance;Current;Small Appliance;MedLow;Very Short;M;Married;Own;Unskilled;No;Yes;13;3;32;Bad
+No Acct;Current;Business;Low;Medium;M;Single;Own;Unskilled;Yes;Yes;6;4;73;Good
+No Acct;Current;Furniture;Low;Medium;F;Divorced;Own;Unskilled;Yes;Yes;13;4;30;Good
+No Acct;Current;Furniture;Low;Very Short;M;Married;Own;Unskilled;Yes;Yes;19;1;42;Bad
+No Acct;Critical;Small Appliance;High;Long;M;Single;Own;Skilled;Yes;Yes;19;4;45;Good
+Low;Current;Small Appliance;Low;Long;M;Single;Own;Skilled;Yes;Yes;7;4;27;Good
+0Balance;Current;Furniture;Low;Very Short;F;Divorced;Rent;Unskilled;No;Yes;25;4;22;Bad
+No Acct;Delay;Car Used;High;Short;M;Single;Own;Skilled;Yes;Yes;28;2;26;Good
+Low;Critical;Business;No Acct;Medium;M;Single;Own;Skilled;No;Yes;25;3;33;Good
+Low;All Paid;Car New;MedLow;Very Short;F;Divorced;Own;Skilled;Yes;Yes;19;3;27;Bad
+0Balance;Current;Car New;No Acct;Short;F;Divorced;Rent;Skilled;Yes;Yes;25;4;24;Bad
+Low;Current;Furniture;Low;Very Short;M;Married;Own;Skilled;Yes;Yes;31;1;21;Good
+0Balance;Bank Paid;Car New;Low;Unemployed;F;Divorced;Rent;Unemployed;Yes;Yes;25;4;28;Bad
+Low;Current;Small Appliance;No Acct;Unemployed;M;Single;Own;Management;No;Yes;13;1;51;Bad
+No Acct;Delay;Furniture;Low;Medium;F;Divorced;Own;Skilled;Yes;Yes;19;1;21;Bad
+No Acct;Current;Small Appliance;Low;Medium;M;Single;Own;Skilled;No;Yes;25;2;27;Good
+No Acct;Delay;Business;MedHigh;Very Short;M;Single;Own;Unskilled;Yes;Yes;22;2;40;Bad
+No Acct;Critical;Small Appliance;Low;Short;M;Single;Other;Skilled;No;Yes;16;4;34;Good
+0Balance;Current;Car New;Low;Very Short;F;Divorced;Own;Unskilled;No;Yes;48;1;34;Good
+No Acct;Current;Education;No Acct;Long;M;Single;Own;Unskilled;Yes;Yes;10;4;63;Good
+Low;Bank Paid;Car New;MedLow;Unemployed;M;Single;Own;Management;No;Yes;16;2;33;Bad
+No Acct;All Paid;Car New;No Acct;Short;F;Divorced;Own;Skilled;No;Yes;22;4;28;Bad
+No Acct;Critical;Car New;Low;Short;F;Divorced;Own;Skilled;No;Yes;37;2;24;Bad
+Low;Current;Furniture;High;Very Short;F;Divorced;Rent;Unskilled;Yes;Yes;13;4;18;Good
+No Acct;Current;Small Appliance;MedLow;Unemployed;F;Divorced;Own;Skilled;Yes;Yes;14;4;63;Good
+No Acct;Current;Business;No Acct;Short;M;Divorced;Own;Skilled;Yes;Yes;49;2;37;Bad
+Low;Critical;Other;Low;Short;M;Single;Own;Management;No;Yes;25;3;38;Bad
+Low;Current;Small Appliance;Low;Very Short;M;Married;Rent;Skilled;Yes;Yes;13;1;22;Bad
+Low;Bank Paid;Car New;MedLow;Very Short;F;Divorced;Own;Unskilled;Yes;Yes;7;1;31;Bad
+No Acct;Current;Small Appliance;Low;Very Short;M;Single;Own;Skilled;No;Yes;19;2;31;Good
+0Balance;Delay;Car New;Low;Unemployed;M;Single;Other;Skilled;Yes;Yes;25;2;42;Bad
+No Acct;Current;Furniture;Low;Short;M;Single;Rent;Unskilled;Yes;Yes;11;2;24;Bad
+High;Delay;Business;Low;Long;M;Single;Own;Management;No;Yes;31;4;65;Bad
+No Acct;Critical;Car Used;High;Long;M;Single;Rent;Skilled;No;Yes;16;4;22;Good
+0Balance;Current;Car Used;MedHigh;Unemployed;F;Divorced;Rent;Unemployed;No;Yes;7;2;22;Good
+No Acct;Current;Small Appliance;Low;Short;M;Single;Own;Skilled;No;Yes;13;4;51;Good
+0Balance;Bank Paid;Small Appliance;Low;Short;F;Divorced;Own;Unskilled;Yes;Yes;13;4;23;Bad
+No Acct;Critical;Education;MedLow;Short;F;Divorced;Own;Skilled;Yes;Yes;16;3;30;Good
+Low;Critical;Small Appliance;Low;Short;M;Married;Own;Skilled;Yes;Yes;19;2;32;Bad
+0Balance;Current;Large Appliance;MedLow;Unemployed;F;Divorced;Own;Skilled;Yes;Yes;13;3;21;Bad
+0Balance;Current;Education;Low;Very Short;F;Divorced;Own;Skilled;Yes;Yes;13;4;52;Bad
+0Balance;Current;Furniture;Low;Medium;F;Divorced;Rent;Skilled;Yes;Yes;31;4;22;Bad
+Low;Delay;Business;No Acct;Long;M;Single;Own;Skilled;Yes;Yes;19;2;41;Good
+Low;Delay;Car New;Low;Short;F;Divorced;Rent;Skilled;Yes;Yes;37;2;53;Good
+0Balance;Critical;Repairs;Low;Unemployed;F;Divorced;Other;Unemployed;Yes;Yes;19;4;54;Bad
+0Balance;Current;Furniture;Low;Short;M;Single;Own;Unskilled;Yes;Yes;13;3;37;Good
+Low;Current;Small Appliance;Low;Medium;M;Single;Own;Skilled;Yes;Yes;49;4;27;Bad
+No Acct;Current;Car New;MedHigh;Short;F;Divorced;Own;Skilled;Yes;Yes;13;2;25;Bad
+No Acct;Critical;Small Appliance;Low;Short;F;Divorced;Own;Skilled;Yes;Yes;13;2;34;Good
+Low;Delay;Business;Low;Short;M;Divorced;Own;Management;No;Yes;37;2;29;Bad
+0Balance;Current;Car New;Low;Short;M;Single;Own;Unskilled;Yes;Yes;10;3;27;Bad
+No Acct;Critical;Small Appliance;No Acct;Long;F;Divorced;Own;Unskilled;Yes;Yes;13;3;32;Bad
+No Acct;Critical;Car Used;No Acct;Short;M;Single;Own;Management;No;Yes;37;2;29;Good
+0Balance;Current;Car New;Low;Very Short;M;Single;Own;Unskilled;Yes;Yes;13;1;32;Bad
+0Balance;Delay;Small Appliance;Low;Very Short;F;Divorced;Rent;Unskilled;No;Yes;25;2;28;Bad
+0Balance;Current;Furniture;Low;Medium;F;Divorced;Rent;Unskilled;Yes;Yes;22;4;25;Good
+No Acct;Current;Car New;No Acct;Long;F;Divorced;Other;Management;No;Yes;13;4;51;Good
+No Acct;Current;Car Used;MedLow;Long;M;Single;Own;Management;No;Yes;40;2;44;Good
+No Acct;Current;Business;Low;Medium;M;Single;Own;Skilled;No;Yes;19;1;33;Good
+No Acct;Current;Furniture;Low;Very Short;F;Divorced;Rent;Unskilled;Yes;Yes;5;3;22;Good
+No Acct;Critical;Car Used;Low;Long;M;Single;Own;Management;No;Yes;22;4;35;Good
+No Acct;Critical;Small Appliance;Low;Short;M;Single;Own;Skilled;Yes;Yes;16;2;30;Good
+Low;Current;Small Appliance;Low;Medium;M;Married;Own;Unskilled;Yes;Yes;7;3;27;Good
+0Balance;Current;Business;Low;Very Short;F;Divorced;Rent;Skilled;Yes;Yes;49;4;23;Bad
+0Balance;Current;Furniture;Low;Short;F;Divorced;Rent;Skilled;Yes;Yes;13;4;19;Bad
+No Acct;Bank Paid;Small Appliance;MedHigh;Long;M;Single;Own;Unskilled;Yes;Yes;7;4;44;Good
+No Acct;Critical;Small Appliance;Low;Medium;M;Single;Own;Unskilled;Yes;Yes;5;1;41;Good
+High;Delay;Car New;Low;Short;F;Divorced;Own;Skilled;No;Yes;13;2;35;Good
+Low;All Paid;Car New;Low;Very Short;F;Divorced;Rent;Unemployed;Yes;Yes;16;1;25;Bad
+0Balance;Current;Car Used;Low;Unemployed;M;Single;Other;Management;No;Yes;25;2;28;Good
+No Acct;Current;Small Appliance;No Acct;Long;M;Single;Own;Skilled;Yes;Yes;16;2;34;Good
+Low;Current;Business;Low;Very Short;F;Divorced;Own;Skilled;No;Yes;28;1;31;Good
+High;Critical;Education;Low;Very Short;M;Divorced;Rent;Skilled;Yes;Yes;22;1;32;Bad
+0Balance;Current;Furniture;Low;Long;M;Single;Own;Skilled;Yes;Yes;37;2;41;Bad
+Low;Current;Business;Low;Short;M;Single;Own;Skilled;No;Yes;49;2;22;Bad
+Low;Current;Other;Low;Short;M;Single;Own;Management;No;Yes;25;3;28;Bad
+No Acct;Current;Furniture;MedLow;Very Short;F;Divorced;Rent;Skilled;Yes;Yes;10;4;21;Good
+Low;Delay;Car New;MedLow;Long;M;Single;Own;Management;No;Yes;37;4;41;Bad
+High;Critical;Car New;No Acct;Medium;M;Single;Own;Unskilled;Yes;Yes;25;2;36;Bad
+No Acct;Delay;Business;Low;Very Short;M;Single;Own;Skilled;No;Yes;25;2;26;Bad
+0Balance;Critical;Car Used;Low;Long;M;Single;Other;Management;No;Yes;31;4;37;Good
+Low;Delay;Business;MedLow;Medium;M;Single;Rent;Management;No;Yes;25;4;35;Good
+No Acct;Current;Small Appliance;MedLow;Medium;M;Single;Own;Skilled;Yes;Yes;13;1;34;Good
+No Acct;Critical;Car New;MedHigh;Short;M;Single;Other;Skilled;Yes;Yes;49;2;43;Bad
+No Acct;Current;Car New;MedHigh;Medium;F;Divorced;Own;Management;Yes;Yes;22;2;30;Good
+No Acct;Current;Furniture;MedHigh;Long;M;Single;Rent;Skilled;No;Yes;25;3;31;Good
+No Acct;Critical;Repairs;Low;Long;M;Single;Other;Skilled;Yes;Yes;25;4;43;Good
+No Acct;Critical;Small Appliance;Low;Medium;F;Divorced;Own;Skilled;Yes;Yes;31;2;24;Good
+Low;Current;Small Appliance;High;Medium;M;Single;Own;Skilled;No;Yes;49;2;26;Bad
+0Balance;Current;Furniture;Low;Very Short;F;Divorced;Rent;Skilled;Yes;Yes;16;1;45;Good
+No Acct;Current;Furniture;Low;Very Short;M;Single;Own;Unskilled;Yes;Yes;16;3;26;Good
+0Balance;Current;Furniture;Low;Long;F;Divorced;Own;Skilled;No;Yes;7;1;48;Good
+0Balance;Bank Paid;Furniture;Low;Short;M;Single;Own;Skilled;Yes;Yes;19;3;43;Bad
+Low;Bank Paid;Other;MedLow;Long;F;Divorced;Other;Management;No;Yes;61;4;59;Bad
+No Acct;Current;Education;Low;Very Short;F;Divorced;Own;Skilled;Yes;Yes;7;2;55;Good
+0Balance;Current;Small Appliance;Low;Unemployed;M;Single;Own;Management;Yes;Yes;25;2;29;Bad
+Low;Current;Car New;No Acct;Short;F;Divorced;Own;Skilled;Yes;Yes;19;2;32;Bad
+No Acct;Current;Business;High;Short;M;Single;Own;Management;No;Yes;25;3;53;Bad
+No Acct;Delay;Business;MedLow;Short;M;Single;Own;Unskilled;Yes;Yes;7;2;33;Good
+No Acct;Critical;Education;Low;Long;F;Divorced;Other;Unskilled;Yes;Yes;13;4;56;Good
+No Acct;Current;Car New;No Acct;Short;M;Single;Other;Skilled;No;Yes;61;4;33;Good
+0Balance;Current;Car Used;No Acct;Long;M;Single;Other;Skilled;Yes;Yes;37;4;46;Bad
+Low;Bank Paid;Car Used;Low;Unemployed;M;Single;Other;Management;No;Yes;43;2;54;Good
+High;Current;Car New;Low;Long;F;Divorced;Own;Management;Yes;Yes;19;2;22;Good
+0Balance;Critical;Car New;Low;Short;M;Single;Rent;Skilled;Yes;Yes;12;2;35;Good
+No Acct;Delay;Car New;Low;Long;M;Single;Own;Unskilled;Yes;Yes;25;4;46;Bad
+0Balance;Current;Small Appliance;No Acct;Medium;F;Divorced;Own;Management;No;Yes;43;3;29;Bad
+0Balance;Current;Car New;Low;Medium;F;Divorced;Rent;Skilled;Yes;Yes;25;4;22;Bad
+No Acct;Delay;Car New;No Acct;Long;M;Married;Own;Skilled;No;Yes;25;4;53;Good
+Low;Current;Furniture;Low;Medium;M;Divorced;Own;Skilled;No;Yes;25;3;42;Bad
+0Balance;Current;Retraining;Low;Medium;M;Married;Rent;Skilled;Yes;Yes;13;4;20;Bad
+No Acct;Critical;Car New;Low;Short;F;Divorced;Own;Skilled;Yes;Yes;19;3;35;Good
+Low;Critical;Education;Low;Long;F;Divorced;Own;Management;No;Yes;10;3;33;Bad
+Low;Current;Education;No Acct;Short;M;Married;Own;Skilled;Yes;Yes;37;2;26;Good
+No Acct;Current;Furniture;Low;Short;M;Single;Other;Skilled;Yes;Yes;19;4;46;Good
+0Balance;Critical;Car New;Low;Short;F;Divorced;Own;Skilled;Yes;Yes;13;2;28;Bad
+No Acct;Current;Small Appliance;MedHigh;Long;M;Single;Own;Skilled;Yes;Yes;37;4;38;Good
+No Acct;All Paid;Business;Low;Short;M;Single;Own;Skilled;Yes;Yes;19;2;35;Bad
+0Balance;All Paid;Car New;Low;Short;M;Single;Own;Skilled;Yes;Yes;13;4;47;Bad
+Low;Current;Small Appliance;Low;Short;M;Single;Own;Skilled;Yes;Yes;10;3;23;Good
+Low;Delay;Car New;Low;Long;M;Single;Other;Skilled;No;Yes;37;4;56;Bad
+No Acct;Current;Furniture;MedHigh;Short;F;Divorced;Rent;Unskilled;Yes;Yes;13;4;28;Bad
+0Balance;Critical;Car New;Low;Medium;M;Single;Own;Skilled;No;Yes;11;3;48;Good
+0Balance;Current;Furniture;High;Short;M;Single;Own;Skilled;Yes;Yes;19;2;27;Good
+Low;Current;Small Appliance;MedLow;Short;M;Married;Own;Skilled;Yes;Yes;73;2;23;Bad
+0Balance;Current;Small Appliance;Low;Short;F;Divorced;Rent;Skilled;Yes;Yes;19;4;24;Bad
+High;Current;Furniture;Low;Very Short;F;Divorced;Own;Skilled;Yes;Yes;11;2;22;Good
+0Balance;Critical;Car New;Low;Long;M;Single;Rent;Skilled;No;Yes;13;4;42;Bad
+0Balance;Current;Car New;Low;Medium;M;Single;Own;Skilled;Yes;Yes;13;2;25;Bad
+High;Current;Car New;MedLow;Long;F;Divorced;Other;Unskilled;Yes;Yes;11;4;47;Bad
+0Balance;Critical;Car New;Low;Long;F;Divorced;Rent;Skilled;No;Yes;19;4;32;Bad
+No Acct;Current;Car New;Low;Short;M;Single;Rent;Skilled;Yes;Yes;7;3;25;Good
+0Balance;Current;Furniture;Low;Short;M;Single;Own;Skilled;Yes;Yes;37;2;36;Good
+0Balance;Delay;Small Appliance;Low;Medium;M;Single;Own;Skilled;No;Yes;43;2;25;Bad
+No Acct;Critical;Furniture;No Acct;Short;M;Married;Own;Skilled;Yes;Yes;7;2;26;Good
+No Acct;Current;Car New;Low;Unemployed;F;Divorced;Own;Unemployed;No;Yes;7;4;53;Good
+Low;Current;Repairs;Low;Unemployed;F;Divorced;Own;Skilled;No;Yes;19;4;66;Good
+Low;Current;Car New;No Acct;Medium;F;Divorced;Own;Skilled;Yes;Yes;49;2;23;Good
+No Acct;Critical;Small Appliance;Low;Long;M;Single;Own;Skilled;Yes;Yes;13;2;25;Good
+Low;Critical;Small Appliance;Low;Very Short;M;Single;Own;Unskilled;Yes;Yes;46;2;24;Bad
+0Balance;Bank Paid;Car New;Low;Medium;M;Single;Other;Unskilled;Yes;Yes;19;4;31;Bad
+0Balance;Critical;Car Used;Low;Long;F;Divorced;Other;Unskilled;Yes;Yes;49;4;57;Bad
+0Balance;Current;Car New;Low;Long;M;Divorced;Own;Management;No;No;15;4;44;Bad
+0Balance;Current;Other;Low;Unemployed;M;Divorced;Own;Management;Yes;Yes;37;3;42;Good
+Low;Current;Car Used;MedHigh;Very Short;F;Divorced;Rent;Skilled;Yes;Yes;25;4;27;Bad
+No Acct;Critical;Small Appliance;Low;Long;M;Single;Own;Skilled;Yes;Yes;13;4;51;Good
+0Balance;All Paid;Car Used;Low;Long;M;Single;Other;Skilled;Yes;Yes;49;4;23;Bad
+No Acct;Critical;Car New;Low;Short;M;Single;Own;Skilled;Yes;Yes;19;2;31;Bad
+No Acct;Critical;Furniture;Low;Very Short;F;Divorced;Rent;Skilled;No;Yes;37;4;22;Bad
+No Acct;Current;Car New;No Acct;Short;M;Single;Own;Skilled;Yes;Yes;37;4;35;Good
+Low;Delay;Business;No Acct;Short;M;Single;Other;Skilled;No;Yes;49;4;37;Good
+No Acct;Current;Small Appliance;Low;Long;M;Single;Own;Management;No;Yes;25;1;35;Good
+No Acct;Critical;Car New;Low;Medium;M;Single;Own;Skilled;Yes;Yes;19;2;30;Bad
+Low;Delay;Education;Low;Long;M;Single;Other;Skilled;Yes;Yes;49;4;49;Bad
+No Acct;Critical;Education;No Acct;Short;F;Divorced;Own;Skilled;No;Yes;25;2;32;Good
+No Acct;Current;Furniture;MedHigh;Long;M;Single;Own;Skilled;Yes;Yes;25;4;52;Good
+0Balance;Bank Paid;Car New;Low;Very Short;M;Single;Own;Skilled;No;Yes;13;2;45;Bad
+High;Current;Small Appliance;Low;Short;M;Married;Own;Skilled;Yes;Yes;13;1;23;Good
+No Acct;Critical;Furniture;Low;Long;M;Single;Own;Skilled;Yes;Yes;13;4;41;Good
+Low;Current;Furniture;Low;Short;F;Divorced;Own;Skilled;Yes;No;10;2;28;Bad
+0Balance;Bank Paid;Furniture;Low;Long;M;Single;Own;Skilled;Yes;Yes;37;4;30;Bad
+No Acct;Critical;Small Appliance;No Acct;Long;M;Single;Own;Skilled;No;Yes;37;2;50;Good
+Low;Bank Paid;Business;Low;Long;F;Divorced;Rent;Skilled;Yes;Yes;49;3;58;Bad
+No Acct;Current;Small Appliance;No Acct;Medium;M;Single;Own;Skilled;No;Yes;49;3;36;Good
+0Balance;Bank Paid;Small Appliance;Low;Medium;M;Single;Rent;Unskilled;Yes;Yes;25;4;23;Bad
+High;Critical;Small Appliance;No Acct;Long;M;Single;Own;Unskilled;Yes;Yes;31;4;48;Good
+No Acct;Current;Small Appliance;Low;Short;M;Single;Own;Skilled;No;No;11;4;37;Good
+Low;Current;Small Appliance;MedLow;Short;M;Single;Rent;Skilled;Yes;Yes;46;4;20;Bad
+Low;Current;Car New;Low;Short;F;Divorced;Own;Skilled;Yes;Yes;31;2;23;Bad
+No Acct;Delay;Furniture;MedHigh;Medium;F;Divorced;Own;Skilled;No;Yes;37;4;39;Good
+No Acct;Current;Education;No Acct;Short;M;Single;Other;Unskilled;No;Yes;37;4;34;Good
+No Acct;Critical;Repairs;No Acct;Medium;F;Divorced;Own;Skilled;Yes;Yes;13;4;22;Good
+No Acct;Current;Small Appliance;Low;Medium;M;Single;Own;Skilled;Yes;Yes;10;2;21;Bad
+0Balance;Current;Furniture;Low;Long;M;Single;Rent;Management;No;Yes;25;2;38;Bad
+No Acct;Current;Small Appliance;No Acct;Short;M;Single;Other;Skilled;No;Yes;13;4;36;Good
+Low;Current;Small Appliance;Low;Long;M;Single;Own;Unskilled;Yes;Yes;10;4;26;Good
+0Balance;Critical;Repairs;MedLow;Long;M;Single;Own;Skilled;Yes;No;10;4;47;Good
+High;Critical;Small Appliance;No Acct;Short;M;Single;Other;Skilled;No;Yes;16;4;38;Bad
+0Balance;All Paid;Small Appliance;Low;Short;M;Single;Rent;Skilled;No;Yes;13;2;27;Bad
+Low;Current;Car New;Low;Very Short;M;Single;Own;Skilled;Yes;Yes;25;1;25;Good
+No Acct;Critical;Small Appliance;No Acct;Short;M;Single;Own;Skilled;No;Yes;19;3;28;Good
+0Balance;Current;Car New;Low;Long;M;Single;Own;Management;No;Yes;7;4;67;Bad
+Low;Current;Business;Low;Very Short;M;Married;Own;Skilled;No;Yes;9;2;25;Good
+0Balance;Current;Small Appliance;MedHigh;Long;M;Married;Own;Skilled;Yes;Yes;13;1;34;Good
+0Balance;Current;Car Used;Low;Medium;M;Single;Other;Skilled;No;Yes;49;4;38;Bad
+0Balance;Current;Car New;Low;Long;M;Single;Other;Management;Yes;Yes;49;4;41;Bad
+0Balance;Bank Paid;Furniture;Low;Medium;M;Single;Own;Skilled;Yes;Yes;25;4;26;Bad
+No Acct;Current;Car New;MedHigh;Long;M;Single;Own;Skilled;Yes;Yes;37;4;35;Good
+0Balance;Critical;Car Used;Low;Long;M;Single;Other;Skilled;No;Yes;49;4;45;Bad
+No Acct;Critical;Small Appliance;Low;Short;F;Divorced;Own;Skilled;No;Yes;31;2;32;Good
+No Acct;Current;Car Used;No Acct;Short;M;Divorced;Other;Skilled;No;Yes;25;4;47;Good
+Low;Current;Car New;Low;Medium;M;Married;Own;Unskilled;Yes;Yes;13;3;24;Bad
+0Balance;Current;Furniture;Low;Very Short;M;Divorced;Own;Unskilled;Yes;Yes;31;4;30;Bad
+0Balance;Current;Small Appliance;Low;Very Short;M;Single;Own;Skilled;Yes;Yes;43;3;33;Bad
+0Balance;Critical;Furniture;Low;Short;F;Divorced;Rent;Skilled;Yes;Yes;19;4;23;Bad
+No Acct;Current;Small Appliance;Low;Unemployed;F;Divorced;Rent;Skilled;Yes;Yes;19;4;21;Bad
+Low;Current;Car New;No Acct;Short;M;Single;Other;Skilled;No;Yes;37;4;36;Bad
+No Acct;Delay;Car Used;No Acct;Medium;M;Single;Own;Management;No;Yes;37;2;30;Good
+0Balance;Delay;Car New;Low;Short;M;Single;Other;Skilled;Yes;Yes;25;4;52;Bad
+High;Critical;Car New;MedHigh;Medium;M;Married;Own;Skilled;No;Yes;13;2;27;Bad
+Low;Current;Small Appliance;Low;Very Short;F;Divorced;Own;Skilled;Yes;Yes;8;1;44;Good
+High;Critical;Small Appliance;No Acct;Medium;M;Single;Own;Skilled;No;Yes;11;2;26;Good
+No Acct;Current;Furniture;MedLow;Short;M;Single;Own;Skilled;Yes;Yes;25;1;24;Good
+Low;Current;Furniture;No Acct;Long;F;Divorced;Own;Skilled;No;Yes;13;2;24;Bad
+No Acct;Current;Small Appliance;Low;Medium;M;Single;Own;Skilled;Yes;Yes;7;2;50;Good
+Low;Current;Small Appliance;Low;Long;M;Married;Own;Unskilled;Yes;Yes;19;2;31;Good
+Low;Current;Business;Low;Long;F;Divorced;Own;Skilled;Yes;Yes;22;4;38;Bad
+Low;Bank Paid;Car New;MedLow;Medium;M;Single;Own;Skilled;Yes;Yes;10;3;28;Bad
+Low;Critical;Car New;Low;Very Short;M;Single;Own;Unskilled;Yes;Yes;13;3;48;Good
+Low;Current;Car New;Low;Long;M;Single;Other;Management;No;Yes;37;2;56;Bad
+No Acct;Current;Furniture;Low;Very Short;F;Divorced;Own;Skilled;Yes;Yes;7;4;31;Bad
+0Balance;Current;Small Appliance;High;Very Short;F;Divorced;Own;Skilled;Yes;Yes;22;2;28;Good
+0Balance;Critical;Education;Low;Short;M;Single;Own;Skilled;No;Yes;41;3;26;Bad
+Low;All Paid;Business;MedLow;Short;F;Divorced;Rent;Unskilled;Yes;Yes;31;4;25;Bad
+Low;All Paid;Business;Low;Long;F;Divorced;Other;Management;No;Yes;28;4;41;Bad
+No Acct;Current;Car New;No Acct;Medium;F;Divorced;Rent;Skilled;Yes;Yes;23;4;24;Good
+Low;Current;Car Used;No Acct;Short;M;Single;Own;Skilled;Yes;Yes;13;2;29;Good
+0Balance;Current;Car Used;Low;Short;M;Single;Own;Skilled;Yes;Yes;37;2;25;Bad
+No Acct;Current;Large Appliance;MedHigh;Medium;M;Single;Own;Skilled;No;Yes;16;3;35;Good
+0Balance;Current;Furniture;Low;Short;M;Single;Own;Unskilled;No;Yes;7;2;35;Good
+No Acct;Critical;Business;MedLow;Short;M;Single;Own;Unskilled;No;Yes;25;3;26;Good
+0Balance;Critical;Furniture;No Acct;Medium;M;Single;Own;Management;No;Yes;40;4;29;Good
+0Balance;Critical;Car New;Low;Long;M;Single;Own;Unskilled;Yes;Yes;25;4;59;Bad
+0Balance;Bank Paid;Education;Low;Long;F;Divorced;Other;Skilled;Yes;Yes;7;4;34;Bad
+0Balance;Current;Car Used;Low;Long;M;Single;Other;Skilled;Yes;Yes;37;4;41;Good
+0Balance;Current;Car New;Low;Medium;M;Divorced;Own;Skilled;Yes;Yes;13;3;35;Bad
+Low;Critical;Furniture;Low;Long;M;Single;Rent;Skilled;No;Yes;13;4;27;Good
+0Balance;Current;Furniture;Low;Short;M;Single;Own;Skilled;Yes;Yes;19;3;41;Bad
+No Acct;Current;Car Used;No Acct;Very Short;F;Divorced;Rent;Skilled;Yes;Yes;11;4;30;Good
+Low;Critical;Car New;Low;Unemployed;M;Married;Own;Management;Yes;Yes;31;2;27;Bad
+Low;Current;Small Appliance;MedHigh;Short;F;Divorced;Own;Unskilled;Yes;Yes;10;3;65;Good
+0Balance;Current;Furniture;Low;Short;F;Divorced;Rent;Skilled;Yes;Yes;19;4;19;Bad
+0Balance;Current;Car New;Low;Very Short;F;Divorced;Own;Skilled;No;Yes;37;4;33;Bad
+Low;All Paid;Furniture;Low;Very Short;F;Divorced;Rent;Skilled;Yes;Yes;13;3;24;Bad
+No Acct;Delay;Car Used;Low;Short;M;Married;Rent;Skilled;Yes;Yes;13;4;40;Good
+0Balance;Critical;Car Used;Low;Long;M;Single;Own;Skilled;No;Yes;25;4;62;Good
+Low;Bank Paid;Education;Low;Medium;F;Divorced;Other;Unskilled;Yes;Yes;25;4;33;Bad
+0Balance;Critical;Car New;Low;Long;M;Married;Own;Skilled;No;Yes;22;3;29;Good
+Low;Current;Car New;MedLow;Very Short;F;Divorced;Own;Unskilled;Yes;Yes;13;2;22;Bad
+No Acct;Critical;Small Appliance;No Acct;Long;M;Single;Other;Skilled;Yes;Yes;7;4;35;Good
+0Balance;Current;Furniture;No Acct;Long;M;Single;Own;Skilled;Yes;Yes;31;4;30;Bad
+0Balance;Current;Car New;No Acct;Long;F;Divorced;Own;Skilled;Yes;Yes;25;2;28;Bad
+0Balance;Current;Car New;Low;Short;F;Divorced;Own;Skilled;No;Yes;16;2;28;Bad
+No Acct;Critical;Car New;Low;Medium;M;Single;Own;Management;No;Yes;7;3;44;Good
