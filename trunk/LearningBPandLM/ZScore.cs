@@ -110,9 +110,9 @@ namespace ZScore
             switch (DataType)
             {
                 case EnumDataTypes.HeartDisease:
+                case EnumDataTypes.CreditRisk:
                     l = 2; break;
                 case EnumDataTypes.LetterRecognitionA:
-                case EnumDataTypes.CreditRisk:
                 default:
                     l = 1; break;
             }
@@ -137,9 +137,9 @@ namespace ZScore
             switch (DataType)
             {
                 case EnumDataTypes.HeartDisease:
+                case EnumDataTypes.CreditRisk:
                     l = 2; break;
                 case EnumDataTypes.LetterRecognitionA:
-                case EnumDataTypes.CreditRisk:
                 default:
                     l = 1; break;
             }

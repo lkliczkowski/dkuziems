@@ -25,10 +25,7 @@ namespace LearningBPandLM
 
         static void Main(string[] args)
         {
-            setOptionsToDefault();
-            SetToCreditRisk();
-            prepareData();
-            /*
+
             while (!endFlag)
             {
                 setOptionsToDefault();
@@ -42,7 +39,7 @@ namespace LearningBPandLM
 
                 MainMenu.Show();
             }
-             */
+
             Console.ReadKey();
         }
 
@@ -70,44 +67,46 @@ namespace LearningBPandLM
             while (!BPendFlag)
             {
                 PrintInfo("Menu główne");
-                Menu menu = new Menu();
-                menu.Add("Wystartuj sieć dla domyślnego zestawu danych i konfiguracji", quickStart);
-                menu.Add("[wybor danych] Ustaw Opcje dla HeartDisease", SetToHeartDisease);
-                menu.Add("[wybor danych] Ustaw Opcje dla LetterRecognition", SetToLetterRecognition);
-                menu.Add("Wyświetl konfigurację", ShowConfig);
-                menu.Add("Zakończ", BPEnd);
+                Menu BPmenu = new Menu();
+                BPmenu.Add("Wystartuj sieć dla domyślnego zestawu danych i konfiguracji", quickStart);
+                BPmenu.Add("[wybor danych] Ustaw Opcje dla HeartDisease", SetToHeartDisease);
+                BPmenu.Add("[wybor danych] Ustaw Opcje dla LetterRecognition", SetToLetterRecognition);
+                BPmenu.Add("[wybor danych] Ustaw Opcje dla CreditRisk", SetToCreditRisk);
+                BPmenu.Add("Wyświetl konfigurację", ShowConfig);
+                BPmenu.Add("Zakończ", BPEnd);
 
                 if (readyToZScore)
                 {
-                    menu.Remove("Zakończ", BPEnd);
-                    menu.Add(">> Standaryzacja danych", prepareData);
-                    menu.Add("Zakończ", BPEnd);
+                    BPmenu.Remove("Zakończ", BPEnd);
+                    BPmenu.Add(">> Standaryzacja danych", prepareData);
+                    BPmenu.Add("Zakończ", BPEnd);
                 }
 
                 if (readyToCreateNN)
                 {
-                    menu.Remove("Zakończ", BPEnd);
-                    menu.Add(String.Format(">> Konfiguruj sieć:\n\t\t" +
+                    BPmenu.Remove("Zakończ", BPEnd);
+                    BPmenu.Add(String.Format(">> Konfiguruj sieć:\n\t\t" +
                         "- liczba neuronów w warstwie ukrytej,\n\t\t" +
                         "- współczynnik uczenia,\n\t\t" +
                         "- maksymalną liczbę epok,\n\t\t" +
                         "- docelowa dokładność modelu."), BPSetConfig);
-                    menu.Add(">> Utworz nową sieć neuronową oraz zbiory trenujący i walidacyjny", BPCreateNN);
+                    BPmenu.Add(">> Utworz nową sieć neuronową oraz zbiory trenujący i walidacyjny", BPCreateNN);
 
-                    menu.Remove("Wystartuj sieć dla domyślnego zestawu danych i konfiguracji", quickStart);
-                    menu.Remove("Ustaw Opcje dla HeartDisease", SetToHeartDisease);
-                    menu.Remove("Ustaw Opcje dla LetterRecognition", SetToLetterRecognition);
-                    menu.Add("Zakończ", BPEnd);
+                    BPmenu.Remove("Wystartuj sieć dla domyślnego zestawu danych i konfiguracji", quickStart);
+                    BPmenu.Remove("Ustaw Opcje dla HeartDisease", SetToHeartDisease);
+                    BPmenu.Remove("Ustaw Opcje dla LetterRecognition", SetToLetterRecognition);
+                    BPmenu.Remove("[wybor danych] Ustaw Opcje dla CreditRisk", SetToCreditRisk);
+                    BPmenu.Add("Zakończ", BPEnd);
                 }
 
                 if (readyToBackpropagate)
                 {
-                    menu.Remove("Zakończ", BPEnd);
-                    menu.Add(">> Rozpocznij/kontynuuj działanie sieci", BPstart);
-                    menu.Add("Zakończ", BPEnd);
+                    BPmenu.Remove("Zakończ", BPEnd);
+                    BPmenu.Add(">> Rozpocznij/kontynuuj działanie sieci", BPstart);
+                    BPmenu.Add("Zakończ", BPEnd);
                 }
 
-                menu.Show();
+                BPmenu.Show();
             }
 
             Console.ReadKey();
@@ -122,6 +121,7 @@ namespace LearningBPandLM
                 LMmenu.Add("Wystartuj sieć dla domyślnego zestawu danych i konfiguracji", LMquickStart);
                 LMmenu.Add("[wybor danych] Ustaw Opcje dla HeartDisease", SetToHeartDisease);
                 LMmenu.Add("[wybor danych] Ustaw Opcje dla LetterRecognition", SetToLetterRecognition);
+                LMmenu.Add("[wybor danych] Ustaw Opcje dla CreditRisk", SetToCreditRisk);
                 LMmenu.Add("Wyświetl konfigurację", ShowConfig);
                 LMmenu.Add("Zakończ", LMEnd);
 
@@ -144,6 +144,7 @@ namespace LearningBPandLM
                     LMmenu.Remove("Wystartuj sieć dla domyślnego zestawu danych i konfiguracji", LMquickStart);
                     LMmenu.Remove("Ustaw Opcje dla HeartDisease", SetToHeartDisease);
                     LMmenu.Remove("Ustaw Opcje dla LetterRecognition", SetToLetterRecognition);
+                    LMmenu.Remove("[wybor danych] Ustaw Opcje dla CreditRisk", SetToCreditRisk);
                     LMmenu.Add("Zakończ", LMEnd);
                 }
 
@@ -202,6 +203,7 @@ namespace LearningBPandLM
         private static void SetToLetterRecognition()
         {
             inputFile = "letter-a-recognition.csv";
+            //outputFile = "normalizedLetter-a-recognition.csv";
             dataType = ZScore.EnumDataTypes.LetterRecognitionA;
             readyToZScore = true;
         }
