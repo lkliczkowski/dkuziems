@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.IO;
 
 namespace ZScore
@@ -10,7 +7,7 @@ namespace ZScore
     {
         private static bool CSVread(string path, ref Column<string>[] Data)
         {
-            const char DELIMETER_IN_DATA = ';';
+            const char DELIMETER_IN_DATA = (char)9; //9 == tab
             int count = 0;
             try
             {
@@ -41,33 +38,6 @@ namespace ZScore
             catch (Exception e)
             {
                 Print("Nieudany odczyt z pliku: ", e.Message);
-            }
-
-            return false;
-        }
-
-        private static bool CSVwrite(string path, Column<double>[] toWrite)
-        {
-            try
-            {
-                TextWriter writeFile = new StreamWriter(path);
-
-                for (int j = 0; j < toWrite[1].GetNum(); j++)
-                {
-                    for (int i = 0; i < toWrite.Length; i++)
-                    {
-
-                        writeFile.Write("{0:N2};", toWrite[i].Get(j));
-                        writeFile.Flush();
-                    }
-                    writeFile.WriteLine();
-                }
-                writeFile.Close();
-                return true;
-            }
-            catch (Exception e)
-            {
-                Print("Nieudany zapis do pliku: ", e.Message);
             }
 
             return false;

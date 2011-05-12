@@ -1,4 +1,6 @@
 //------------------------------------------------------------------------
+// Korzystam z tej bibliotegi w celu obliczenia macierzy odwrotnej
+// (funkcja public static double[,] Inverse(double[,] Mat))
 //
 // Author      : Anas Abidi
 // Date        : 18 Dec 2004

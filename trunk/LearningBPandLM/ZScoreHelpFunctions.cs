@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace ZScore
 {
@@ -67,7 +66,156 @@ namespace ZScore
             return probabilityList.ToArray();
         }
 
-        private static double[] probabilityDiscrete(double[] discretizedList, EnumCreditRisk discreteType)
+        private static double[] probabilityDiscrete(double[] discretizedList,
+            EnumGermanCreditData discreteType)
+        {
+            List<double> probabilityList = new List<double>();
+            switch (discreteType)
+            {
+                case EnumGermanCreditData.A1:
+                    addZero(ref probabilityList,
+                        Enum.GetValues(typeof(EnumA1)).Length - 1);
+                    foreach (double cell in discretizedList)
+                    {
+                        if ((int)cell == (int)EnumA1.unknown)
+                            continue;
+                        probabilityList[(int)cell]++;
+                    }
+                    break;
+                case EnumGermanCreditData.A3:
+                    addZero(ref probabilityList,
+                        Enum.GetValues(typeof(EnumA3)).Length - 1);
+                    foreach (double cell in discretizedList)
+                    {
+                        if ((int)cell == (int)EnumA3.unknown)
+                            continue;
+                        probabilityList[(int)cell]++;
+                    }
+                    break;
+                case EnumGermanCreditData.A4:
+                    addZero(ref probabilityList,
+                        Enum.GetValues(typeof(EnumA4)).Length - 1);
+                    foreach (double cell in discretizedList)
+                    {
+                        if ((int)cell == (int)EnumA4.unknown)
+                            continue;
+                        probabilityList[(int)cell]++;
+                    }
+                    break;
+                case EnumGermanCreditData.A6:
+                    addZero(ref probabilityList,
+                        Enum.GetValues(typeof(EnumA6)).Length - 1);
+                    foreach (double cell in discretizedList)
+                    {
+                        if ((int)cell == (int)EnumA6.unknown)
+                            continue;
+                        probabilityList[(int)cell]++;
+                    }
+                    break;
+                case EnumGermanCreditData.A7:
+                    addZero(ref probabilityList,
+                        Enum.GetValues(typeof(EnumA7)).Length - 1);
+                    foreach (double cell in discretizedList)
+                    {
+                        if ((int)cell == (int)EnumA7.unknown)
+                            continue;
+                        probabilityList[(int)cell]++;
+                    }
+                    break;
+                case EnumGermanCreditData.A9:
+                    addZero(ref probabilityList,
+                        Enum.GetValues(typeof(EnumA9)).Length - 1);
+                    foreach (double cell in discretizedList)
+                    {
+                        if ((int)cell == (int)EnumA9.unknown)
+                            continue;
+                        probabilityList[(int)cell]++;
+                    }
+                    break;
+                case EnumGermanCreditData.A10:
+                    addZero(ref probabilityList,
+                        Enum.GetValues(typeof(EnumA10)).Length - 1);
+                    foreach (double cell in discretizedList)
+                    {
+                        if ((int)cell == (int)EnumA10.unknown)
+                            continue;
+                        probabilityList[(int)cell]++;
+                    }
+                    break;
+                case EnumGermanCreditData.A12:
+                    addZero(ref probabilityList,
+                        Enum.GetValues(typeof(EnumA12)).Length - 1);
+                    foreach (double cell in discretizedList)
+                    {
+                        if ((int)cell == (int)EnumA12.unknown)
+                            continue;
+                        probabilityList[(int)cell]++;
+                    }
+                    break;
+                case EnumGermanCreditData.A14:
+                    addZero(ref probabilityList,
+                        Enum.GetValues(typeof(EnumA14)).Length - 1);
+                    foreach (double cell in discretizedList)
+                    {
+                        if ((int)cell == (int)EnumA14.unknown)
+                            continue;
+                        probabilityList[(int)cell]++;
+                    }
+                    break;
+                case EnumGermanCreditData.A15:
+                    addZero(ref probabilityList,
+                        Enum.GetValues(typeof(EnumA15)).Length - 1);
+                    foreach (double cell in discretizedList)
+                    {
+                        if ((int)cell == (int)EnumA15.unknown)
+                            continue;
+                        probabilityList[(int)cell]++;
+                    }
+                    break;
+                case EnumGermanCreditData.A17:
+                    addZero(ref probabilityList,
+                        Enum.GetValues(typeof(EnumA17)).Length - 1);
+                    foreach (double cell in discretizedList)
+                    {
+                        if ((int)cell == (int)EnumA17.unknown)
+                            continue;
+                        probabilityList[(int)cell]++;
+                    }
+                    break;
+                case EnumGermanCreditData.A19:
+                    addZero(ref probabilityList,
+                        Enum.GetValues(typeof(EnumA19)).Length - 1);
+                    foreach (double cell in discretizedList)
+                    {
+                        if ((int)cell == (int)EnumA19.unknown)
+                            continue;
+                        probabilityList[(int)cell]++;
+                    }
+                    break;
+                case EnumGermanCreditData.A20:
+                    addZero(ref probabilityList,
+                        Enum.GetValues(typeof(EnumA20)).Length - 1);
+                    foreach (double cell in discretizedList)
+                    {
+                        if ((int)cell == (int)EnumA20.unknown)
+                            continue;
+                        probabilityList[(int)cell]++;
+                    }
+                    break;
+                default:
+                    Print("ProbabilityDiscrete", "default");
+                    break;
+            }
+            for (int i = 0; i < probabilityList.Count(); i++)
+            {
+                probabilityList[i] /= discretizedList.Length;
+            }
+
+            return probabilityList.ToArray();
+        }
+
+        private static double[] probabilityDiscrete(double[] discretizedList, 
+            EnumCreditRisk discreteType)
         {
             List<double> probabilityList = new List<double>();
             switch (discreteType)
@@ -211,6 +359,56 @@ namespace ZScore
                                 break;
                             case (int)EnumHeartDisease.AgeRange:
                                 len += (Enum.GetValues(typeof(EnumAgeRange)).Length - 1);
+                                break;
+                        }
+                    }
+                    break;
+
+                case EnumDataTypes.GermanCreditData:
+                    foreach (int i in tabTypes)
+                    {
+                        switch (i)
+                        {
+                            case (int)EnumGermanCreditData.Numerical:
+                                len++;
+                                break;
+                            case (int)EnumGermanCreditData.A1:
+                                len += (Enum.GetValues(typeof(EnumA1)).Length - 1);
+                                break;
+                            case (int)EnumGermanCreditData.A3:
+                                len += (Enum.GetValues(typeof(EnumA3)).Length - 1);
+                                break;
+                            case (int)EnumGermanCreditData.A4:
+                                len += (Enum.GetValues(typeof(EnumA4)).Length - 1);
+                                break;
+                            case (int)EnumGermanCreditData.A6:
+                                len += (Enum.GetValues(typeof(EnumA6)).Length - 1);
+                                break;
+                            case (int)EnumGermanCreditData.A7:
+                                len += (Enum.GetValues(typeof(EnumA7)).Length - 1);
+                                break;
+                            case (int)EnumGermanCreditData.A9:
+                                len += (Enum.GetValues(typeof(EnumA9)).Length - 1);
+                                break;
+                            case (int)EnumGermanCreditData.A10:
+                                len += (Enum.GetValues(typeof(EnumA10)).Length - 1);
+                                break;
+                            case (int)EnumGermanCreditData.A12:
+                                len += (Enum.GetValues(typeof(EnumA12)).Length - 1);
+                                break;
+                            case (int)EnumGermanCreditData.A14:
+                                len += (Enum.GetValues(typeof(EnumA14)).Length - 1);
+                                break;
+                            case (int)EnumGermanCreditData.A15:
+                                len += (Enum.GetValues(typeof(EnumA15)).Length - 1);
+                                break;
+                            case (int)EnumGermanCreditData.A17:
+                                len += (Enum.GetValues(typeof(EnumA17)).Length - 1);
+                                break;
+                            case (int)EnumGermanCreditData.A19:
+                            case (int)EnumGermanCreditData.A20:
+                            case (int)EnumGermanCreditData.Classification:
+                                len += (Enum.GetValues(typeof(EnumA20)).Length - 1);
                                 break;
                         }
                     }

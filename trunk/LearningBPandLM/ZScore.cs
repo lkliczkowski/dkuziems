@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
 
 namespace ZScore
 {
@@ -15,12 +11,15 @@ namespace ZScore
         public EnumDataTypes DataType;
         private int[] columnType;
         private Column<double>[] normalizedData;
-        public Column<double>[] Data
+
+        /// <summary>
+        /// Zwraca znormalizowane dane
+        /// </summary>
+        public Column<double>[] NormalizedData
         {
             get { return normalizedData; }
         }
 
-        //TODO: example data
         private ZScore()
             : this("ExampleData.csv", "normalizedExample.csv", EnumDataTypes.HeartDisease)
         {}
@@ -34,10 +33,10 @@ namespace ZScore
             DATAFILE = f1;
             OUTPUTFILE = f2;
             DataType = dt;
-            InitData();
+            InitDataColumnType();
         }
 
-        private void InitData()
+        private void InitDataColumnType()
         {
             switch (DataType)
             {
@@ -45,6 +44,9 @@ namespace ZScore
                     break;
                 case EnumDataTypes.HeartDisease:
                     columnType = ColumnTypes.HeartDisease;
+                    break;
+                case EnumDataTypes.GermanCreditData:
+                    columnType = ColumnTypes.GermanCreditData;
                     break;
                 case EnumDataTypes.LetterRecognitionA:
                     columnType = ColumnTypes.LetterRecognition;
@@ -110,6 +112,7 @@ namespace ZScore
             switch (DataType)
             {
                 case EnumDataTypes.HeartDisease:
+                case EnumDataTypes.GermanCreditData:
                 case EnumDataTypes.CreditRisk:
                     l = 2; break;
                 case EnumDataTypes.LetterRecognitionA:
@@ -137,6 +140,7 @@ namespace ZScore
             switch (DataType)
             {
                 case EnumDataTypes.HeartDisease:
+                case EnumDataTypes.GermanCreditData:
                 case EnumDataTypes.CreditRisk:
                     l = 2; break;
                 case EnumDataTypes.LetterRecognitionA:
@@ -145,15 +149,6 @@ namespace ZScore
             }
 
             return normalizedData[normalizedData.Length - l].GetByIndex(f);
-        }
-
-        /// <summary>
-        /// Funkcja zwracajaca dane
-        /// </summary>
-        /// <returns>znormalizowana tablica danych</returns>
-        public Column<double>[] NormalizedData()
-        {
-            return normalizedData;
         }
     }
 }

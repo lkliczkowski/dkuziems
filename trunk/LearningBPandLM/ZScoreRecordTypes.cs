@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
+﻿
 namespace ZScore
 {
     public static class ColumnTypes
@@ -26,6 +22,31 @@ namespace ZScore
             (int)EnumHeartDisease.AgeRange,//Age Range;
             (int)EnumHeartDisease.Value,//Age Disease;
             (int)EnumHeartDisease.AbsentPresent//Coronary Heart Disease
+        };
+
+        public static int[] GermanCreditData =
+        {
+            (int)EnumGermanCreditData.A1, //Status of existing checking account
+            (int)EnumGermanCreditData.Numerical, //Duration in month
+            (int)EnumGermanCreditData.A3, //Credit history
+            (int)EnumGermanCreditData.A4, //Purpose
+            (int)EnumGermanCreditData.Numerical, //Credit amount
+            (int)EnumGermanCreditData.A6, //Savings account/bonds
+            (int)EnumGermanCreditData.A7, //Present employment since
+            (int)EnumGermanCreditData.Numerical, //Installment rate in percentage of disposable income
+            (int)EnumGermanCreditData.A9, //Personal status and sex
+            (int)EnumGermanCreditData.A10, //Other debtors / guarantors
+            (int)EnumGermanCreditData.Numerical, //Present residence since
+            (int)EnumGermanCreditData.A12, //Property
+            (int)EnumGermanCreditData.Numerical, //Age in years
+            (int)EnumGermanCreditData.A14, //Other installment plans
+            (int)EnumGermanCreditData.A15, //Housing
+            (int)EnumGermanCreditData.Numerical, //Number of existing credits at this bank
+            (int)EnumGermanCreditData.A17, //Job
+            (int)EnumGermanCreditData.Numerical, //Number of people being liable to provide maintenance for
+            (int)EnumGermanCreditData.A19, //Telephone (binary)
+            (int)EnumGermanCreditData.A20, //foreign worker (binary)
+            (int)EnumGermanCreditData.Classification //binary
         };
 
         public static int[] LetterRecognition =

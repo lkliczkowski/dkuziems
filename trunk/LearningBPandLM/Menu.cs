@@ -66,7 +66,7 @@ namespace LearningBPandLM
                 menuCallback();
             }
             else
-                Console.WriteLine("Zła Opcja");
+                Console.WriteLine("Nieprawidłowa opcja");
 
         }
         

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace LearningBPandLM
 {
@@ -12,6 +11,8 @@ namespace LearningBPandLM
     /// </summary>
     class DatasetOperateWindowed : DatasetStructure
     {
+        const int DEFAULT_GENERALIZATIONSET_SIZE = 20,
+            DEFAULT_SAMPLE_SIZE = 10;
         //niedostępny
         private DatasetOperateWindowed()
         { }
@@ -20,14 +21,14 @@ namespace LearningBPandLM
          * Konstruktor z domyslnym podzialem zbiorow
          */ 
         public DatasetOperateWindowed(int setLength)
-            :this(setLength, 5)
+            : this(setLength, DEFAULT_GENERALIZATIONSET_SIZE)
         { }
 
         /*
          * Konstruktor glowny
          */
         public DatasetOperateWindowed(int setLength, int gPercent)
-            : base (setLength, gPercent, 5)
+            : base(setLength, gPercent, DEFAULT_SAMPLE_SIZE)
         {
             actualRange = 0;
             
