@@ -1,12 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.IO;
-using System.Diagnostics;
-using System.Collections;
 
-namespace LearningBPandLM
+namespace ImprovedLM
 {
-    class TrainerLMImproved
+    class ImprovedLMTrainer
     {
         #region parametry i zmienne algorytmu
         /// <summary>
@@ -142,7 +142,7 @@ namespace LearningBPandLM
         /// DatasetIndexes.TrainingSet - int[] dane trenujace (uczace)
         /// DatasetIndexes.GeneralizationSet - int[] dane testujace
         /// </summary>
-        private DatasetOperateWindowed DatasetIndexes;
+        private Backpropagation.DatasetOperateWindowed DatasetIndexes;
 
         /// <summary>
         /// docelowa dokladnosc modelu
@@ -197,31 +197,24 @@ namespace LearningBPandLM
         /// </summary>
         bool trainingComplete;
 
-        Hashtable durationOfEachEpoch;
-        Stopwatch timer;
-
         #endregion
 
         #region konstruktory
 
-        public TrainerLMImproved(ZScore.ZScore dataset)
-            : this(dataset, (dataset.sample(0).Length > 40) ?
-            (dataset.sample(0).Length / 4 - 1) :
-            dataset.sample(0).Length / 2 - 1, 
-            1500, 99)
+        public ImprovedLMTrainer(ZScore.ZScore dataset)
+            : this(dataset, dataset.sample(0).Length / 2 - 1, 1500, 99)
+            //:this (dataset, dataset.sample(0).Length/2-1, 1500, 99)
         {}
-
-        public TrainerLMImproved(ZScore.ZScore dataset, int hiddenNodeRatio, ulong mE, double dAcc)
+        public ImprovedLMTrainer(ZScore.ZScore dataset, int hiddenNodeRatio, ulong mE, double dAcc)
         {
 
             Dataset = dataset;
-            DatasetIndexes = new DatasetOperateWindowed(Dataset.NormalizedData[0].GetNum());
+            DatasetIndexes = new Backpropagation.DatasetOperateWindowed(Dataset.Data[0].GetNum());
 
-            NN = new neuralNetwork(Dataset.sample(0).Length, hiddenNodeRatio, 1, Dataset.DataType, ActivationFuncType.Sigmoid, ActivationFuncType.Sigmoid);
+            ///ostatnie 2 argumenty - false, false dla funkcji aktywacji ktore maja byc tanh(x)
+            NN = new neuralNetwork(Dataset.sample(0).Length, hiddenNodeRatio, 1, Dataset.DataType, false, false);
 
             createFileNames();
-            durationOfEachEpoch = new Hashtable();
-            timer = new Stopwatch();
 
             trainingSetMSE = generalizationSetMSE = double.MaxValue;
             maxEpochs = mE;
@@ -241,7 +234,7 @@ namespace LearningBPandLM
 
             NN.initializeWeights();
 
-            Program.PrintInfo("Utworzono sieć neuronową");
+            Program.PrintInfo("Utworzona sieć neuronową");
             networkStats();
         }
 
@@ -263,46 +256,34 @@ namespace LearningBPandLM
             Console.Write("\nNaciśnij dowolny przycisk by rozpocząć nauczanie sieci...\n");
             Console.ReadKey();
 
-            ShowOptions();
+            showOptions();
 
             //naglowki w pliku z wynikami
-            saveResult.WriteLine("#LMtraining: default μ = {0}, V = {1}, NN: {2}(+1):{3}(+1):{4}",
-                MI_DEFAULT, adjustmentFactorV, NN.numInput, NN.numHidden, NN.numOutput);
-            saveResult.WriteLine("#{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t",
-                "epoch", "tMSE", "tAcc", "gMSE", "gAcc", "ms");
+            saveResult.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}", "epoch", "tMSE", "tAcc", "gMSE", "gAcc");
             saveResult.Flush();
 
             saveResultsToFile(saveResult);
 
             PrintStatus();
 
-            double bestGeneralizationSetMSE = generalizationSetMSE;
-
             while ((trainingSetAccuracy < desiredAccuracy || generalizationSetAccuracy < desiredAccuracy)
                 && epochCounter < maxEpochs && !trainingComplete)
             {
-                
-
-                timer.Restart();
-
-                // pojedyncza epoka
+                //pojedyncza epoka
                 if (runTrainingEpoch(DatasetIndexes.TrainingSet))
                 {
-                    timer.Stop();
-                    durationOfEachEpoch.Add(epochCounter+1, timer.ElapsedMilliseconds);
-
                     //kolejna epoka, zwiekszamy licznik
                     epochCounter++;
                     totalFailEpochInARow = 0;
 
+                    double previousGeneralizationSetMSE = generalizationSetAccuracy;
 
                     //zapisujemy wyniki do pliku
                     saveResultsToFile(saveResult);
 
                     //dodatkowo zachowujemy wagi dla najnizszego MSE dla zbioru testujacego
-                    if (bestGeneralizationSetMSE > generalizationSetMSE)
+                    if (previousGeneralizationSetMSE > generalizationSetAccuracy)
                     {
-                        bestGeneralizationSetMSE = generalizationSetMSE;
                         NN.bestWeightInputHidden = NN.wInputHidden;
                         NN.bestWeightHiddenOutput = NN.wHiddenOutput;
                         //zapis wag do pliku pod warunkiem, ze minelo wiecej niz n-epok
@@ -320,7 +301,7 @@ namespace LearningBPandLM
                     //co n-ta epoke pyta co zrobic
                     if (epochCounter % 5 == 0)
                     {
-//                        ShowOptions();
+                        showOptions();
                     }
                 }
                 else
@@ -328,7 +309,7 @@ namespace LearningBPandLM
                     if (++totalFailEpochInARow > MAX_TOTAL_EPOCH_FAIL_IN_A_ROW)
                     {
                         Console.WriteLine("Osiagnieto maksymalna ilość epok bez zmian w modelu ({0})", MAX_TOTAL_EPOCH_FAIL_IN_A_ROW);
-                        ShowOptions();
+                        showOptions();
                         saveResult.Close();
                         return false;
                     }
@@ -350,10 +331,7 @@ namespace LearningBPandLM
                         Console.WriteLine("Dane przemieszane!");
                     }
                 }
-                
             }
-            saveResult.WriteLine("#ms.average(): {0}", calcMeanDuration(durationOfEachEpoch));
-            saveResult.Flush();
             saveResult.Close();
             return true;
         }
@@ -373,9 +351,8 @@ namespace LearningBPandLM
 
             try
             {
-                saveResult.WriteLine("{0}\t{1:N4}\t{2:N2}\t{3:N4}\t{4:N2}\t{5}", 
-                    epochCounter, trainingSetMSE, trainingSetAccuracy, generalizationSetMSE, 
-                    generalizationSetAccuracy, durationOfEachEpoch[epochCounter]);
+                saveResult.WriteLine("{0}\t{1:N4}\t{2:N2}\t{3:N4}\t{4:N2}",
+                    epochCounter, trainingSetMSE, trainingSetAccuracy, generalizationSetMSE, generalizationSetAccuracy);
 
                 saveResult.Flush();
             }
@@ -385,11 +362,7 @@ namespace LearningBPandLM
             }
         }
 
-        /// <summary>
-        /// Pojedyncza epoka - dla calego podzbioru danych feedforward+backpropagation,
-        /// wyliczenie aktualnego bledu oraz ustawienie nowych wag
-        /// </summary>
-        /// <param name="trainingSet">indeksy w zbiorze danych na ktorych trenujemy siec w tej epoce</param>
+
         private bool runTrainingEpoch(int[] trainingSet)
         {
             initializeForNewEpoch(true);
@@ -419,6 +392,18 @@ namespace LearningBPandLM
                     //faza wstecz
                     backward(Dataset.target(trainingSet[i]), i);
 
+                    //flaga informujaca czy wskazany przypadek zostal dobrze wyliczony przez siec
+                    bool patternCorrect = true;
+
+                    foreach (double actualVal in NN.outputNeurons)
+                    {
+                        if (NN.decideOutput(actualVal) != Dataset.target(trainingSet[i]))
+                            patternCorrect = false;
+                    }
+
+                    //jezeli niepoprawnie sklasyfikowany zwieksz blad
+                    if (!patternCorrect)
+                        incorrectPatterns++;
                 }
 
                 //zachowujemy stan wag
@@ -483,7 +468,7 @@ namespace LearningBPandLM
                     if (showAdditionalOutputMsgs) { 
                         if (!matrixInverseMsgShown)
                         {
-                            Console.Write("Macierz osobliwa ({0}), zwiekszam współczynnik μ! \nPrób:  ", e.Message);
+                            Console.Write("Macierz osobliwa ({0}), zwiekszam współczynnik μ! \nPróba:  ", e.Message);
                             matrixInverseMsgShown = true;
                         }
                         Console.Write("\b{0}", matrixInverseFailCounter);
@@ -516,17 +501,17 @@ namespace LearningBPandLM
         private void backward(double desiredOutputs, int sampleNum)
         {
             //odliczamy aktualny blad sieci dla wyjscia dla aktualnej probki
-            error = desiredOutputs - NN.OutputNeurons[0];
+            error = desiredOutputs - NN.outputNeurons[0];
             //error[sampleNum] = desiredOutputs - NN.outputNeurons[0];
 
 
             //lista pochodnych dla funkcji bledu oraz sum wazonych 
             //D(e_ij)/D(net_ij)
             double[] s = new double[NN.numHidden + NN.numOutput];
-            s[s.Length - 1] =  derivativeOfNetsSigmoid(NN.OutputNets[0]);
+            s[s.Length - 1] =  derivativeOfNetsTanh(NN.OutputNets[0]);
             for (int i = s.Length - 2; i >= 0; --i)
             {
-                s[i] = derivativeOfNetsSigmoid(NN.HiddenNets[i]) * NN.wHiddenOutput[i][0] * (-s.Last());
+                s[i] = derivativeOfNetsTanh(NN.HiddenNets[i]) * NN.wHiddenOutput[i][0] * (-s.Last());
             }
 
             //obliczamy wektor j
@@ -534,14 +519,14 @@ namespace LearningBPandLM
             for (int i = 0; i < NN.numHidden; i++)
                 for (int k = 0; k < NN.numInput + 1; k++)
                 {
-                    vectorJ[wIndex] = s[i] * NN.Inputs[k];
+                    vectorJ[wIndex] = s[i] * NN.inputNeurons[k];
                     wIndex++;
                 }
 
             for (int i = 0; i < NN.numOutput; i++)
                 for (int k = 0; k < NN.numHidden + 1; k++)
                 {
-                    vectorJ[wIndex] = s.Last() * NN.HiddenNeurons[k];
+                    vectorJ[wIndex] = s.Last() * NN.hiddenNeurons[k];
                     wIndex++;
                 }
 
@@ -663,10 +648,8 @@ namespace LearningBPandLM
         public void PrintStatus()
         {
             Program.PrintLongLine();
-            Console.Write("Epoka: {0} {3}ms  tMSE: {1:N4}\ttAcc: {2:N2}%", 
-                epochCounter, trainingSetMSE, trainingSetAccuracy, durationOfEachEpoch[epochCounter]);
-            Console.WriteLine("\tgMSE: {0:N4}\t gAcc: {1:N2}%\t", 
-                generalizationSetMSE, generalizationSetAccuracy);
+            Console.Write("Epoka: {0}\ttMSE: {1:N4}\ttAcc: {2:N2}%", epochCounter, trainingSetMSE, trainingSetAccuracy);
+            Console.WriteLine("\tgMSE: {0:N4}\t gAcc: {1:N2}%\t", generalizationSetMSE, generalizationSetAccuracy);
             Program.PrintLongLine();
         }
 
@@ -745,154 +728,79 @@ namespace LearningBPandLM
         /// <summary>
         /// pokazuje i obsluguje opcje podczas procesu nauczania
         /// </summary>
-        public void ShowOptions()
+        private void showOptions()
         {
-            if (!trainingComplete)
+            Console.WriteLine("[Enter] by kontynuować, [1] Zapisac wagi, [2] Wczytac wagi, [3] Przerwac");
+            int option;
+            try
             {
-                Console.WriteLine("[Enter] by kontynuować, [1] Zapisac wagi, [2] Wczytac wagi, [3] Przerwac");
-                int option;
+                option = Int32.Parse(Console.ReadLine());
+                string filename;
+                switch (option)
+                {
+                    case 1:
+                        Console.WriteLine("Podaj nazwę pliku, lub Enter dla domyślnej nazwy \"{0}\"",
+                            customWeightsOutputFile);
+                        filename = Console.ReadLine();
+                        if (String.Equals(filename, ""))
+                        {
+                            Console.WriteLine("Nie podano nazwy, domyślna nazwa pliku (\"{0}\")",
+                                customWeightsOutputFile);
+                            filename = customWeightsOutputFile;
+                        }
+                        NN.SaveWeights(customWeightsOutputFile);
+                        showOptions();
+                        break;
+                    case 2:
+                        Console.WriteLine("UWAGA! Wagi zostaną poprawnie wczytane "
+                            + "jeżeli rozmiar sieci będzie taki sam jak w momencie zapisu wag.");
+                        Console.WriteLine("Podaj nazwę pliku, lub Enter dla domyślnej nazwy \"{0}\"",
+                            customWeightsOutputFile);
+                        filename = Console.ReadLine();
+                        if (String.Equals(filename, ""))
+                        {
+                            Console.WriteLine("Nie podano nazwy, domyślna nazwa pliku (\"{0}\")",
+                                customWeightsOutputFile);
+                            filename = customWeightsOutputFile;
+                        }
+                        NN.LoadWeights(filename);
+                        showOptions();
+                        break;
+                    case 3:
+                        Console.WriteLine("Wybrano koniec nauczania sieci");
+                        trainingComplete = true;
+                        break;
+                    default:
+                        Console.WriteLine("Nie wybrano żadnej z powyższych opcji, kontynuować nauczanie sieci?"
+                            + "[Enter] Kontynuuj\t [1] Pokaż menu");
+                        try
+                        {
+                            option = Int32.Parse(Console.ReadLine());
+                            if (option == 1)
+                                showOptions();
+                        }
+                        catch
+                        {
+                            Console.WriteLine("Kontynuuje nauczanie...");
+                        }
+                        break;
+                }
+            }
+            catch
+            {
+                Console.WriteLine("Nie wybrano żadnej z powyższych opcji, kontynuować nauczanie sieci?"
+                    + "\n[Enter] Kontynuuj\t [1] Pokaż menu");
                 try
                 {
                     option = Int32.Parse(Console.ReadLine());
-                    string filename;
-                    switch (option)
-                    {
-                        case 1:
-                            Console.WriteLine("Podaj nazwę pliku, lub Enter dla domyślnej nazwy \"{0}\"",
-                                customWeightsOutputFile);
-                            filename = Console.ReadLine();
-                            if (String.Equals(filename, ""))
-                            {
-                                Console.WriteLine("Nie podano nazwy, domyślna nazwa pliku (\"{0}\")",
-                                    customWeightsOutputFile);
-                                filename = customWeightsOutputFile;
-                            }
-                            NN.SaveWeights(customWeightsOutputFile);
-                            ShowOptions();
-                            break;
-                        case 2:
-                            Console.WriteLine("UWAGA! Wagi zostaną poprawnie wczytane "
-                                + "jeżeli rozmiar sieci będzie taki sam jak w momencie zapisu wag.");
-                            Console.WriteLine("Podaj nazwę pliku, lub Enter dla domyślnej nazwy \"{0}\"",
-                                customWeightsOutputFile);
-                            filename = Console.ReadLine();
-                            if (String.Equals(filename, ""))
-                            {
-                                Console.WriteLine("Nie podano nazwy, domyślna nazwa pliku (\"{0}\")",
-                                    customWeightsOutputFile);
-                                filename = customWeightsOutputFile;
-                            }
-                            NN.LoadWeights(filename);
-                            ShowOptions();
-                            break;
-                        case 3:
-                            Console.WriteLine("Wybrano koniec nauczania sieci");
-                            trainingComplete = true;
-                            break;
-                        default:
-                            Console.WriteLine("Nie wybrano żadnej z powyższych opcji, kontynuować nauczanie sieci?"
-                                + "[Enter] Kontynuuj\t [1] Pokaż menu");
-                            try
-                            {
-                                option = Int32.Parse(Console.ReadLine());
-                                if (option == 1)
-                                    ShowOptions();
-                            }
-                            catch
-                            {
-                                Console.WriteLine("Kontynuuje nauczanie...");
-                            }
-                            break;
-                    }
+                    if (option == 1)
+                        showOptions();
                 }
                 catch
                 {
-                    Console.WriteLine("Nie wybrano żadnej z powyższych opcji, kontynuować nauczanie sieci?"
-                        + "\n[Enter] Kontynuuj\t [1] Pokaż menu");
-                    try
-                    {
-                        option = Int32.Parse(Console.ReadLine());
-                        if (option == 1)
-                            ShowOptions();
-                    }
-                    catch
-                    {
-                        Console.WriteLine("Kontynuuje nauczanie...");
-                    }
+                    Console.WriteLine("Kontynuuje nauczanie...");
                 }
             }
-            else
-            {
-                Console.WriteLine("[Enter] by kontynuować, [1] Zapisac wagi");
-                int option;
-                try
-                {
-                    option = Int32.Parse(Console.ReadLine());
-                    string filename;
-                    switch (option)
-                    {
-                        case 1:
-                            Console.WriteLine("Podaj nazwę pliku, lub Enter dla domyślnej nazwy \"{0}\"",
-                                customWeightsOutputFile);
-                            filename = Console.ReadLine();
-                            if (String.Equals(filename, ""))
-                            {
-                                Console.WriteLine("Nie podano nazwy, domyślna nazwa pliku (\"{0}\")",
-                                    customWeightsOutputFile);
-                                filename = customWeightsOutputFile;
-                            }
-                            NN.SaveWeights(customWeightsOutputFile);
-                            ShowOptions();
-                            break;
-                        default:
-                            Console.WriteLine("Nie wybrano żadnej z powyższych opcji, kontynuować nauczanie sieci?"
-                                + "[Enter] Kontynuuj\t [1] Pokaż menu");
-                            try
-                            {
-                                option = Int32.Parse(Console.ReadLine());
-                                if (option == 1)
-                                    ShowOptions();
-                            }
-                            catch
-                            {
-                                Console.WriteLine("Kontynuuje nauczanie...");
-                            }
-                            break;
-                    }
-                }
-                catch
-                {
-                    Console.WriteLine("Nie wybrano żadnej z powyższych opcji, kontynuować nauczanie sieci?"
-                        + "\n[Enter] Kontynuuj\t [1] Pokaż menu");
-                    try
-                    {
-                        option = Int32.Parse(Console.ReadLine());
-                        if (option == 1)
-                            ShowOptions();
-                    }
-                    catch
-                    {
-                        Console.WriteLine("Kontynuuje nauczanie...");
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Oblicza srednia trwania epok dla podanej tablicy
-        /// </summary>
-        /// <param name="durationHashtable">Hashtable durationOfEachEpoch</param>
-        /// <returns>durationOfEachEpoch.Average()</returns>
-        private static double calcMeanDuration(Hashtable durationOfEachEpoch)
-        {
-            long total = new long();
-
-            foreach (long l in durationOfEachEpoch.Values)
-            {
-                total += l;
-            }
-
-            return (double)(total / durationOfEachEpoch.Count);
         }
 
         private static double[][] multidimensionalArrayToJaggedArray(double[,] mArray)

@@ -4,6 +4,13 @@ using System.IO;
 
 namespace LearningBPandLM
 {
+    public enum ActivationFuncType
+    {
+        Linear,
+        Sigmoid,
+        Tanh
+    }
+
     class neuralNetwork
     {
         public const int BIAS = 1;
@@ -12,9 +19,9 @@ namespace LearningBPandLM
         public int numHidden { get; set; }
         public int numOutput { get; set; }
 
-        public double[] inputNeurons { get; set; }
-        public double[] hiddenNeurons { get; set; }
-        public double[] outputNeurons { get; set; }
+        public double[] Inputs { get; set; }
+        public double[] HiddenNeurons { get; set; }
+        public double[] OutputNeurons { get; set; }
 
         /// <summary>
         /// net_ij - przechowuje wartosci sum wazonych,
@@ -22,6 +29,7 @@ namespace LearningBPandLM
         /// </summary>
         private double[] hiddenNets;
         public double[] HiddenNets { get { return hiddenNets; } }
+
         /// <summary>
         /// net_ij - przechowuje wartosc sumy wazonej dla WY,
         /// odwoluje sie do niej algorytm LM
@@ -29,33 +37,49 @@ namespace LearningBPandLM
         private double[] outputNets;
         public double[] OutputNets { get { return outputNets; } }
 
+        /// <summary>
+        /// Wagi pomiedzy We a warstwa ukryta
+        /// </summary>
         public double[][] wInputHidden { get; set; }
+
+        /// <summary>
+        /// Wagi pomiedzy warstwa ukryta a WY
+        /// </summary>
         public double[][] wHiddenOutput { get; set; }
 
+        /// <summary>
+        /// Wagi input-hidden dla najlepszego generalizationSetMSE
+        /// </summary>
         public double[][] bestWeightInputHidden { get; set; }
+        /// <summary>
+        /// Wagi hidden-output dla najlepszego generalizationSetMSE
+        /// </summary>
         public double[][] bestWeightHiddenOutput { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public double[][] previousWeightsInputHidden { get; set; }
         public double[][] previousWeightsHiddenOutput { get; set; }
 
         private double decideOutputRangeA;
         private double decideOutputRangeB;
 
-        bool firstActivationIsSigmoid, secondActivationIsSigmoid;
+        ActivationFuncType firstActivationIsSigmoid, secondActivationIsSigmoid;
 
-        public neuralNetwork(int nInput, int nHidden, int nOutput, ZScore.EnumDataTypes dataType, 
-            bool firstActivationFunc, bool secondActivationFunc)
+        public neuralNetwork(int nInput, int nHidden, int nOutput, ZScore.EnumDataTypes dataType,
+            ActivationFuncType firstActivationFunc, ActivationFuncType secondActivationFunc)
         {
             numInput = nInput;
             numHidden = nHidden;
             numOutput = nOutput;
 
-            inputNeurons = new double[numInput + 1];
-            inputNeurons[numInput] = BIAS;
+            Inputs = new double[numInput + 1];
+            Inputs[numInput] = BIAS;
 
-            hiddenNeurons = new double[numHidden + 1];
-            hiddenNeurons[numHidden] = BIAS;
-            outputNeurons = new double[numOutput];
+            HiddenNeurons = new double[numHidden + 1];
+            HiddenNeurons[numHidden] = BIAS;
+            OutputNeurons = new double[numOutput];
 
             //net_ij
             hiddenNets = new double[numHidden + 1];
@@ -75,20 +99,19 @@ namespace LearningBPandLM
 		        wHiddenOutput[i] = new double[numOutput];			
 	        }
 
-            //zakresy klasyfikacji
+            //zakresy klasyfikacji, sluza tylko do okreslania Accuracy, nie wplywaja na MSE
             switch (dataType)
             {
-                case ZScore.EnumDataTypes.unknown:
-                    decideOutputRangeA = 0;
-                    decideOutputRangeB = 0;
-                    break;
                 case ZScore.EnumDataTypes.HeartDisease:
+                case ZScore.EnumDataTypes.GermanCreditData:
+                case ZScore.EnumDataTypes.CreditRisk:
+                default:
                     decideOutputRangeA = 0.5;
                     decideOutputRangeB = 0.5;
                     break;
                 case ZScore.EnumDataTypes.LetterRecognitionA:
-                    decideOutputRangeA = 0.1;
-                    decideOutputRangeB = 0.9;
+                    decideOutputRangeA = 0.2;//0.1;
+                    decideOutputRangeB = 0.8;//0.9;
                     break;
             }
 
@@ -115,7 +138,7 @@ namespace LearningBPandLM
                 //flaga informujaca czy wskazany przypadek zostal dobrze wyliczony przez siec
                 bool correctResult = true;
 
-                foreach(double actualVal in outputNeurons)
+                foreach(double actualVal in OutputNeurons)
                 {
                     if (decideOutput(actualVal) != Dataset.target(setIndex[i])) 
                         correctResult = false;
@@ -146,7 +169,7 @@ namespace LearningBPandLM
                 feedForward(Dataset.sample(setIndex[i]));
 
                 //wyliczamy Set Mean Squared Error
-                foreach(double actualVal in outputNeurons)
+                foreach(double actualVal in OutputNeurons)
                     mse += Math.Pow((actualVal - Dataset.target(setIndex[i])), 2);
             }
 
@@ -182,9 +205,9 @@ namespace LearningBPandLM
                     if (i != numLayerFrom)
                     {
                         //losowe wagi
-                        //weightList[i][j] = (r.NextDouble() * 2 - 1); // (-1.1)
+                        weightList[i][j] = (r.NextDouble() * 2 - 1); // (-1.1)
                         //weightList[i][j] = (r.NextDouble() * 1 - 0.5); // (-0.5,0.5)
-                        weightList[i][j] = 0.1;
+                        //weightList[i][j] = 0.1;
                     }
                     else
                     {
@@ -235,18 +258,18 @@ namespace LearningBPandLM
         public void feedForward(double[] sample)
         {
             //przypisuje wartosci na WE (wejsciu)
-            for (int i = 0; i < numInput; i++) inputNeurons[i] = sample[i];
+            for (int i = 0; i < numInput; i++) Inputs[i] = sample[i];
 
             //obliczamy wartosci w hiddenLayer
             //hiddenNeurons = calculateOfOutputs(numInput, numHidden, inputNeurons, hiddenNeurons, wInputHidden, ref hiddenNets, true);
 
             //dla sigmoid 
-            hiddenNeurons = calculateOfOutputs(numInput, numHidden, inputNeurons, hiddenNeurons, wInputHidden, 
+            HiddenNeurons = calculateOfOutputs(numInput, numHidden, Inputs, HiddenNeurons, wInputHidden, 
                 ref hiddenNets, firstActivationIsSigmoid);
 
             //wyliczamy wartosci na WY
-            outputNeurons = calculateOfOutputs(numHidden, numOutput, hiddenNeurons, outputNeurons, wHiddenOutput, 
-                ref outputNets, firstActivationIsSigmoid);
+            OutputNeurons = calculateOfOutputs(numHidden, numOutput, HiddenNeurons, OutputNeurons, wHiddenOutput, 
+                ref outputNets, secondActivationIsSigmoid);
 
         }
         
@@ -261,8 +284,8 @@ namespace LearningBPandLM
         /// <param name="useSigmoid">okresla funkcje aktywacji (true dla sigmoid, false dla Tanh)</param>
         /// <returns>obliczone wartosci dla neuronsCurrentLayer</returns>
         private static double[] calculateOfOutputs
-            (int nLayerFrom, int nCurrentLayer, double[] neuronsLayerFrom, double[] neuronsCurrentLayer, 
-            double[][] wWithinLayers, ref double[] currNets, bool useSigmoid)
+            (int nLayerFrom, int nCurrentLayer, double[] neuronsLayerFrom, double[] neuronsCurrentLayer,
+            double[][] wWithinLayers, ref double[] currNets, ActivationFuncType useSigmoid)
         {
             for (int j = 0; j < nCurrentLayer; j++)
             {
@@ -275,11 +298,18 @@ namespace LearningBPandLM
 
                 currNets[j] = neuronsCurrentLayer[j];
 
-                //set to result of sigmoid
-                if(useSigmoid)
-                    neuronsCurrentLayer[j] = activationFunctionSigmoid(neuronsCurrentLayer[j]);
-                else
-                    neuronsCurrentLayer[j] = activationFunctionTanh(neuronsCurrentLayer[j]);
+                switch(useSigmoid)
+                {
+                    case ActivationFuncType.Sigmoid:
+                        neuronsCurrentLayer[j] = activationFunctionSigmoid(neuronsCurrentLayer[j]);
+                        break;
+                    case ActivationFuncType.Tanh:
+                        neuronsCurrentLayer[j] = activationFunctionTanh(neuronsCurrentLayer[j]);
+                        break;
+                    case ActivationFuncType.Linear:
+                    default:
+                        break;
+                }
             }
             return neuronsCurrentLayer;
         }

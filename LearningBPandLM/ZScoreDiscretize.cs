@@ -106,6 +106,235 @@ namespace ZScore
                     }
                     break;
                 #endregion
+                #region GermanCreditData
+                case EnumDataTypes.GermanCreditData:
+                    Print("ZScoreDiscretize.Discretize", "case EnumDataTypes.GermanCreditData");
+                    for (int j = 0; j < rawData[0].GetNum(); j++)
+                    {
+                        for (int i = 0; i < columnType.Length; i++)
+                        {
+                            switch (columnType[i])
+                            {
+                                case (int)EnumGermanCreditData.Numerical:
+                                case (int)EnumGermanCreditData.Classification:
+                                    double val;
+                                    try
+                                    {
+                                        val = double.Parse(rawData[i].Get(j));
+                                    }
+                                    catch
+                                    {
+                                        failParseInfo("value", i);
+                                        Console.WriteLine(rawData[i].Get(j));
+                                        val = -1;
+                                    }
+                                    discretizedData[i].AddData(val);
+                                    break;
+
+                                case (int)EnumGermanCreditData.A1:
+                                    EnumA1 a1;
+                                    try
+                                    {
+                                        a1 = (EnumA1)Enum.
+                                            Parse(typeof(EnumA1), rawData[i].Get(j));
+                                    }
+                                    catch
+                                    {
+                                        failParseInfo("a1", i, j);
+                                        a1 = EnumA1.unknown;
+                                    }
+                                    discretizedData[i].AddData(((int)a1));
+                                    break;
+
+                                case (int)EnumGermanCreditData.A3:
+                                    EnumA3 a3;
+                                    try
+                                    {
+                                        a3 = (EnumA3)Enum.
+                                            Parse(typeof(EnumA3), rawData[i].Get(j));
+                                    }
+                                    catch
+                                    {
+                                        failParseInfo("a3", i, j);
+                                        a3 = EnumA3.unknown;
+                                    }
+                                    discretizedData[i].AddData(((int)a3));
+                                    break;
+
+                                case (int)EnumGermanCreditData.A4:
+                                    EnumA4 a4;
+                                    try
+                                    {
+                                        a4 = (EnumA4)Enum.
+                                            Parse(typeof(EnumA4), rawData[i].Get(j));
+                                    }
+                                    catch
+                                    {
+                                        failParseInfo("a4", i, j);
+                                        a4 = EnumA4.unknown;
+                                    }
+                                    discretizedData[i].AddData(((int)a4));
+                                    break;
+
+                                case (int)EnumGermanCreditData.A6:
+                                    EnumA6 a6;
+                                    try
+                                    {
+                                        a6 = (EnumA6)Enum.
+                                            Parse(typeof(EnumA6), rawData[i].Get(j));
+                                    }
+                                    catch
+                                    {
+                                        failParseInfo("a6", i, j);
+                                        a6 = EnumA6.unknown;
+                                    }
+                                    discretizedData[i].AddData(((int)a6));
+                                    break;
+
+                                case (int)EnumGermanCreditData.A7:
+                                    EnumA7 a7;
+                                    try
+                                    {
+                                        a7 = (EnumA7)Enum.
+                                            Parse(typeof(EnumA7), rawData[i].Get(j));
+                                    }
+                                    catch
+                                    {
+                                        failParseInfo("a7", i, j);
+                                        a7 = EnumA7.unknown;
+                                    }
+                                    discretizedData[i].AddData(((int)a7));
+                                    break;
+
+                                case (int)EnumGermanCreditData.A9:
+                                    EnumA9 a9;
+                                    try
+                                    {
+                                        a9 = (EnumA9)Enum.
+                                            Parse(typeof(EnumA9), rawData[i].Get(j));
+                                    }
+                                    catch
+                                    {
+                                        failParseInfo("a9", i, j);
+                                        a9 = EnumA9.unknown;
+                                    }
+                                    discretizedData[i].AddData(((int)a9));
+                                    break;
+
+                                case (int)EnumGermanCreditData.A10:
+                                    EnumA10 a10;
+                                    try
+                                    {
+                                        a10 = (EnumA10)Enum.
+                                            Parse(typeof(EnumA10), rawData[i].Get(j));
+                                    }
+                                    catch
+                                    {
+                                        failParseInfo("a10", i, j);
+                                        a10 = EnumA10.unknown;
+                                    }
+                                    discretizedData[i].AddData(((int)a10));
+                                    break;
+
+                                case (int)EnumGermanCreditData.A12:
+                                    EnumA12 a12;
+                                    try
+                                    {
+                                        a12 = (EnumA12)Enum.
+                                            Parse(typeof(EnumA12), rawData[i].Get(j));
+                                    }
+                                    catch
+                                    {
+                                        failParseInfo("a12", i, j);
+                                        a12 = EnumA12.unknown;
+                                    }
+                                    discretizedData[i].AddData(((int)a12));
+                                    break;
+
+                                case (int)EnumGermanCreditData.A14:
+                                    EnumA14 a14;
+                                    try
+                                    {
+                                        a14 = (EnumA14)Enum.
+                                            Parse(typeof(EnumA14), rawData[i].Get(j));
+                                    }
+                                    catch
+                                    {
+                                        failParseInfo("a14", i, j);
+                                        a14 = EnumA14.unknown;
+                                    }
+                                    discretizedData[i].AddData(((int)a14));
+                                    break;
+
+                                case (int)EnumGermanCreditData.A15:
+                                    EnumA15 a15;
+                                    try
+                                    {
+                                        a15 = (EnumA15)Enum.
+                                            Parse(typeof(EnumA15), rawData[i].Get(j));
+                                    }
+                                    catch
+                                    {
+                                        failParseInfo("a15", i, j);
+                                        a15 = EnumA15.unknown;
+                                    }
+                                    discretizedData[i].AddData(((int)a15));
+                                    break;
+
+                                case (int)EnumGermanCreditData.A17:
+                                    EnumA17 a17;
+                                    try
+                                    {
+                                        a17 = (EnumA17)Enum.
+                                            Parse(typeof(EnumA17), rawData[i].Get(j));
+                                    }
+                                    catch
+                                    {
+                                        failParseInfo("a17", i, j);
+                                        a17 = EnumA17.unknown;
+                                    }
+                                    discretizedData[i].AddData(((int)a17));
+                                    break;
+
+                                case (int)EnumGermanCreditData.A19:
+                                    EnumA19 a19;
+                                    try
+                                    {
+                                        a19 = (EnumA19)Enum.
+                                            Parse(typeof(EnumA19), rawData[i].Get(j));
+                                    }
+                                    catch
+                                    {
+                                        failParseInfo("a19", i, j);
+                                        a19 = EnumA19.unknown;
+                                    }
+                                    discretizedData[i].AddData(((int)a19));
+                                    break;
+
+                                case (int)EnumGermanCreditData.A20:
+                                    EnumA20 a20;
+                                    try
+                                    {
+                                        a20 = (EnumA20)Enum.
+                                            Parse(typeof(EnumA20), rawData[i].Get(j));
+                                    }
+                                    catch
+                                    {
+                                        failParseInfo("a20", i, j);
+                                        a20 = EnumA20.unknown;
+                                    }
+                                    discretizedData[i].AddData(((int)a20));
+                                    break;
+
+                                default:
+                                    Print("Unrecognized", "HeartDisease[switch by columnType]");
+                                    discretizedData[i].AddData(-1);
+                                    break;
+                            }
+                        }
+                    }
+                    break;
+                #endregion
                 #region letterRecognition
                 case EnumDataTypes.LetterRecognitionA:
                     Print("ZScoreDiscretize.Discretize", "case LetterRecognitionA");

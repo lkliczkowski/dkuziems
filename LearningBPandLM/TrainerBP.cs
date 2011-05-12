@@ -1,9 +1,11 @@
 ﻿using System;
 using System.IO;
+using System.Diagnostics;
+using System.Collections;
 
 namespace LearningBPandLM
 {
-    class BPlearning
+    class TrainerBP
     {
         #region parametry i zmienne algorytmu
 
@@ -94,27 +96,38 @@ namespace LearningBPandLM
         /// </summary>
         bool trainingComplete;
 
+        /// <summary>
+        /// domyslna wartosc wspolczynnika uczenia
+        /// </summary>
+        const double LEARNINGRATEDEFAULT = 0.1;
+
+        Hashtable durationOfEachEpoch;
+        Stopwatch timer;
+
         #endregion
 
         #region konstruktory
 
-        public BPlearning(ZScore.ZScore dataset)
+        public TrainerBP(ZScore.ZScore dataset)
             : this(dataset, dataset.sample(0).Length - 1)
         { }
 
-        public BPlearning(ZScore.ZScore dataset, int hiddenNodeRatio)
-            :this (dataset, hiddenNodeRatio, 0.001, 1500, 99)
+        public TrainerBP(ZScore.ZScore dataset, int hiddenNodeRatio)
+            :this (dataset, hiddenNodeRatio, LEARNINGRATEDEFAULT, 1500, 99)
         { }
 
-        public BPlearning(ZScore.ZScore dataset, int hiddenNodeRatio, double lr, ulong mE, double desiredAcc)
+        public TrainerBP(ZScore.ZScore dataset, int hiddenNodeRatio, double lr, ulong mE, double desiredAcc)
         {
             this.Dataset = dataset;
 
             ///ostatnie 2 argumenty - false, true dla funkcji aktywacji ktore maja byc tanh(x), true dla sigmoid
-            NN = new neuralNetwork(Dataset.sample(0).Length, hiddenNodeRatio, 1, dataset.DataType, false, true);
-            DatasetIndexes = new DatasetOperateWindowed(Dataset.Data[0].GetNum());
+            NN = new neuralNetwork(Dataset.sample(0).Length, hiddenNodeRatio, 
+                1, dataset.DataType, ActivationFuncType.Tanh, ActivationFuncType.Sigmoid);
+            DatasetIndexes = new DatasetOperateWindowed(Dataset.NormalizedData[0].GetNum());
 
             createFileNames();
+            durationOfEachEpoch = new Hashtable();
+            timer = new Stopwatch();
 
             maxEpochs = mE;
             learningRate = lr;
@@ -132,7 +145,7 @@ namespace LearningBPandLM
             NN.initializeWeights();
             trainingComplete = false;
 
-            Program.PrintInfo("Utworzona sieć neuronową");
+            Program.PrintInfo("Utworzono sieć neuronową");
             networkStats();
         }
         #endregion
@@ -169,27 +182,44 @@ namespace LearningBPandLM
             ShowOptions();
 
             //naglowki w pliku z wynikami
-            saveResult.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}", "epoch", "tMSE", "tAcc", "gMSE", "gAcc");
+            saveResult.WriteLine("#LMtraining: learningRate {0}, NN: {1}(+1):{2}(+1):{3}",
+                learningRate, NN.numInput, NN.numHidden, NN.numOutput);
+            saveResult.WriteLine("#{0}\t{1}\t{2}\t{3}\t{4}\t{5}",
+                "epoch", "tMSE", "tAcc", "gMSE", "gAcc", "ms");
             saveResult.Flush();
 
             saveResultsToFile(saveResult);
 
+            PrintStatus();
+
+            double bestGeneralizationSetMSE = generalizationSetMSE;
+
             while ((trainingSetAccuracy < desiredAccuracy || generalizationSetAccuracy < desiredAccuracy) 
                 && epochCounter < maxEpochs && !trainingComplete)
             {
+
+                //kolejna epoka, zwiekszamy licznik
+                epochCounter++;
+
+
+                timer.Restart();
+
                 //pojedyncza epoka
                 runTrainingEpoch(DatasetIndexes.TrainingSet);
 
+                timer.Stop();
+                durationOfEachEpoch.Add(epochCounter, timer.ElapsedMilliseconds);
+
                 /* zapisujemy stan generalizationSetAccuracy by sprawdzic czy MSE sie zmniejszyl
                  * jezeli tak zapisujemy wagi do NN.bestWeights- */
-                double previousGeneralizationSetMSE = generalizationSetAccuracy;
 
                 //zapisujemy wyniki do pliku
                 saveResultsToFile(saveResult);
 
                 //zachowujemy wagi dla najnizszego MSE dla zbioru testujacego
-                if (previousGeneralizationSetMSE > generalizationSetAccuracy)
+                if (bestGeneralizationSetMSE > generalizationSetMSE)
                 {
+                    bestGeneralizationSetMSE = generalizationSetMSE;
                     NN.bestWeightInputHidden = NN.wInputHidden;
                     NN.bestWeightHiddenOutput = NN.wHiddenOutput;
                     //zapis wag do pliku pod warunkiem, ze minelo wiecej niz n-epok
@@ -202,22 +232,16 @@ namespace LearningBPandLM
                 //zmieniamy zakres indeksu podzbioru dla zbioru trenujacego
                 DatasetIndexes.IncreaseRange();
 
-                //kolejna epoka, zwiekszamy licznik
-                epochCounter++;
-
-                //zapisujemy wyniki do pliku
-                saveResult.WriteLine("{0}\t{1:N4}\t{2:N2}\t{3:N4}\t{4:N2}", 
-                    epochCounter, trainingSetMSE, trainingSetAccuracy, generalizationSetMSE, generalizationSetAccuracy);
-                saveResult.Flush();
-
                 PrintStatus();
 
                 if (epochCounter % 10 == 0)
                 {
-//                    ShowOptions();
+                    //Console.WriteLine("średni czas: {0}", calcMeanDuration(durationOfEachEpoch));
+                    //ShowOptions();
                 }
             }
-
+            saveResult.WriteLine("#ms.average(): {0}", calcMeanDuration(durationOfEachEpoch));
+            saveResult.Flush();
             saveResult.Close();
         }
 
@@ -228,42 +252,16 @@ namespace LearningBPandLM
         /// <param name="trainingSet">indeksy w zbiorze danych na ktorych trenujemy siec w tej epoce</param>
         private void runTrainingEpoch(int[] trainingSet)
         {
-            //niepoprawnie skasyfikowane przypadki (do wyznaczenia celnosci modelu)
-            double incorrectPatterns = 0;
-            //suma błędu "mean squared error"
-            double mse = 0; 
-
             for (int i = 0; i < trainingSet.Length; i++)
             {
                 //wyliczamy wyjscia i propagujemy wstecz
                 NN.feedForward(Dataset.sample(trainingSet[i]));
                 backpropagate(Dataset.target(trainingSet[i]));
-
-                //flaga informujaca czy wskazany przypadek zostal dobrze wyliczony przez siec
-                bool patternCorrect = true;
-
-                foreach (double actualVal in NN.outputNeurons)
-                {
-                    if (NN.decideOutput(actualVal) != Dataset.target(trainingSet[i])) 
-                        patternCorrect = false;
-
-                    //wylicz sume kwadratow bledu dla wskazanych
-                    mse += Math.Pow((actualVal - Dataset.target(trainingSet[i])), 2);
-                }
-
-                //jezeli niepoprawnie sklasyfikowany zwieksz blad
-                if (!patternCorrect) 
-                    incorrectPatterns++;
-
             }
 
             //aktualizacja wag - zostaje wykonana na podstawie obecnych wartosci 
             //deltaInputHidden/deltaHiddenOutput wyliczanych w backpropagate()
             updateWeights();
-
-            //aktualizuj wspolczynnik celnosci oraz blad dla zbioru uczacego
-            trainingSetAccuracy = 100 - (incorrectPatterns / trainingSet.Length * 100);
-            trainingSetMSE = mse / (NN.numOutput * trainingSet.Length);
         }
 
         /// <summary>
@@ -276,13 +274,13 @@ namespace LearningBPandLM
             for (int k = 0; k < NN.numOutput; k++)
             {
                 //gradient (kierunke spadku) dla wyjscia y_k*(1-y_k)*(d_k - y_k)
-                outputErrorGradients[k] = getOutputErrorGradient(desiredOutputs, NN.outputNeurons[k]);
+                outputErrorGradients[k] = getOutputErrorGradient(desiredOutputs, NN.OutputNeurons[k]);
 
                 //z j-tym neuronem warstwy ukrytej
                 for (int j = 0; j <= NN.numHidden; j++)
                 {
                     //zmiana(przysrost) wagi z reguly delta
-                    deltaHiddenOutput[j][k] += learningRate * NN.hiddenNeurons[j] * outputErrorGradients[k];
+                    deltaHiddenOutput[j][k] += learningRate * NN.HiddenNeurons[j] * outputErrorGradients[k];
                 }
             }
 
@@ -296,7 +294,7 @@ namespace LearningBPandLM
                 //z i-tym neuronem warstwy WE
                 for (int i = 0; i <= NN.numInput; i++)
                 {
-                    deltaInputHidden[i][j] += learningRate * NN.inputNeurons[i] * hiddenErrorGradients[j];
+                    deltaInputHidden[i][j] += learningRate * NN.Inputs[i] * hiddenErrorGradients[j];
                 }
             }
         }
@@ -397,7 +395,7 @@ namespace LearningBPandLM
                 weightedSum += NN.wHiddenOutput[j][k] * outputErrorGradients[k];
             }
 
-            return NN.hiddenNeurons[j] * (1 - NN.hiddenNeurons[j]) * weightedSum;
+            return NN.HiddenNeurons[j] * (1 - NN.HiddenNeurons[j]) * weightedSum;
         }
 
         /// <summary>
@@ -415,8 +413,9 @@ namespace LearningBPandLM
 
             try
             {
-                saveResult.WriteLine("{0}\t{1:N4}\t{2:N2}\t{3:N4}\t{4:N2}",
-                    epochCounter, trainingSetMSE, trainingSetAccuracy, generalizationSetMSE, generalizationSetAccuracy);
+                saveResult.WriteLine("{0}\t{1:N4}\t{2:N2}\t{3:N4}\t{4:N2}\t{5}", 
+                    epochCounter, trainingSetMSE, trainingSetAccuracy, generalizationSetMSE, 
+                    generalizationSetAccuracy, durationOfEachEpoch[epochCounter]);
 
                 saveResult.Flush();
             }
@@ -568,8 +567,10 @@ namespace LearningBPandLM
         public void PrintStatus()
         {
             Program.PrintLongLine();
-            Console.Write("Epoka: {0}\ttMSE: {1:N4}\ttAcc: {2:N2}%", epochCounter, trainingSetMSE, trainingSetAccuracy);
-            Console.WriteLine("\tgMSE: {0:N4}\t gAcc: {1:N2}%\t", generalizationSetMSE, generalizationSetAccuracy);
+            Console.Write("Epoka: {0} {3}ms  tMSE: {1:N4}\ttAcc: {2:N2}%", 
+                epochCounter, trainingSetMSE, trainingSetAccuracy, durationOfEachEpoch[epochCounter]);
+            Console.WriteLine("\tgMSE: {0:N4}\t gAcc: {1:N2}%\t", 
+                generalizationSetMSE, generalizationSetAccuracy);
             Program.PrintLongLine();
         }
 
@@ -587,5 +588,21 @@ namespace LearningBPandLM
             Console.WriteLine("Docelowa dokładność modelu:\t{0}\n", desiredAccuracy);
         }
 
+        /// <summary>
+        /// Oblicza srednia trwania epok dla podanej tablicy
+        /// </summary>
+        /// <param name="durationHashtable">Hashtable durationOfEachEpoch</param>
+        /// <returns>durationOfEachEpoch.Average()</returns>
+        private static double calcMeanDuration(Hashtable durationOfEachEpoch) 
+        {
+            long total = new long();
+
+            foreach (long l in durationOfEachEpoch.Values)
+            {
+                total += l;
+            }
+
+            return (double)(total / durationOfEachEpoch.Count);
+        }
     }
 }

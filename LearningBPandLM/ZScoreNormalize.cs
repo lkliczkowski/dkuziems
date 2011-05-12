@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace ZScore
 {
@@ -14,6 +12,7 @@ namespace ZScore
                 normalized[i] = new Column<double>();
             int normalized_index = 0;
             double[] probability;
+
             switch (dataType)
             {
                 #region heart disease
@@ -40,29 +39,15 @@ namespace ZScore
                                     (discretized[i].ColumnToArray(), EnumHeartDisease.LowMediumHigh);
                                 foreach (double cell in discretized[i].ColumnToArray())
                                 {
-                                    switch ((int)cell)
+                                    try
                                     {
-                                        case (int)EnumLowMediumHigh.low:
-                                            addNormalized(ref normalized, probability,
-                                                EnumLowMediumHigh.low, normalized_index);
-                                            break;
-                                        case (int)EnumLowMediumHigh.medium:
-                                            addNormalized(ref normalized, probability,
-                                                EnumLowMediumHigh.medium, normalized_index);
-                                            break;
-                                        case (int)EnumLowMediumHigh.high:
-                                            addNormalized(ref normalized, probability,
-                                                EnumLowMediumHigh.high, normalized_index);
-                                            break;
-
-                                        case (int)EnumLowMediumHigh.unknown:
-                                            Print("in Normalize.switch(dataType)",
+                                        addNormalized(ref normalized, probability,
+                                                (EnumLowMediumHigh)((int)cell), normalized_index);
+                                    }
+                                    catch
+                                    {
+                                        Print("in Normalize.switch(dataType)",
                                                 "unknown EnumLowMediumHigh :: unhandled");
-                                            break;
-                                        default:
-                                            Print("in Normalize.switch(dataType)",
-                                                "default EnumLowMediumHigh :: unhandled");
-                                            break;
                                     }
                                 }
                                 normalized_index += Enum.GetValues(typeof(EnumLowMediumHigh)).Length - 1;
@@ -83,34 +68,16 @@ namespace ZScore
 
                                 foreach (double cell in discretized[i].ColumnToArray())
                                 {
-                                    switch ((int)cell)
+                                    try
                                     {
-                                        case (int)EnumObesity.underweight:
-                                            addNormalized(ref normalized,
-                                                probability, EnumObesity.underweight, normalized_index);
-                                            break;
-                                        case (int)EnumObesity.Healthy:
-                                            addNormalized(ref normalized,
-                                                probability, EnumObesity.Healthy, normalized_index);
-                                            break;
-                                        case (int)EnumObesity.overweight:
-                                            addNormalized(ref normalized,
-                                                probability, EnumObesity.overweight, normalized_index);
-                                            break;
-                                        case (int)EnumObesity.clinicallyobese:
-                                            addNormalized(ref normalized,
-                                                probability, EnumObesity.clinicallyobese, normalized_index);
-                                            break;
-                                        case (int)EnumObesity.unknown:
-                                            Print("in Normalize.switch(dataType)",
-                                                "unknown EnumObesity :: unhandled");
-                                            break;
-                                        default:
-                                            Print("in Normalize.switch(dataType)",
-                                                "default EnumObesity :: unhandled");
-                                            break;
+                                        addNormalized(ref normalized, probability,
+                                                (EnumObesity)((int)cell), normalized_index);
                                     }
-
+                                    catch
+                                    {
+                                        Print("in Normalize.switch(dataType)",
+                                                "unknown EnumObesity :: unhandled"); ;
+                                    }
                                 }
                                 normalized_index += Enum.GetValues(typeof(EnumObesity)).Length - 1;
                                 break;
@@ -121,30 +88,273 @@ namespace ZScore
 
                                 foreach (double cell in discretized[i].ColumnToArray())
                                 {
-                                    switch ((int)cell)
+                                    try
                                     {
-                                        case (int)EnumAgeRange.young:
-                                            addNormalized(ref normalized, probability, EnumAgeRange.young, normalized_index);
-                                            break;
-                                        case (int)EnumAgeRange.middleaged:
-                                            addNormalized(ref normalized, probability, EnumAgeRange.middleaged, normalized_index);
-                                            break;
-                                        case (int)EnumAgeRange.old:
-                                            addNormalized(ref normalized, probability, EnumAgeRange.old, normalized_index);
-                                            break;
-                                        case (int)EnumAgeRange.unknown:
-                                            Print("in Normalize.switch(dataType)",
-                                                "unknown EnumAgeRange :: unhandled");
-                                            break;
-                                        default:
-                                            Print("in Normalize.switch(dataType)",
-                                                "default EnumAgeRange :: unhandled");
-                                            break;
+                                        addNormalized(ref normalized, probability,
+                                                (EnumAgeRange)((int)cell), normalized_index);
                                     }
-
+                                    catch
+                                    {
+                                        Print("in Normalize.switch(dataType)",
+                                                "unknown EnumAgeRange :: unhandled"); ;
+                                    }
                                 }
                                 normalized_index += Enum.GetValues(typeof(EnumAgeRange)).Length - 1;
                                 break;
+                        }
+                    }
+                    break;
+                #endregion
+                #region GermanCreditData
+                case EnumDataTypes.GermanCreditData:
+                    Print("ZScore.Normalize", "case EnumDataTypes.GermanCreditData");
+                    for (int i = 0; i < tabType.Length; i++)
+                    {
+                        switch (tabType[i])
+                        {
+                            case (int)EnumGermanCreditData.Numerical:
+                                double mean = discretized[i].ColumnToArray().Average();
+                                double sigma = stdDevContinuous(discretized[i].ColumnToArray());
+
+                                foreach (double cell in discretized[i].ColumnToArray())
+                                {
+                                    normalized[normalized_index].AddData(zScoreContinuous(cell, mean, sigma));
+                                }
+
+                                normalized_index++;
+                                break;
+
+                            case (int)EnumGermanCreditData.A19: //binary 1/0 -> YES/NO
+                            case (int)EnumGermanCreditData.A20:
+                            case (int)EnumGermanCreditData.Classification: 
+                                foreach (double cell in discretized[i].ColumnToArray())
+                                {
+                                    normalized[normalized_index].AddData((cell == 1 ? 1 : 0));
+                                    normalized[normalized_index + 1].AddData((cell == 1 ? 0 : 1));
+                                }
+                                normalized_index += Enum.GetValues(typeof(EnumA20)).Length - 1;
+                                break;
+
+                            case (int)EnumGermanCreditData.A1:
+                                probability = probabilityDiscrete
+                                    (discretized[i].ColumnToArray(), EnumGermanCreditData.A1);
+
+                                foreach (double cell in discretized[i].ColumnToArray())
+                                {
+                                    try
+                                    {
+                                        addNormalized(ref normalized, probability,
+                                                (EnumA1)((int)cell), normalized_index);
+                                    }
+                                    catch
+                                    {
+                                        Print("in Normalize.switch(dataType)",
+                                                "unknown EnumA1 :: unhandled"); ;
+                                    }
+                                }
+                                normalized_index += Enum.GetValues(typeof(EnumA1)).Length - 1;
+                                break;
+
+                            case (int)EnumGermanCreditData.A3:
+                                probability = probabilityDiscrete
+                                    (discretized[i].ColumnToArray(), EnumGermanCreditData.A3);
+
+                                foreach (double cell in discretized[i].ColumnToArray())
+                                {
+                                    try
+                                    {
+                                        addNormalized(ref normalized, probability,
+                                                (EnumA3)((int)cell), normalized_index);
+                                    }
+                                    catch
+                                    {
+                                        Print("in Normalize.switch(dataType)",
+                                                "unknown EnumA3 :: unhandled"); ;
+                                    }
+                                }
+                                normalized_index += Enum.GetValues(typeof(EnumA3)).Length - 1;
+                                break;
+
+                            case (int)EnumGermanCreditData.A4:
+                                probability = probabilityDiscrete
+                                    (discretized[i].ColumnToArray(), EnumGermanCreditData.A4);
+
+                                foreach (double cell in discretized[i].ColumnToArray())
+                                {
+                                    try
+                                    {
+                                        addNormalized(ref normalized, probability,
+                                                (EnumA4)((int)cell), normalized_index);
+                                    }
+                                    catch
+                                    {
+                                        Print("in Normalize.switch(dataType)",
+                                                "unknown EnumA4 :: unhandled"); ;
+                                    }
+                                }
+                                normalized_index += Enum.GetValues(typeof(EnumA4)).Length - 1;
+                                break;
+
+                            case (int)EnumGermanCreditData.A6:
+                                probability = probabilityDiscrete
+                                    (discretized[i].ColumnToArray(), EnumGermanCreditData.A6);
+
+                                foreach (double cell in discretized[i].ColumnToArray())
+                                {
+                                    try
+                                    {
+                                        addNormalized(ref normalized, probability,
+                                                (EnumA6)((int)cell), normalized_index);
+                                    }
+                                    catch
+                                    {
+                                        Print("in Normalize.switch(dataType)",
+                                                "unknown EnumA6 :: unhandled"); ;
+                                    }
+                                }
+                                normalized_index += Enum.GetValues(typeof(EnumA6)).Length - 1;
+                                break;
+
+                            case (int)EnumGermanCreditData.A7:
+                                probability = probabilityDiscrete
+                                    (discretized[i].ColumnToArray(), EnumGermanCreditData.A7);
+
+                                foreach (double cell in discretized[i].ColumnToArray())
+                                {
+                                    try
+                                    {
+                                        addNormalized(ref normalized, probability,
+                                                (EnumA7)((int)cell), normalized_index);
+                                    }
+                                    catch
+                                    {
+                                        Print("in Normalize.switch(dataType)",
+                                                "unknown EnumA7 :: unhandled"); ;
+                                    }
+                                }
+                                normalized_index += Enum.GetValues(typeof(EnumA7)).Length - 1;
+                                break;
+
+                            case (int)EnumGermanCreditData.A9:
+                                probability = probabilityDiscrete
+                                    (discretized[i].ColumnToArray(), EnumGermanCreditData.A9);
+
+                                foreach (double cell in discretized[i].ColumnToArray())
+                                {
+                                    try
+                                    {
+                                        addNormalized(ref normalized, probability,
+                                                (EnumA9)((int)cell), normalized_index);
+                                    }
+                                    catch
+                                    {
+                                        Print("in Normalize.switch(dataType)",
+                                                "unknown EnumA9 :: unhandled"); ;
+                                    }
+                                }
+                                normalized_index += Enum.GetValues(typeof(EnumA9)).Length - 1;
+                                break;
+
+                            case (int)EnumGermanCreditData.A10:
+                                probability = probabilityDiscrete
+                                    (discretized[i].ColumnToArray(), EnumGermanCreditData.A10);
+
+                                foreach (double cell in discretized[i].ColumnToArray())
+                                {
+                                    try
+                                    {
+                                        addNormalized(ref normalized, probability,
+                                                (EnumA10)((int)cell), normalized_index);
+                                    }
+                                    catch
+                                    {
+                                        Print("in Normalize.switch(dataType)",
+                                                "unknown EnumA10 :: unhandled"); ;
+                                    }
+                                }
+                                normalized_index += Enum.GetValues(typeof(EnumA10)).Length - 1;
+                                break;
+
+                            case (int)EnumGermanCreditData.A12:
+                                probability = probabilityDiscrete
+                                    (discretized[i].ColumnToArray(), EnumGermanCreditData.A12);
+
+                                foreach (double cell in discretized[i].ColumnToArray())
+                                {
+                                    try
+                                    {
+                                        addNormalized(ref normalized, probability,
+                                                (EnumA12)((int)cell), normalized_index);
+                                    }
+                                    catch
+                                    {
+                                        Print("in Normalize.switch(dataType)",
+                                                "unknown EnumA12 :: unhandled"); ;
+                                    }
+                                }
+                                normalized_index += Enum.GetValues(typeof(EnumA12)).Length - 1;
+                                break;
+
+                            case (int)EnumGermanCreditData.A14:
+                                probability = probabilityDiscrete
+                                    (discretized[i].ColumnToArray(), EnumGermanCreditData.A14);
+
+                                foreach (double cell in discretized[i].ColumnToArray())
+                                {
+                                    try
+                                    {
+                                        addNormalized(ref normalized, probability,
+                                                (EnumA14)((int)cell), normalized_index);
+                                    }
+                                    catch
+                                    {
+                                        Print("in Normalize.switch(dataType)",
+                                                "unknown EnumA14 :: unhandled"); ;
+                                    }
+                                }
+                                normalized_index += Enum.GetValues(typeof(EnumA14)).Length - 1;
+                                break;
+
+                            case (int)EnumGermanCreditData.A15:
+                                probability = probabilityDiscrete
+                                    (discretized[i].ColumnToArray(), EnumGermanCreditData.A15);
+
+                                foreach (double cell in discretized[i].ColumnToArray())
+                                {
+                                    try
+                                    {
+                                        addNormalized(ref normalized, probability,
+                                                (EnumA15)((int)cell), normalized_index);
+                                    }
+                                    catch
+                                    {
+                                        Print("in Normalize.switch(dataType)",
+                                                "unknown EnumA15 :: unhandled"); ;
+                                    }
+                                }
+                                normalized_index += Enum.GetValues(typeof(EnumA15)).Length - 1;
+                                break;
+
+                            case (int)EnumGermanCreditData.A17:
+                                probability = probabilityDiscrete
+                                    (discretized[i].ColumnToArray(), EnumGermanCreditData.A17);
+
+                                foreach (double cell in discretized[i].ColumnToArray())
+                                {
+                                    try
+                                    {
+                                        addNormalized(ref normalized, probability,
+                                                (EnumA17)((int)cell), normalized_index);
+                                    }
+                                    catch
+                                    {
+                                        Print("in Normalize.switch(dataType)",
+                                                "unknown EnumA17 :: unhandled"); ;
+                                    }
+                                }
+                                normalized_index += Enum.GetValues(typeof(EnumA17)).Length - 1;
+                                break;
+
                         }
                     }
                     break;
@@ -172,7 +382,6 @@ namespace ZScore
                                 foreach (double cell in discretized[i].ColumnToArray())
                                 {
                                     normalized[normalized_index].AddData(cell);
-                                    //normalized[normalized_index + 1].AddData((cell == 1?0:1));
                                 }
                                 normalized_index++;
                                 break;
@@ -219,33 +428,13 @@ namespace ZScore
                                     (discretized[i].ColumnToArray(), EnumCreditRisk.CheckingAcct);
                                 foreach (double cell in discretized[i].ColumnToArray())
                                 {
-                                    switch ((int)cell)
+                                    try
                                     {
-                                        case (int)EnumCheckingAcct.Low:
-                                            addNormalized(ref normalized, probability,
-                                                EnumCheckingAcct.Low, normalized_index);
-                                            break;
-                                        case (int)EnumCheckingAcct.NoAcct:
-                                            addNormalized(ref normalized, probability,
-                                                EnumCheckingAcct.NoAcct, normalized_index);
-                                            break;
-                                        case (int)EnumCheckingAcct.Balance:
-                                            addNormalized(ref normalized, probability,
-                                                EnumCheckingAcct.Balance, normalized_index);
-                                            break;
-                                        case (int)EnumCheckingAcct.High:
-                                            addNormalized(ref normalized, probability,
-                                                EnumCheckingAcct.High, normalized_index);
-                                            break;
-
-                                        case (int)EnumCheckingAcct.unknown:
-                                            Print("in Normalize.switch(dataType)",
-                                                "unknown EnumCheckingAcct :: unhandled");
-                                            break;
-                                        default:
-                                            Print("in Normalize.switch(dataType)",
-                                                "default EnumCheckingAcct :: unhandled");
-                                            break;
+                                        addNormalized(ref normalized, probability, (EnumCheckingAcct)((int)cell), normalized_index);
+                                    }
+                                    catch
+                                    {
+                                        Print("in Normalize.switch(dataType)", "unknown EnumCheckingAcct :: unhandled");
                                     }
                                 }
                                 normalized_index += Enum.GetValues(typeof(EnumCheckingAcct)).Length - 1;
@@ -257,39 +446,14 @@ namespace ZScore
 
                                 foreach (double cell in discretized[i].ColumnToArray())
                                 {
-                                    switch ((int)cell)
+                                    try
                                     {
-                                        case (int)EnumCreditHist.Critical:
-                                            addNormalized(ref normalized,
-                                                probability, EnumCreditHist.Critical, normalized_index);
-                                            break;
-                                        case (int)EnumCreditHist.Delay:
-                                            addNormalized(ref normalized,
-                                                probability, EnumCreditHist.Delay, normalized_index);
-                                            break;
-                                        case (int)EnumCreditHist.BankPaid:
-                                            addNormalized(ref normalized,
-                                                probability, EnumCreditHist.BankPaid, normalized_index);
-                                            break;
-                                        case (int)EnumCreditHist.Current:
-                                            addNormalized(ref normalized,
-                                                probability, EnumCreditHist.Current, normalized_index);
-                                            break;
-                                        case (int)EnumCreditHist.AllPaid:
-                                            addNormalized(ref normalized,
-                                                probability, EnumCreditHist.AllPaid, normalized_index);
-                                            break;
-
-                                        case (int)EnumCreditHist.unknown:
-                                            Print("in Normalize.switch(dataType)",
-                                                "unknown EnumCreditHist :: unhandled");
-                                            break;
-                                        default:
-                                            Print("in Normalize.switch(dataType)",
-                                                "default EnumCreditHist :: unhandled");
-                                            break;
+                                        addNormalized(ref normalized, probability, (EnumCreditHist)((int)cell), normalized_index);
                                     }
-
+                                    catch
+                                    {
+                                        Print("in Normalize.switch(dataType)", "unknown EnumCreditHist :: unhandled");
+                                    }
                                 }
                                 normalized_index += Enum.GetValues(typeof(EnumCreditHist)).Length - 1;
                                 break;
@@ -300,49 +464,14 @@ namespace ZScore
 
                                 foreach (double cell in discretized[i].ColumnToArray())
                                 {
-                                    switch ((int)cell)
+                                    try
                                     {
-                                        case (int)EnumPurpose.SmallAppliance:
-                                            addNormalized(ref normalized, probability, EnumPurpose.SmallAppliance, normalized_index);
-                                            break;
-                                        case (int)EnumPurpose.Furniture:
-                                            addNormalized(ref normalized, probability, EnumPurpose.Furniture, normalized_index);
-                                            break;
-                                        case (int)EnumPurpose.LargeAppliance:
-                                            addNormalized(ref normalized, probability, EnumPurpose.LargeAppliance, normalized_index);
-                                            break;
-                                        case (int)EnumPurpose.Repairs:
-                                            addNormalized(ref normalized, probability, EnumPurpose.Repairs, normalized_index);
-                                            break;
-                                        case (int)EnumPurpose.Other:
-                                            addNormalized(ref normalized, probability, EnumPurpose.Other, normalized_index);
-                                            break;
-                                        case (int)EnumPurpose.CarUsed:
-                                            addNormalized(ref normalized, probability, EnumPurpose.CarUsed, normalized_index);
-                                            break;
-                                        case (int)EnumPurpose.Retraining:
-                                            addNormalized(ref normalized, probability, EnumPurpose.Retraining, normalized_index);
-                                            break;
-                                        case (int)EnumPurpose.Education:
-                                            addNormalized(ref normalized, probability, EnumPurpose.Education, normalized_index);
-                                            break;
-                                        case (int)EnumPurpose.CarNew:
-                                            addNormalized(ref normalized, probability, EnumPurpose.CarNew, normalized_index);
-                                            break;
-                                        case (int)EnumPurpose.Business:
-                                            addNormalized(ref normalized, probability, EnumPurpose.Business, normalized_index);
-                                            break;
-
-                                        case (int)EnumPurpose.unknown:
-                                            Print("in Normalize.switch(dataType)",
-                                                "unknown EnumPurpose :: unhandled");
-                                            break;
-                                        default:
-                                            Print("in Normalize.switch(dataType)",
-                                                "default EnumPurpose :: unhandled");
-                                            break;
+                                        addNormalized(ref normalized, probability, (EnumPurpose)((int)cell), normalized_index);
                                     }
-
+                                    catch
+                                    {
+                                        Print("in Normalize.switch(dataType)", "unknown EnumPurpose :: unhandled");
+                                    }
                                 }
                                 normalized_index += Enum.GetValues(typeof(EnumPurpose)).Length - 1;
                                 break;
@@ -353,34 +482,14 @@ namespace ZScore
 
                                 foreach (double cell in discretized[i].ColumnToArray())
                                 {
-                                    switch ((int)cell)
+                                    try
                                     {
-                                        case (int)EnumSavingsAcct.Low:
-                                            addNormalized(ref normalized, probability, EnumSavingsAcct.Low, normalized_index);
-                                            break;
-                                        case (int)EnumSavingsAcct.MedLow:
-                                            addNormalized(ref normalized, probability, EnumSavingsAcct.MedLow, normalized_index);
-                                            break;
-                                        case (int)EnumSavingsAcct.NoAcct:
-                                            addNormalized(ref normalized, probability, EnumSavingsAcct.NoAcct, normalized_index);
-                                            break;
-                                        case (int)EnumSavingsAcct.MedHigh:
-                                            addNormalized(ref normalized, probability, EnumSavingsAcct.MedHigh, normalized_index);
-                                            break;
-                                        case (int)EnumSavingsAcct.High:
-                                            addNormalized(ref normalized, probability, EnumSavingsAcct.High, normalized_index);
-                                            break;
-
-                                        case (int)EnumPurpose.unknown:
-                                            Print("in Normalize.switch(dataType)",
-                                                "unknown EnumSavingsAcct :: unhandled");
-                                            break;
-                                        default:
-                                            Print("in Normalize.switch(dataType)",
-                                                "default EnumSavingsAcct :: unhandled");
-                                            break;
+                                        addNormalized(ref normalized, probability, (EnumSavingsAcct)((int)cell), normalized_index);
                                     }
-
+                                    catch
+                                    {
+                                        Print("in Normalize.switch(dataType)", "unknown EnumSavingsAcct :: unhandled");
+                                    }
                                 }
                                 normalized_index += Enum.GetValues(typeof(EnumSavingsAcct)).Length - 1;
                                 break;
@@ -392,34 +501,14 @@ namespace ZScore
 
                                 foreach (double cell in discretized[i].ColumnToArray())
                                 {
-                                    switch ((int)cell)
+                                    try
                                     {
-                                        case (int)EnumEmployment.Unemployed:
-                                            addNormalized(ref normalized, probability, EnumEmployment.Unemployed, normalized_index);
-                                            break;
-                                        case (int)EnumEmployment.VeryShort:
-                                            addNormalized(ref normalized, probability, EnumEmployment.VeryShort, normalized_index);
-                                            break;
-                                        case (int)EnumEmployment.Short:
-                                            addNormalized(ref normalized, probability, EnumEmployment.Short, normalized_index);
-                                            break;
-                                        case (int)EnumEmployment.Medium:
-                                            addNormalized(ref normalized, probability, EnumEmployment.Medium, normalized_index);
-                                            break;
-                                        case (int)EnumEmployment.Long:
-                                            addNormalized(ref normalized, probability, EnumEmployment.Long, normalized_index);
-                                            break;
-
-                                        case (int)EnumPurpose.unknown:
-                                            Print("in Normalize.switch(dataType)",
-                                                "unknown EnumEmployment :: unhandled");
-                                            break;
-                                        default:
-                                            Print("in Normalize.switch(dataType)",
-                                                "default EnumEmployment :: unhandled");
-                                            break;
+                                        addNormalized(ref normalized, probability, (EnumEmployment)((int)cell), normalized_index);
                                     }
-
+                                    catch
+                                    {
+                                        Print("in Normalize.switch(dataType)", "unknown EnumEmployment :: unhandled");
+                                    }
                                 }
                                 normalized_index += Enum.GetValues(typeof(EnumEmployment)).Length - 1;
                                 break;
@@ -430,25 +519,14 @@ namespace ZScore
 
                                 foreach (double cell in discretized[i].ColumnToArray())
                                 {
-                                    switch ((int)cell)
+                                    try
                                     {
-                                        case (int)EnumGender.F:
-                                            addNormalized(ref normalized, probability, EnumGender.F, normalized_index);
-                                            break;
-                                        case (int)EnumGender.M:
-                                            addNormalized(ref normalized, probability, EnumGender.M, normalized_index);
-                                            break;
-
-                                        case (int)EnumPurpose.unknown:
-                                            Print("in Normalize.switch(dataType)",
-                                                "unknown EnumGender :: unhandled");
-                                            break;
-                                        default:
-                                            Print("in Normalize.switch(dataType)",
-                                                "default EnumGender :: unhandled");
-                                            break;
+                                        addNormalized(ref normalized, probability, (EnumGender)((int)cell), normalized_index);
                                     }
-
+                                    catch
+                                    {
+                                        Print("in Normalize.switch(dataType)", "default EnumGender :: unhandled");
+                                    }
                                 }
                                 normalized_index += Enum.GetValues(typeof(EnumGender)).Length - 1;
                                 break;
@@ -459,28 +537,15 @@ namespace ZScore
 
                                 foreach (double cell in discretized[i].ColumnToArray())
                                 {
-                                    switch ((int)cell)
+                                    try
                                     {
-                                        case (int)EnumPersonalStatus.Single:
-                                            addNormalized(ref normalized, probability, EnumPersonalStatus.Single, normalized_index);
-                                            break;
-                                        case (int)EnumPersonalStatus.Divorced:
-                                            addNormalized(ref normalized, probability, EnumPersonalStatus.Divorced, normalized_index);
-                                            break;
-                                        case (int)EnumPersonalStatus.Married:
-                                            addNormalized(ref normalized, probability, EnumPersonalStatus.Married, normalized_index);
-                                            break;
-
-                                        case (int)EnumPurpose.unknown:
-                                            Print("in Normalize.switch(dataType)",
-                                                "unknown EnumPersonalStatus :: unhandled");
-                                            break;
-                                        default:
-                                            Print("in Normalize.switch(dataType)",
-                                                "default EnumPersonalStatus :: unhandled");
-                                            break;
+                                        addNormalized(ref normalized, probability, (EnumPersonalStatus)((int)cell), normalized_index);
                                     }
-
+                                    catch
+                                    {
+                                        Print("in Normalize.switch(dataType)",
+                                                "default EnumPersonalStatus :: unhandled");
+                                    }
                                 }
                                 normalized_index += Enum.GetValues(typeof(EnumPersonalStatus)).Length - 1;
                                 break;
@@ -491,28 +556,15 @@ namespace ZScore
 
                                 foreach (double cell in discretized[i].ColumnToArray())
                                 {
-                                    switch ((int)cell)
+                                    try
                                     {
-                                        case (int)EnumHousing.Other:
-                                            addNormalized(ref normalized, probability, EnumHousing.Other, normalized_index);
-                                            break;
-                                        case (int)EnumHousing.Rent:
-                                            addNormalized(ref normalized, probability, EnumHousing.Rent, normalized_index);
-                                            break;
-                                        case (int)EnumHousing.Own:
-                                            addNormalized(ref normalized, probability, EnumHousing.Own, normalized_index);
-                                            break;
-
-                                        case (int)EnumPurpose.unknown:
-                                            Print("in Normalize.switch(dataType)",
-                                                "unknown EnumHousing :: unhandled");
-                                            break;
-                                        default:
-                                            Print("in Normalize.switch(dataType)",
-                                                "default EnumHousing :: unhandled");
-                                            break;
+                                        addNormalized(ref normalized, probability, (EnumHousing)((int)cell), normalized_index);
                                     }
-
+                                    catch
+                                    {
+                                        Print("in Normalize.switch(dataType)",
+                                                "default EnumHousing :: unhandled");
+                                    }
                                 }
                                 normalized_index += Enum.GetValues(typeof(EnumHousing)).Length - 1;
                                 break;
@@ -523,31 +575,15 @@ namespace ZScore
 
                                 foreach (double cell in discretized[i].ColumnToArray())
                                 {
-                                    switch ((int)cell)
+                                    try
                                     {
-                                        case (int)EnumJob.Unskilled:
-                                            addNormalized(ref normalized, probability, EnumJob.Unskilled, normalized_index);
-                                            break;
-                                        case (int)EnumJob.Unemployed:
-                                            addNormalized(ref normalized, probability, EnumJob.Unemployed, normalized_index);
-                                            break;
-                                        case (int)EnumJob.Skilled:
-                                            addNormalized(ref normalized, probability, EnumJob.Skilled, normalized_index);
-                                            break;
-                                        case (int)EnumJob.Management:
-                                            addNormalized(ref normalized, probability, EnumJob.Management, normalized_index);
-                                            break;
-
-                                        case (int)EnumPurpose.unknown:
-                                            Print("in Normalize.switch(dataType)",
-                                                "unknown EnumJob :: unhandled");
-                                            break;
-                                        default:
-                                            Print("in Normalize.switch(dataType)",
-                                                "default EnumJob :: unhandled");
-                                            break;
+                                        addNormalized(ref normalized, probability, (EnumJob)((int)cell), normalized_index);
                                     }
-
+                                    catch
+                                    {
+                                        Print("in Normalize.switch(dataType)",
+                                                "unknown EnumJob :: unhandled");
+                                    }
                                 }
                                 normalized_index += Enum.GetValues(typeof(EnumJob)).Length - 1;
                                 break;
@@ -615,6 +651,199 @@ namespace ZScore
             }
         }
 
+        private static void addNormalized(ref Column<double>[] normalizedTable,
+            double[] probabilityList, EnumA1 ourCase, int normalized_index)
+        {
+            double val;
+            val = zScoreDiscrete(probabilityList[(int)ourCase],
+                stdDevDiscrete(probabilityList[(int)ourCase]));
+
+            for (int i = 0; i < Enum.GetValues(typeof(EnumA1)).Length - 1; i++)
+            {
+                normalizedTable[normalized_index + i].
+                    AddData((i == (int)ourCase ? val : (-val)));
+            }
+        }
+
+        private static void addNormalized(ref Column<double>[] normalizedTable,
+            double[] probabilityList, EnumA3 ourCase, int normalized_index)
+        {
+            double val;
+            val = zScoreDiscrete(probabilityList[(int)ourCase],
+                stdDevDiscrete(probabilityList[(int)ourCase]));
+
+            for (int i = 0; i < Enum.GetValues(typeof(EnumA3)).Length - 1; i++)
+            {
+                normalizedTable[normalized_index + i].
+                    AddData((i == (int)ourCase ? val : (-val)));
+            }
+        }
+
+
+        private static void addNormalized(ref Column<double>[] normalizedTable,
+            double[] probabilityList, EnumA4 ourCase, int normalized_index)
+        {
+            double val;
+            val = zScoreDiscrete(probabilityList[(int)ourCase],
+                stdDevDiscrete(probabilityList[(int)ourCase]));
+
+            for (int i = 0; i < Enum.GetValues(typeof(EnumA4)).Length - 1; i++)
+            {
+                normalizedTable[normalized_index + i].
+                    AddData((i == (int)ourCase ? val : (-val)));
+            }
+        }
+
+
+        private static void addNormalized(ref Column<double>[] normalizedTable,
+            double[] probabilityList, EnumA6 ourCase, int normalized_index)
+        {
+            double val;
+            val = zScoreDiscrete(probabilityList[(int)ourCase],
+                stdDevDiscrete(probabilityList[(int)ourCase]));
+
+            for (int i = 0; i < Enum.GetValues(typeof(EnumA6)).Length - 1; i++)
+            {
+                normalizedTable[normalized_index + i].
+                    AddData((i == (int)ourCase ? val : (-val)));
+            }
+        }
+
+
+        private static void addNormalized(ref Column<double>[] normalizedTable,
+            double[] probabilityList, EnumA7 ourCase, int normalized_index)
+        {
+            double val;
+            val = zScoreDiscrete(probabilityList[(int)ourCase],
+                stdDevDiscrete(probabilityList[(int)ourCase]));
+
+            for (int i = 0; i < Enum.GetValues(typeof(EnumA7)).Length - 1; i++)
+            {
+                normalizedTable[normalized_index + i].
+                    AddData((i == (int)ourCase ? val : (-val)));
+            }
+        }
+
+
+        private static void addNormalized(ref Column<double>[] normalizedTable,
+            double[] probabilityList, EnumA9 ourCase, int normalized_index)
+        {
+            double val;
+            val = zScoreDiscrete(probabilityList[(int)ourCase],
+                stdDevDiscrete(probabilityList[(int)ourCase]));
+
+            for (int i = 0; i < Enum.GetValues(typeof(EnumA9)).Length - 1; i++)
+            {
+                normalizedTable[normalized_index + i].
+                    AddData((i == (int)ourCase ? val : (-val)));
+            }
+        }
+
+
+        private static void addNormalized(ref Column<double>[] normalizedTable,
+            double[] probabilityList, EnumA10 ourCase, int normalized_index)
+        {
+            double val;
+            val = zScoreDiscrete(probabilityList[(int)ourCase],
+                stdDevDiscrete(probabilityList[(int)ourCase]));
+
+            for (int i = 0; i < Enum.GetValues(typeof(EnumA10)).Length - 1; i++)
+            {
+                normalizedTable[normalized_index + i].
+                    AddData((i == (int)ourCase ? val : (-val)));
+            }
+        }
+
+
+        private static void addNormalized(ref Column<double>[] normalizedTable,
+            double[] probabilityList, EnumA12 ourCase, int normalized_index)
+        {
+            double val;
+            val = zScoreDiscrete(probabilityList[(int)ourCase],
+                stdDevDiscrete(probabilityList[(int)ourCase]));
+
+            for (int i = 0; i < Enum.GetValues(typeof(EnumA12)).Length - 1; i++)
+            {
+                normalizedTable[normalized_index + i].
+                    AddData((i == (int)ourCase ? val : (-val)));
+            }
+        }
+
+
+        private static void addNormalized(ref Column<double>[] normalizedTable,
+            double[] probabilityList, EnumA14 ourCase, int normalized_index)
+        {
+            double val;
+            val = zScoreDiscrete(probabilityList[(int)ourCase],
+                stdDevDiscrete(probabilityList[(int)ourCase]));
+
+            for (int i = 0; i < Enum.GetValues(typeof(EnumA14)).Length - 1; i++)
+            {
+                normalizedTable[normalized_index + i].
+                    AddData((i == (int)ourCase ? val : (-val)));
+            }
+        }
+
+
+        private static void addNormalized(ref Column<double>[] normalizedTable,
+            double[] probabilityList, EnumA15 ourCase, int normalized_index)
+        {
+            double val;
+            val = zScoreDiscrete(probabilityList[(int)ourCase],
+                stdDevDiscrete(probabilityList[(int)ourCase]));
+
+            for (int i = 0; i < Enum.GetValues(typeof(EnumA15)).Length - 1; i++)
+            {
+                normalizedTable[normalized_index + i].
+                    AddData((i == (int)ourCase ? val : (-val)));
+            }
+        }
+
+
+        private static void addNormalized(ref Column<double>[] normalizedTable,
+            double[] probabilityList, EnumA17 ourCase, int normalized_index)
+        {
+            double val;
+            val = zScoreDiscrete(probabilityList[(int)ourCase],
+                stdDevDiscrete(probabilityList[(int)ourCase]));
+
+            for (int i = 0; i < Enum.GetValues(typeof(EnumA17)).Length - 1; i++)
+            {
+                normalizedTable[normalized_index + i].
+                    AddData((i == (int)ourCase ? val : (-val)));
+            }
+        }
+
+
+/*        private static void addNormalized(ref Column<double>[] normalizedTable,
+            double[] probabilityList, EnumA19 ourCase, int normalized_index)
+        {
+            double val;
+            val = zScoreDiscrete(probabilityList[(int)ourCase],
+                stdDevDiscrete(probabilityList[(int)ourCase]));
+
+            for (int i = 0; i < Enum.GetValues(typeof(EnumA19)).Length - 1; i++)
+            {
+                normalizedTable[normalized_index + i].
+                    AddData((i == (int)ourCase ? val : (-val)));
+            }
+        }
+
+
+        private static void addNormalized(ref Column<double>[] normalizedTable,
+            double[] probabilityList, EnumA20 ourCase, int normalized_index)
+        {
+            double val;
+            val = zScoreDiscrete(probabilityList[(int)ourCase],
+                stdDevDiscrete(probabilityList[(int)ourCase]));
+
+            for (int i = 0; i < Enum.GetValues(typeof(EnumA20)).Length - 1; i++)
+            {
+                normalizedTable[normalized_index + i].
+                    AddData((i == (int)ourCase ? val : (-val)));
+            }
+        }
+*/
         private static void addNormalized(ref Column<double>[] normalizedTable,
             double[] probabilityList, EnumCheckingAcct ourCase, int normalized_index)
         {
@@ -740,5 +969,6 @@ namespace ZScore
                     AddData((i == (int)ourCase ? val : (-val)));
             }
         }
+
     }
 }

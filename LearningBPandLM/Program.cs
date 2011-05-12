@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace LearningBPandLM
 {
@@ -12,7 +9,7 @@ namespace LearningBPandLM
         private static ZScore.ZScore dataset;
         private static ZScore.EnumDataTypes dataType;
         private static TrainerLMImproved networkTrainerLM;
-        private static BPlearning nT;
+        private static TrainerBP networkTrainerBP;
 
         //flagi menu
         private static bool endFlag, BPendFlag, LMendFlag, readyToZScore, readyToCreateNN, 
@@ -20,12 +17,13 @@ namespace LearningBPandLM
 
         //parametry konfiguracyjne
         private static int hiddenNodeRatioPar;
-        private static double learningRatePar = 0.001, desiredAccuracyPar;
+        private static double learningRatePar, desiredAccuracyPar;
         private static ulong maxEpochsPar;
 
+        #region menu glowne
+        
         static void Main(string[] args)
         {
-
             while (!endFlag)
             {
                 setOptionsToDefault();
@@ -43,6 +41,15 @@ namespace LearningBPandLM
             Console.ReadKey();
         }
 
+        private static void MainEnd()
+        {
+            Console.WriteLine("Program zakończy działanie, naciśnij dowolny przycisk...");
+            endFlag = true;
+        }
+        #endregion
+
+        #region opcje ogolne konfiguracji i danych
+
         private static void programInfo()
         {
             Console.WriteLine("W programie zaimplementowane są 2 metody nauczania sieci neuronowych, " 
@@ -55,12 +62,80 @@ namespace LearningBPandLM
             dataType = ZScore.EnumDataTypes.unknown;
             //flagi menu
             endFlag = BPendFlag = LMendFlag = readyToZScore = readyToCreateNN = readyToBackpropagate = configured = false;
-
-            //parametry konfiguracyjne
+            
+            //parametry konfiguracji
             hiddenNodeRatioPar = 4;
             desiredAccuracyPar = 99;
             maxEpochsPar = 1500;
+            learningRatePar = 0.01;
         }
+
+        private static void SetToHeartDisease()
+        {
+            inputFile = "HeartDisease.csv";
+            //outputFile = "normalizedHeartDisease.csv";
+            dataType = ZScore.EnumDataTypes.HeartDisease;
+            readyToZScore = true;
+        }
+
+        private static void SetToGermanCreditData()
+        {
+            inputFile = "GermanCreditData.csv";
+            //outputFile = "normalizedGermanCreditData.csv";
+            dataType = ZScore.EnumDataTypes.GermanCreditData;
+            readyToZScore = true;
+        }
+
+        private static void SetToLetterRecognition()
+        {
+            inputFile = "letter-a-recognition.csv";
+            //outputFile = "normalizedLetter-a-recognition.csv";
+            dataType = ZScore.EnumDataTypes.LetterRecognitionA;
+            readyToZScore = true;
+        }
+
+        private static void SetToCreditRisk()
+        {
+            inputFile = "CreditRisk.csv";
+            //outputFile = "normalizedCreditRisk.csv";
+            dataType = ZScore.EnumDataTypes.CreditRisk;
+            readyToZScore = true;
+        }
+
+        private static void prepareData()
+        {
+            PrintInfo("Przygotowywanie danych");
+            if (outputFile.Equals(""))
+                dataset = new ZScore.ZScore(inputFile, dataType);
+            else
+                dataset = new ZScore.ZScore(inputFile, outputFile, dataType);
+
+            if (dataset.NormalizeRun())
+            {
+                Console.WriteLine("Standaryzacja Z-Score zakończona z powodzeniem!");
+                hiddenNodeRatioPar = dataset.sample(0).Length - 1;
+                readyToCreateNN = true;
+            }
+            else
+            {
+                Console.WriteLine("StandaryzacjaZ (ZScore) nie powiodła się!");
+            }
+        }
+
+        private static void ShowConfig()
+        {
+            PrintInfo("Konfiguracja");
+            Console.WriteLine("Opcje ustawione dla {0} typu: {1}",
+                (inputFile == "") ? "brak" : inputFile, Enum.GetName(typeof(ZScore.EnumDataTypes), dataType));
+
+            Console.WriteLine("\nKonfiguracja sieci:{0}", (configured == false) ? "\n[nie konfigurowano - wartości domyślne]" : "");
+            Console.WriteLine("Liczba neuronów w war.ukrytej:\t{0}", hiddenNodeRatioPar);
+            Console.WriteLine("Maksymalna liczba epok:\t\t{0}", maxEpochsPar);
+            Console.WriteLine("Docelowa dokładność modelu:\t{0}\n", desiredAccuracyPar);
+        }
+        #endregion
+
+        #region podmenu Backprop
 
         private static void BPAlgorithm()
         {
@@ -68,8 +143,9 @@ namespace LearningBPandLM
             {
                 PrintInfo("Menu główne");
                 Menu BPmenu = new Menu();
-                BPmenu.Add("Wystartuj sieć dla domyślnego zestawu danych i konfiguracji", quickStart);
+                BPmenu.Add("Wystartuj sieć dla domyślnego zestawu danych i konfiguracji", BPquickStart);
                 BPmenu.Add("[wybor danych] Ustaw Opcje dla HeartDisease", SetToHeartDisease);
+                BPmenu.Add("[wybor danych] Ustaw Opcje dla GermanCreditData", SetToGermanCreditData);
                 BPmenu.Add("[wybor danych] Ustaw Opcje dla LetterRecognition", SetToLetterRecognition);
                 BPmenu.Add("[wybor danych] Ustaw Opcje dla CreditRisk", SetToCreditRisk);
                 BPmenu.Add("Wyświetl konfigurację", ShowConfig);
@@ -92,8 +168,9 @@ namespace LearningBPandLM
                         "- docelowa dokładność modelu."), BPSetConfig);
                     BPmenu.Add(">> Utworz nową sieć neuronową oraz zbiory trenujący i walidacyjny", BPCreateNN);
 
-                    BPmenu.Remove("Wystartuj sieć dla domyślnego zestawu danych i konfiguracji", quickStart);
+                    BPmenu.Remove("Wystartuj sieć dla domyślnego zestawu danych i konfiguracji", BPquickStart);
                     BPmenu.Remove("Ustaw Opcje dla HeartDisease", SetToHeartDisease);
+                    BPmenu.Remove("[wybor danych] Ustaw Opcje dla GermanCreditData", SetToGermanCreditData);
                     BPmenu.Remove("Ustaw Opcje dla LetterRecognition", SetToLetterRecognition);
                     BPmenu.Remove("[wybor danych] Ustaw Opcje dla CreditRisk", SetToCreditRisk);
                     BPmenu.Add("Zakończ", BPEnd);
@@ -112,60 +189,10 @@ namespace LearningBPandLM
             Console.ReadKey();
         }
 
-        private static void LMAlgorithm()
-        {
-            while (!LMendFlag)
-            {
-                PrintInfo("Menu główne algorytm Levenberga-Marquardta");
-                Menu LMmenu = new Menu();
-                LMmenu.Add("Wystartuj sieć dla domyślnego zestawu danych i konfiguracji", LMquickStart);
-                LMmenu.Add("[wybor danych] Ustaw Opcje dla HeartDisease", SetToHeartDisease);
-                LMmenu.Add("[wybor danych] Ustaw Opcje dla LetterRecognition", SetToLetterRecognition);
-                LMmenu.Add("[wybor danych] Ustaw Opcje dla CreditRisk", SetToCreditRisk);
-                LMmenu.Add("Wyświetl konfigurację", ShowConfig);
-                LMmenu.Add("Zakończ", LMEnd);
-
-                if (readyToZScore)
-                {
-                    LMmenu.Remove("Zakończ", LMEnd);
-                    LMmenu.Add(">> Standaryzacja danych", prepareData);
-                    LMmenu.Add("Zakończ", LMEnd);
-                }
-
-                if (readyToCreateNN)
-                {
-                    LMmenu.Remove("Zakończ", LMEnd);
-                    LMmenu.Add(String.Format(">> Konfiguruj sieć:\n\t\t" +
-                        "- liczba neuronów w warstwie ukrytej,\n\t\t" +
-                        "- maksymalną liczbę epok,\n\t\t" +
-                        "- docelowa dokładność modelu."), LMSetConfig);
-                    LMmenu.Add(">> Utworz nową sieć neuronową oraz zbiory trenujący i walidacyjny", LMCreateNN);
-
-                    LMmenu.Remove("Wystartuj sieć dla domyślnego zestawu danych i konfiguracji", LMquickStart);
-                    LMmenu.Remove("Ustaw Opcje dla HeartDisease", SetToHeartDisease);
-                    LMmenu.Remove("Ustaw Opcje dla LetterRecognition", SetToLetterRecognition);
-                    LMmenu.Remove("[wybor danych] Ustaw Opcje dla CreditRisk", SetToCreditRisk);
-                    LMmenu.Add("Zakończ", LMEnd);
-                }
-
-                if (readyToBackpropagate)
-                {
-                    LMmenu.Remove("Zakończ", LMEnd);
-                    LMmenu.Add(">> Rozpocznij/kontynuuj działanie sieci", LMStart);
-                    LMmenu.Add("Zakończ", LMEnd);
-                }
-
-                LMmenu.Show();
-            }
-
-            Console.ReadKey();
-        }
-
-        #region funkcje konfiguracji, menu
-
-        private static void quickStart()
+        private static void BPquickStart()
         {
             SetToLetterRecognition();
+            //SetToGermanCreditData();
             try
             {
                 prepareData();
@@ -175,64 +202,6 @@ namespace LearningBPandLM
             catch
             {
                 Console.WriteLine("Niepowodzenie.");
-            }
-        }
-
-        private static void LMquickStart()
-        {
-            SetToLetterRecognition();
-            try
-            {
-                prepareData();
-                LMCreateNN();
-                LMStart();
-            }
-            catch
-            {
-                Console.WriteLine("Niepowodzenie.");
-            }
-        }
-
-        private static void SetToHeartDisease()
-        {
-            inputFile = "HeartDisease.csv";
-            dataType = ZScore.EnumDataTypes.HeartDisease;
-            readyToZScore = true;
-        }
-
-        private static void SetToLetterRecognition()
-        {
-            inputFile = "letter-a-recognition.csv";
-            //outputFile = "normalizedLetter-a-recognition.csv";
-            dataType = ZScore.EnumDataTypes.LetterRecognitionA;
-            readyToZScore = true;
-        }
-
-        private static void SetToCreditRisk()
-        {
-            inputFile = "CreditRisk.csv";
-            outputFile = "normalizedCreditRisk.csv";
-            dataType = ZScore.EnumDataTypes.CreditRisk;
-            readyToZScore = true;
-        }
-
-        private static void prepareData()
-        {
-            PrintInfo("Przygotowywanie danych");
-            if (outputFile.Equals(""))
-                dataset = new ZScore.ZScore(inputFile, dataType);
-            else
-                dataset = new ZScore.ZScore(inputFile, outputFile, dataType);
-
-            if (dataset.NormalizeRun())
-            {
-                Console.WriteLine("Standaryzacja Z-Score zakończona z powodzeniem!");
-                hiddenNodeRatioPar = dataset.sample(0).Length - 1;
-                readyToCreateNN = true;
-            }
-            else
-            {
-                Console.WriteLine("StandaryzacjaZ (ZScore) nie powiodła się!");
             }
         }
 
@@ -301,6 +270,98 @@ namespace LearningBPandLM
 
         }
 
+        private static void BPCreateNN()
+        {
+            if (configured)
+                networkTrainerBP = new TrainerBP(dataset, hiddenNodeRatioPar, learningRatePar, maxEpochsPar, desiredAccuracyPar);
+            else
+                networkTrainerBP = new TrainerBP(dataset);
+
+            readyToBackpropagate = true;
+        }
+
+        private static void BPstart()
+        {
+            networkTrainerBP.TrainNetwork();
+            networkTrainerBP.ShowOptions();
+        }
+
+        private static void BPEnd()
+        {
+            Console.WriteLine("Moduł zakończy działanie, naciśnij dowolny przycisk...");
+            BPendFlag = true;
+        }
+        #endregion
+
+        #region podmenu LM
+        
+        private static void LMAlgorithm()
+        {
+            while (!LMendFlag)
+            {
+                PrintInfo("Menu główne algorytm Levenberga-Marquardta");
+                Menu LMmenu = new Menu();
+                LMmenu.Add("Wystartuj sieć dla domyślnego zestawu danych i konfiguracji", LMquickStart);
+                LMmenu.Add("[wybor danych] Ustaw Opcje dla HeartDisease", SetToHeartDisease);
+                LMmenu.Add("[wybor danych] Ustaw Opcje dla GermanCreditData", SetToGermanCreditData);
+                LMmenu.Add("[wybor danych] Ustaw Opcje dla LetterRecognition", SetToLetterRecognition);
+                LMmenu.Add("[wybor danych] Ustaw Opcje dla CreditRisk", SetToCreditRisk);
+                LMmenu.Add("Wyświetl konfigurację", ShowConfig);
+                LMmenu.Add("Zakończ", LMEnd);
+
+                if (readyToZScore)
+                {
+                    LMmenu.Remove("Zakończ", LMEnd);
+                    LMmenu.Add(">> Standaryzacja danych", prepareData);
+                    LMmenu.Add("Zakończ", LMEnd);
+                }
+
+                if (readyToCreateNN)
+                {
+                    LMmenu.Remove("Zakończ", LMEnd);
+                    LMmenu.Add(String.Format(">> Konfiguruj sieć:\n\t\t" +
+                        "- liczba neuronów w warstwie ukrytej,\n\t\t" +
+                        "- maksymalną liczbę epok,\n\t\t" +
+                        "- docelowa dokładność modelu."), LMSetConfig);
+                    LMmenu.Add(">> Utworz nową sieć neuronową oraz zbiory trenujący i walidacyjny", LMCreateNN);
+
+                    LMmenu.Remove("Wystartuj sieć dla domyślnego zestawu danych i konfiguracji", LMquickStart);
+                    LMmenu.Remove("Ustaw Opcje dla HeartDisease", SetToHeartDisease);
+                    LMmenu.Remove("[wybor danych] Ustaw Opcje dla GermanCreditData", SetToGermanCreditData);
+                    LMmenu.Remove("Ustaw Opcje dla LetterRecognition", SetToLetterRecognition);
+                    LMmenu.Remove("[wybor danych] Ustaw Opcje dla CreditRisk", SetToCreditRisk);
+                    LMmenu.Add("Zakończ", LMEnd);
+                }
+
+                if (readyToBackpropagate)
+                {
+                    LMmenu.Remove("Zakończ", LMEnd);
+                    LMmenu.Add(">> Rozpocznij/kontynuuj działanie sieci", LMStart);
+                    LMmenu.Add("Zakończ", LMEnd);
+                }
+
+                LMmenu.Show();
+            }
+
+            Console.ReadKey();
+        }
+
+        private static void LMquickStart()
+        {
+            SetToLetterRecognition();
+            //SetToGermanCreditData();
+            try
+            {
+                prepareData();
+                LMCreateNN();
+                LMStart();
+            }
+            catch
+            {
+                Console.WriteLine("Niepowodzenie.");
+            }
+        }
+
         private static void LMSetConfig()
         {
             double desiredAccuracyDefault = 99;
@@ -352,16 +413,6 @@ namespace LearningBPandLM
 
         }
 
-        private static void BPCreateNN()
-        {
-            if (configured)
-                nT = new BPlearning(dataset, hiddenNodeRatioPar, learningRatePar, maxEpochsPar, desiredAccuracyPar);
-            else
-                nT = new BPlearning(dataset);
-
-            readyToBackpropagate = true;
-        }
-
         private static void LMCreateNN()
         {
             if (configured)
@@ -370,12 +421,6 @@ namespace LearningBPandLM
                 networkTrainerLM = new TrainerLMImproved(dataset);
 
             readyToBackpropagate = true;
-        }
-
-        private static void BPstart()
-        {
-            nT.TrainNetwork();
-            nT.ShowOptions();
         }
 
         private static void LMStart()
@@ -388,30 +433,6 @@ namespace LearningBPandLM
             {
                 Console.WriteLine("Zakończono trenowanie sieci neuronowej! (Niepowodzenie)");
             }
-        }
-
-        private static void ShowConfig()
-        {
-            PrintInfo("Konfiguracja");
-            Console.WriteLine("Opcje ustawione dla {0} typu: {1}",
-                (inputFile == "") ? "brak" : inputFile, Enum.GetName(typeof(ZScore.EnumDataTypes), dataType));
-
-            Console.WriteLine("\nKonfiguracja sieci:{0}", (configured == false) ? "\n[nie konfigurowano - wartości domyślne]" : "");
-            Console.WriteLine("Liczba neuronów w war.ukrytej:\t{0}", hiddenNodeRatioPar);
-            Console.WriteLine("Maksymalna liczba epok:\t\t{0}", maxEpochsPar);
-            Console.WriteLine("Docelowa dokładność modelu:\t{0}\n", desiredAccuracyPar);
-        }
-
-        private static void MainEnd()
-        {
-            Console.WriteLine("Program zakończy działanie, naciśnij dowolny przycisk...");
-            endFlag = true;
-        }
-
-        private static void BPEnd()
-        {
-            Console.WriteLine("Moduł zakończy działanie, naciśnij dowolny przycisk...");
-            BPendFlag = true;
         }
 
         private static void LMEnd()
