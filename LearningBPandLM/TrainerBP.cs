@@ -125,12 +125,12 @@ namespace LearningBPandLM
                 1, dataset.DataType, ActivationFuncType.Tanh, ActivationFuncType.Sigmoid);
             DatasetIndexes = new DatasetOperateWindowed(Dataset.NormalizedData[0].GetNum());
 
+            maxEpochs = mE;
+            learningRate = lr;
+
             createFileNames();
             durationOfEachEpoch = new Hashtable();
             timer = new Stopwatch();
-
-            maxEpochs = mE;
-            learningRate = lr;
 
             desiredAccuracy = desiredAcc;
             trainingSetAccuracy = 0;
@@ -155,12 +155,15 @@ namespace LearningBPandLM
         /// </summary>
         private void createFileNames()
         {
-            RESULTS = String.Format("wynik_{0}_BP.txt", 
-                Enum.GetName(typeof(ZScore.EnumDataTypes), (int)Dataset.DataType));
-            weightsOutputFile = String.Format("weights_{0}_BP.txt", 
-                Enum.GetName(typeof(ZScore.EnumDataTypes), (int)Dataset.DataType));
-            customWeightsOutputFile = String.Format("customWeights_{0}_BP.txt", 
-                Enum.GetName(typeof(ZScore.EnumDataTypes), (int)Dataset.DataType));
+            RESULTS = String.Format("wynik_{0}_BP-{1}-{2}-{3}.txt", 
+                Enum.GetName(typeof(ZScore.EnumDataTypes), (int)Dataset.DataType),
+                learningRate.ToString(), NN.numHidden.ToString(), maxEpochs.ToString());
+            weightsOutputFile = String.Format("weights_{0}_BP-{1}.txt", 
+                Enum.GetName(typeof(ZScore.EnumDataTypes), (int)Dataset.DataType),
+                NN.numHidden.ToString());
+            customWeightsOutputFile = String.Format("customWeights_{0}_BP-{1}.txt", 
+                Enum.GetName(typeof(ZScore.EnumDataTypes), (int)Dataset.DataType),
+                NN.numHidden.ToString());
         }
 
         /// <summary>
@@ -413,9 +416,11 @@ namespace LearningBPandLM
 
             try
             {
-                saveResult.WriteLine("{0}\t{1:N4}\t{2:N2}\t{3:N4}\t{4:N2}\t{5}", 
-                    epochCounter, trainingSetMSE, trainingSetAccuracy, generalizationSetMSE, 
+                string line = String.Format("{0}\t{1:N4}\t{2:N2}\t{3:N4}\t{4:N2}\t{5}",
+                    epochCounter, trainingSetMSE, trainingSetAccuracy, generalizationSetMSE,
                     generalizationSetAccuracy, durationOfEachEpoch[epochCounter]);
+                line = line.Replace(",",".");
+                saveResult.WriteLine(line);
 
                 saveResult.Flush();
             }
