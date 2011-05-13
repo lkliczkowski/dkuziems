@@ -141,7 +141,7 @@ namespace LearningBPandLM
         {
             while (!BPendFlag)
             {
-                PrintInfo("Menu główne");
+                PrintInfo("Menu algorytmu Backpropagation");
                 Menu BPmenu = new Menu();
                 BPmenu.Add("Wystartuj sieć dla domyślnego zestawu danych i konfiguracji", BPquickStart);
                 BPmenu.Add("[wybor danych] Ustaw Opcje dla HeartDisease", SetToHeartDisease);
@@ -149,18 +149,19 @@ namespace LearningBPandLM
                 BPmenu.Add("[wybor danych] Ustaw Opcje dla LetterRecognition", SetToLetterRecognition);
                 BPmenu.Add("[wybor danych] Ustaw Opcje dla CreditRisk", SetToCreditRisk);
                 BPmenu.Add("Wyświetl konfigurację", ShowConfig);
-                BPmenu.Add("Zakończ", BPEnd);
+                BPmenu.Add("Powrót do menu głównego", BPEnd);
 
                 if (readyToZScore)
                 {
-                    BPmenu.Remove("Zakończ", BPEnd);
+                    BPmenu.Remove("Powrót do menu głównego", BPEnd);
+                    BPmenu.Remove("Wystartuj sieć dla domyślnego zestawu danych i konfiguracji", BPquickStart);
                     BPmenu.Add(">> Standaryzacja danych", prepareData);
-                    BPmenu.Add("Zakończ", BPEnd);
+                    BPmenu.Add("Powrót do menu głównego", BPEnd);
                 }
 
                 if (readyToCreateNN)
                 {
-                    BPmenu.Remove("Zakończ", BPEnd);
+                    BPmenu.Remove("Powrót do menu głównego", BPEnd);
                     BPmenu.Add(String.Format(">> Konfiguruj sieć:\n\t\t" +
                         "- liczba neuronów w warstwie ukrytej,\n\t\t" +
                         "- współczynnik uczenia,\n\t\t" +
@@ -168,19 +169,18 @@ namespace LearningBPandLM
                         "- docelowa dokładność modelu."), BPSetConfig);
                     BPmenu.Add(">> Utworz nową sieć neuronową oraz zbiory trenujący i walidacyjny", BPCreateNN);
 
-                    BPmenu.Remove("Wystartuj sieć dla domyślnego zestawu danych i konfiguracji", BPquickStart);
                     BPmenu.Remove("Ustaw Opcje dla HeartDisease", SetToHeartDisease);
                     BPmenu.Remove("[wybor danych] Ustaw Opcje dla GermanCreditData", SetToGermanCreditData);
                     BPmenu.Remove("Ustaw Opcje dla LetterRecognition", SetToLetterRecognition);
                     BPmenu.Remove("[wybor danych] Ustaw Opcje dla CreditRisk", SetToCreditRisk);
-                    BPmenu.Add("Zakończ", BPEnd);
+                    BPmenu.Add("Powrót do menu głównego", BPEnd);
                 }
 
                 if (readyToBackpropagate)
                 {
-                    BPmenu.Remove("Zakończ", BPEnd);
+                    BPmenu.Remove("Powrót do menu głównego", BPEnd);
                     BPmenu.Add(">> Rozpocznij/kontynuuj działanie sieci", BPstart);
-                    BPmenu.Add("Zakończ", BPEnd);
+                    BPmenu.Add("Powrót do menu głównego", BPEnd);
                 }
 
                 BPmenu.Show();
@@ -207,7 +207,7 @@ namespace LearningBPandLM
 
         private static void BPSetConfig()
         {
-            double learningRateDefault = 0.001,
+            double learningRateDefault = 0.01,
                 desiredAccuracyDefault = 99;
             ulong maxEpochsDefault = 1500;
 
@@ -224,7 +224,8 @@ namespace LearningBPandLM
             Console.WriteLine("Obecna liczba neuronów wynosi: {0}\n", hiddenNodeRatioPar);
 
 
-            Console.WriteLine("Podaj współczynnik uczenia, obecny: {0}", learningRatePar);
+            Console.WriteLine("Podaj współczynnik uczenia, obecny: {0}, domyślny: {1}", 
+                learningRatePar, learningRateDefault);
             try
             {
                 learningRatePar = Double.Parse(Console.ReadLine());
@@ -299,7 +300,7 @@ namespace LearningBPandLM
         {
             while (!LMendFlag)
             {
-                PrintInfo("Menu główne algorytm Levenberga-Marquardta");
+                PrintInfo("Menu algorytmu Levenberga-Marquardta");
                 Menu LMmenu = new Menu();
                 LMmenu.Add("Wystartuj sieć dla domyślnego zestawu danych i konfiguracji", LMquickStart);
                 LMmenu.Add("[wybor danych] Ustaw Opcje dla HeartDisease", SetToHeartDisease);
@@ -307,37 +308,38 @@ namespace LearningBPandLM
                 LMmenu.Add("[wybor danych] Ustaw Opcje dla LetterRecognition", SetToLetterRecognition);
                 LMmenu.Add("[wybor danych] Ustaw Opcje dla CreditRisk", SetToCreditRisk);
                 LMmenu.Add("Wyświetl konfigurację", ShowConfig);
-                LMmenu.Add("Zakończ", LMEnd);
+                LMmenu.Add("Powrót do menu głównego", LMEnd);
 
                 if (readyToZScore)
                 {
-                    LMmenu.Remove("Zakończ", LMEnd);
+                    LMmenu.Remove("Powrót do menu głównego", LMEnd);
+                    LMmenu.Remove("Wystartuj sieć dla domyślnego zestawu danych i konfiguracji", LMquickStart);
                     LMmenu.Add(">> Standaryzacja danych", prepareData);
-                    LMmenu.Add("Zakończ", LMEnd);
+                    LMmenu.Add("Powrót do menu głównego", LMEnd);
                 }
 
                 if (readyToCreateNN)
                 {
-                    LMmenu.Remove("Zakończ", LMEnd);
+                    LMmenu.Remove("Powrót do menu głównego", LMEnd);
                     LMmenu.Add(String.Format(">> Konfiguruj sieć:\n\t\t" +
                         "- liczba neuronów w warstwie ukrytej,\n\t\t" +
                         "- maksymalną liczbę epok,\n\t\t" +
                         "- docelowa dokładność modelu."), LMSetConfig);
                     LMmenu.Add(">> Utworz nową sieć neuronową oraz zbiory trenujący i walidacyjny", LMCreateNN);
 
-                    LMmenu.Remove("Wystartuj sieć dla domyślnego zestawu danych i konfiguracji", LMquickStart);
+                    
                     LMmenu.Remove("Ustaw Opcje dla HeartDisease", SetToHeartDisease);
                     LMmenu.Remove("[wybor danych] Ustaw Opcje dla GermanCreditData", SetToGermanCreditData);
                     LMmenu.Remove("Ustaw Opcje dla LetterRecognition", SetToLetterRecognition);
                     LMmenu.Remove("[wybor danych] Ustaw Opcje dla CreditRisk", SetToCreditRisk);
-                    LMmenu.Add("Zakończ", LMEnd);
+                    LMmenu.Add("Powrót do menu głównego", LMEnd);
                 }
 
                 if (readyToBackpropagate)
                 {
-                    LMmenu.Remove("Zakończ", LMEnd);
+                    LMmenu.Remove("Powrót do menu głównego", LMEnd);
                     LMmenu.Add(">> Rozpocznij/kontynuuj działanie sieci", LMStart);
-                    LMmenu.Add("Zakończ", LMEnd);
+                    LMmenu.Add("Powrót do menu głównego", LMEnd);
                 }
 
                 LMmenu.Show();

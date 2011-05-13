@@ -219,13 +219,13 @@ namespace LearningBPandLM
 
             NN = new neuralNetwork(Dataset.sample(0).Length, hiddenNodeRatio, 1, Dataset.DataType, ActivationFuncType.Sigmoid, ActivationFuncType.Sigmoid);
 
-            createFileNames();
-            durationOfEachEpoch = new Hashtable();
-            timer = new Stopwatch();
-
             trainingSetMSE = generalizationSetMSE = double.MaxValue;
             maxEpochs = mE;
             desiredAccuracy = dAcc;
+
+            createFileNames();
+            durationOfEachEpoch = new Hashtable();
+            timer = new Stopwatch();
 
             coefficientMI = MI_DEFAULT;
             adjustmentFactorV = V_DEFAULT;
@@ -373,9 +373,11 @@ namespace LearningBPandLM
 
             try
             {
-                saveResult.WriteLine("{0}\t{1:N4}\t{2:N2}\t{3:N4}\t{4:N2}\t{5}", 
-                    epochCounter, trainingSetMSE, trainingSetAccuracy, generalizationSetMSE, 
+                string line = String.Format("{0}\t{1:N4}\t{2:N2}\t{3:N4}\t{4:N2}\t{5}",
+                    epochCounter, trainingSetMSE, trainingSetAccuracy, generalizationSetMSE,
                     generalizationSetAccuracy, durationOfEachEpoch[epochCounter]);
+                line = line.Replace(",", ".");
+                saveResult.WriteLine(line);
 
                 saveResult.Flush();
             }
@@ -642,12 +644,15 @@ namespace LearningBPandLM
         /// </summary>
         private void createFileNames()
         {
-            RESULTS = String.Format("wynik_{0}_LM.txt",
-                Enum.GetName(typeof(ZScore.EnumDataTypes), (int)Dataset.DataType));
-            weightsOutputFile = String.Format("weights_{0}_LM.txt",
-                Enum.GetName(typeof(ZScore.EnumDataTypes), (int)Dataset.DataType));
-            customWeightsOutputFile = String.Format("customWeights_{0}_LM.txt",
-                Enum.GetName(typeof(ZScore.EnumDataTypes), (int)Dataset.DataType));
+            RESULTS = String.Format("wynik_{0}_LM-{1}-{2}.txt",
+                Enum.GetName(typeof(ZScore.EnumDataTypes), (int)Dataset.DataType),
+                NN.numHidden.ToString(), maxEpochs.ToString());
+            weightsOutputFile = String.Format("weights_{0}_LM-{1}.txt",
+                Enum.GetName(typeof(ZScore.EnumDataTypes), (int)Dataset.DataType),
+                NN.numHidden.ToString());
+            customWeightsOutputFile = String.Format("customWeights_{0}_LM-{1}.txt",
+                Enum.GetName(typeof(ZScore.EnumDataTypes), (int)Dataset.DataType),
+                NN.numHidden.ToString());
         }
 
         private void networkStats()
