@@ -677,7 +677,8 @@ namespace MatrixLibrary
 				for(int col = 1;col<=Cols+1;col++)
 				{A[row,col] = Mat_[row-1,col-1];}
 
-			const int NMAX = 100;
+//			const int NMAX = 100;
+            const int NMAX = 1024;
 			v = new double[NP+1, NP+1];
 			w = new double[NP+1];
 
@@ -727,6 +728,7 @@ namespace MatrixLibrary
 				}
 				w[i]=scale*g;
 				g=s=scale=0.0;
+
 				if (i <= m && i != n) 
 				{
 					for (k=l;k<=n;k++) scale += Math.Abs(A[i,k]);
@@ -741,7 +743,15 @@ namespace MatrixLibrary
 						g = -Sign(Math.Sqrt(s),f);
 						h=f*g-s;
 						A[i,l]=f-g;
-						for (k=l;k<=n;k++) rv1[k]=A[i,k]/h;
+                        try
+                        {
+                            for (k = l; k <= n; k++)
+                                rv1[k] = A[i, k] / h;
+                        }
+                        catch
+                        {
+                            Console.WriteLine();
+                        }
 						if (i != m) 
 						{
 							for (j=l;j<=m;j++) 

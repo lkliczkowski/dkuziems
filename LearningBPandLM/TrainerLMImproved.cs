@@ -67,11 +67,15 @@ namespace LearningBPandLM
         /// <summary>
         /// domyślna wartość startowa współczynnika "tłumienia"
         /// </summary>
-        const double MI_DEFAULT = 0.00001;
+        double mi_default;
         /// <summary>
         /// Maksymalna wielkość współczynnika \mi
         /// </summary>
-        double MAX_MI = 100000;
+        const double MAX_MI = 10000000000000000000;
+        /// <summary>
+        /// Minimalna wielkość współczynnika \mi
+        /// </summary>
+        const double MIN_MI = 0.00000000000000000000000001;
         /// <summary>
         /// wspołczynnik przystosowania, wartosc domyślna
         /// </summary>
@@ -94,42 +98,6 @@ namespace LearningBPandLM
         /// Maksymalna ilość epok
         /// </summary>
         ulong maxEpochs;
-
-        /// <summary>
-        /// Informacja ile razy nie udało się odwrócić macierzy podczas odliczania przyrostu wag,
-        /// jeżeli próba nieudana zaliczamy ją do nieudanych prób aktualizacji wag i zwiększamy 
-        /// współczynnik tłumienia dzięki czemu macierz przyjmuje inne wartości i wyznacznik 
-        /// przestaje być zerowy gdyż zmieniają się wartości na przekątnej macierzy (Q+μI)
-        /// </summary>
-        int matrixInverseFailCounter;
-        /// <summary>
-        /// Maksymalna ilość powtórzeń próby odwrócenia macierzy, jeżeli matrixInverseFailCounter
-        /// osiągnie tę wartość zostaje zainicjowana nowa epoka z kolejną próbką danych i domyślną
-        /// wartością współczynnika μ
-        /// </summary>
-        const int MAX_MATRIX_FAIL_COUNT = 10;
-
-        /// <summary>
-        /// Główny licznik epok dla których zmiana wag z rzędu była nieudana, jeżeli zostanie osiągnięta 
-        /// wartość MAX_TOTAL_EPOCH_FAIL_IN_A_ROW uczenie sieci dobiega końca gdyż wielokrotnie nie 
-        /// zostały podjęte zmiany w modelu i najprawdopodobniej dalsze próby nie przyniosłyby efektu
-        /// </summary>
-        int totalFailEpochInARow;
-        /// <summary>
-        /// Maksymalna wielkość dla totalFailEpochInARow
-        /// </summary>
-        const int MAX_TOTAL_EPOCH_FAIL_IN_A_ROW = 10;
-
-        /// <summary>
-        /// Dodatkowy licznik kolejno po sobie następujących epok w trakcie których zmiana wag była 
-        /// nieudana, jeżeli osiągnie maksymalną wartość, dane ze zbioru uczącego zostają przetasowane
-        /// ponownie metodą DatasetIndexes.MixAgainTrainingData() i zostaje zainicjowana nowa epoka
-        /// </summary>
-        int additionalEpochFailCounter;
-        /// <summary>
-        /// Maksymalna ilość powtórzeń epok dla additionalEpochFailCounter
-        /// </summary>
-        const int MAX_ADD_EPOCH_FAIL_COUNT = 5;
 
         /// <summary>
         /// Zbior danych, klasa ZScore zawiera zstandaryzowane dane:
@@ -188,11 +156,6 @@ namespace LearningBPandLM
         private double h = 0.00000000001;//Double.Epsilon - gdzies gubi precyzje w trakcie obliczen!
 
         /// <summary>
-        /// Czy wyświtlać dodatkowe informacje o tym co jest przeliczane
-        /// </summary>
-        bool showAdditionalOutputMsgs = true;
-
-        /// <summary>
         /// flaga czy kontynuowac nauczanie
         /// </summary>
         bool trainingComplete;
@@ -207,11 +170,11 @@ namespace LearningBPandLM
         public TrainerLMImproved(ZScore.ZScore dataset)
             : this(dataset, (dataset.sample(0).Length > 40) ?
             (dataset.sample(0).Length / 4 - 1) :
-            dataset.sample(0).Length / 2 - 1, 
-            1500, 99)
+            dataset.sample(0).Length / 2 - 1,
+            1500, 99, 0.00001, V_DEFAULT)
         {}
 
-        public TrainerLMImproved(ZScore.ZScore dataset, int hiddenNodeRatio, ulong mE, double dAcc)
+        public TrainerLMImproved(ZScore.ZScore dataset, int hiddenNodeRatio, ulong mE, double dAcc, double cMi, double aFV)
         {
 
             Dataset = dataset;
@@ -222,13 +185,12 @@ namespace LearningBPandLM
             trainingSetMSE = generalizationSetMSE = double.MaxValue;
             maxEpochs = mE;
             desiredAccuracy = dAcc;
+            coefficientMI = mi_default = cMi;
+            adjustmentFactorV = aFV;
 
             createFileNames();
             durationOfEachEpoch = new Hashtable();
             timer = new Stopwatch();
-
-            coefficientMI = MI_DEFAULT;
-            adjustmentFactorV = V_DEFAULT;
 
             N = (NN.numInput + 1) * NN.numHidden 
                 + (NN.numHidden + 1) * NN.numOutput; //liczba wag = N
@@ -237,7 +199,7 @@ namespace LearningBPandLM
             //error = new double[numTrainingPatternsInSingleEpoch];
             error = new double();
             submatrixQ = initArray(submatrixQ, N, N);
-            initializeForNewEpoch(false);
+            initializeForNewEpoch();
 
             NN.initializeWeights();
 
@@ -257,7 +219,7 @@ namespace LearningBPandLM
 
             //inicjalizacja licznika epok oraz wag oraz flagi
             epochCounter = 0;
-            totalFailEpochInARow = 0;
+
             trainingComplete = false;
 
             Console.Write("\nNaciśnij dowolny przycisk by rozpocząć nauczanie sieci...\n");
@@ -267,7 +229,7 @@ namespace LearningBPandLM
 
             //naglowki w pliku z wynikami
             saveResult.WriteLine("#LMtraining: default μ = {0}, V = {1}, NN: {2}(+1):{3}(+1):{4}",
-                MI_DEFAULT, adjustmentFactorV, NN.numInput, NN.numHidden, NN.numOutput);
+                mi_default, adjustmentFactorV, NN.numInput, NN.numHidden, NN.numOutput);
             saveResult.WriteLine("#{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t",
                 "epoch", "tMSE", "tAcc", "gMSE", "gAcc", "ms");
             saveResult.Flush();
@@ -278,8 +240,9 @@ namespace LearningBPandLM
 
             double bestGeneralizationSetMSE = generalizationSetMSE;
 
-            while ((trainingSetAccuracy < desiredAccuracy || generalizationSetAccuracy < desiredAccuracy)
-                && epochCounter < maxEpochs && !trainingComplete)
+            //while ((trainingSetAccuracy < desiredAccuracy || generalizationSetAccuracy < desiredAccuracy)
+            //    && epochCounter < maxEpochs && !trainingComplete)
+            while (epochCounter < maxEpochs && !trainingComplete)
             {
                 
 
@@ -293,8 +256,6 @@ namespace LearningBPandLM
 
                     //kolejna epoka, zwiekszamy licznik
                     epochCounter++;
-                    totalFailEpochInARow = 0;
-
 
                     //zapisujemy wyniki do pliku
                     saveResultsToFile(saveResult);
@@ -325,30 +286,21 @@ namespace LearningBPandLM
                 }
                 else
                 {
-                    if (++totalFailEpochInARow > MAX_TOTAL_EPOCH_FAIL_IN_A_ROW)
-                    {
-                        Console.WriteLine("Osiagnieto maksymalna ilość epok bez zmian w modelu ({0})", MAX_TOTAL_EPOCH_FAIL_IN_A_ROW);
-                        ShowOptions();
-                        saveResult.Close();
-                        return false;
-                    }
+                    timer.Stop();
+                    durationOfEachEpoch.Add(epochCounter + 1, timer.ElapsedMilliseconds);
 
-                    Console.WriteLine("\nEpoka {0} niepowodzenie [{1}x z rzędu]! Powtarzam dla nastepnej probki danych!",
-                        epochCounter + 1, totalFailEpochInARow);
 
-                    if (coefficientMI > MAX_MI)
-                    {
-                        coefficientMI = MI_DEFAULT;
-                    }
+                    //kolejna epoka, zwiekszamy licznik
+                    epochCounter++;
 
-                    //zwiekszamy licznik niepowodzen - jezeli osiagnie max - przemieszamy dane treningowe
-                    additionalEpochFailCounter++;
-                    if (additionalEpochFailCounter > MAX_ADD_EPOCH_FAIL_COUNT - 1)
+                    //zapisujemy wyniki do pliku
+                    saveResultsToFile(saveResult);
+
+                    for( ; epochCounter < maxEpochs; epochCounter++)
                     {
-                        DatasetIndexes.MixAgainTrainingData();
-                        initializeForNewEpoch(false);
-                        Console.WriteLine("Dane przemieszane!");
+                        fillResults(saveResult);
                     }
+                    trainingComplete = true;
                 }
                 
             }
@@ -388,29 +340,44 @@ namespace LearningBPandLM
         }
 
         /// <summary>
+        /// Zapis pomiarow do pliku bez wyliczania MSE i Acc
+        /// </summary>
+        /// <param name="saveResult">uchwyt do pliku z wynikami</param>
+        private void fillResults(TextWriter saveResult)
+        {
+            try
+            {
+                string line = String.Format("{0}\t{1:N4}\t{2:N2}\t{3:N4}\t{4:N2}\t{5}",
+                    epochCounter, trainingSetMSE, trainingSetAccuracy, generalizationSetMSE,
+                    generalizationSetAccuracy, durationOfEachEpoch[epochCounter]);
+                line = line.Replace(",", ".");
+                saveResult.WriteLine(line);
+
+                saveResult.Flush();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Nieudany zapis do pliku wyników:\n{0}", e.Message);
+            }
+        }
+
+        /// <summary>
         /// Pojedyncza epoka - dla calego podzbioru danych feedforward+backpropagation,
         /// wyliczenie aktualnego bledu oraz ustawienie nowych wag
         /// </summary>
         /// <param name="trainingSet">indeksy w zbiorze danych na ktorych trenujemy siec w tej epoce</param>
         private bool runTrainingEpoch(int[] trainingSet)
         {
-            initializeForNewEpoch(true);
+            initializeForNewEpoch();
             //jezeli kwadrat sumy bledow sie zmniejszyl
             bool epochComplete = false;
 
-            bool matrixInverseMsgShown = false;
-            
             bool miMsgShown = false;
 
             while (!epochComplete)
             {
-                if (coefficientMI > MAX_MI)
+                if (coefficientMI > MAX_MI || coefficientMI < MIN_MI)
                     epochComplete = true;
-
-                //niepoprawnie skasyfikowane przypadki (do wyznaczenia celnosci modelu)
-                double incorrectPatterns = 0;
-                double previousTrainingSetMSE = NN.calcMSE(Dataset, DatasetIndexes.GeneralizationSet);
-                //double previousGeneralizationSetMSE = generalizationSetMSE;
 
                 for (int i = 0; i < trainingSet.Length; i++)
                 {
@@ -427,84 +394,58 @@ namespace LearningBPandLM
                 NN.previousWeightsInputHidden = NN.wInputHidden;
                 NN.previousWeightsHiddenOutput = NN.wHiddenOutput;
 
-                try
+                if (updateWeights())
                 {
-                    if (updateWeights())
+                    //aktualizuj wspolczynnik celnosci oraz blad dla zbioru uczacego
+                    double previousTrainingSetMSE = trainingSetMSE,
+                        previousGeneralizationSetMSE = generalizationSetMSE;
+
+                    trainingSetMSE = NN.calcMSE(Dataset, trainingSet);
+                    generalizationSetMSE = NN.calcMSE(Dataset, DatasetIndexes.GeneralizationSet);
+
+                    //jezeli kwadrat sumy bledow sie zmniejszyl
+                    if (previousTrainingSetMSE >= trainingSetMSE || generalizationSetMSE <= previousGeneralizationSetMSE)
                     {
-                        //aktualizuj wspolczynnik celnosci oraz blad dla zbioru uczacego
-                        trainingSetAccuracy = 100 - (incorrectPatterns / trainingSet.Length * 100);
-                        trainingSetMSE = NN.calcMSE(Dataset, trainingSet);
+                        //iteracja sie konczy
+                        epochComplete = true;
 
-                        //jezeli kwadrat sumy bledow sie zmniejszyl
-                        if (previousTrainingSetMSE > trainingSetMSE)// || generalizationSetMSE < previousGeneralizationSetMSE)
-                        {
-                            //iteracja sie konczy
-                            epochComplete = true;
-
-                            Console.WriteLine("\nWagi zostały zmienione dla μ: {0}", coefficientMI);
-                            //zmniejszamy /mi
-                            decMi();
-                        }
-                        else
-                        {
-                            //powtarzamy iteracje epochComplete == false
-                            //zwiekszamy /mi
-                            incMi();
-                            //odrzucamy nowe wagi
-                            NN.wInputHidden = NN.previousWeightsInputHidden;
-                            NN.wHiddenOutput = NN.previousWeightsHiddenOutput;
-                            trainingSetMSE = previousTrainingSetMSE;
-                            //generalizationSetMSE = previousGeneralizationSetMSE;
-                            if (!miMsgShown)
-                            {
-                                Console.WriteLine("\nNieudana zmiana wag" 
-                                    + " (błąd dla zmienionych wag przyjmuje większa wartość)\n"
-                                    + "zmiany wag cofnięte, zmiana wartości współczynnika μ:");
-                                miMsgShown = true;
-                            }
-                            Console.Write("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b{0:N6}", coefficientMI);
-                        }
+                        Console.WriteLine("\nWagi zostały zmienione dla μ: {0}", coefficientMI);
+                        //zmniejszamy /mi
+                        decMi();
                     }
                     else
                     {
-                        return false;
+                        //powtarzamy iteracje epochComplete == false
+                        //zwiekszamy /mi
+                        incMi();
+                        //odrzucamy nowe wagi
+                        NN.wInputHidden = NN.previousWeightsInputHidden;
+                        NN.wHiddenOutput = NN.previousWeightsHiddenOutput;
+//                        trainingSetMSE = previousTrainingSetMSE;
+//                        generalizationSetMSE = previousTrainingSetMSE;
+//                        //generalizationSetMSE = previousGeneralizationSetMSE;
+                        if (!miMsgShown)
+                        {
+                            Console.WriteLine("\nNieudana zmiana wag" 
+                                + " (błąd dla zmienionych wag przyjmuje większa wartość)\n"
+                                + "zmiany wag cofnięte, zmiana wartości współczynnika μ:");
+                            miMsgShown = true;
+                        }
+                        Console.Write("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b{0:N6}",
+                            coefficientMI);
                     }
                 }
-                catch (MatrixLibrary.MatrixDeterminentZero e)
+                else
                 {
-                    if (matrixInverseFailCounter > MAX_MATRIX_FAIL_COUNT - 1)
-                    {
-                        matrixInverseFailCounter = 0;
-                        initializeForNewEpoch(true);
-                        return false;
-                    }
-
-                    /* Dodatkowe informacje o niepowodzeniu w odwracaniu macierzy
-                     * dla showAdditionalOutputMsgs == true
-                     */
-                    if (showAdditionalOutputMsgs) { 
-                        if (!matrixInverseMsgShown)
-                        {
-                            Console.Write("Macierz osobliwa ({0}), zwiekszam współczynnik μ! \nPrób:  ", e.Message);
-                            matrixInverseMsgShown = true;
-                        }
-                        Console.Write("\b{0}", matrixInverseFailCounter);
-                    }
-
-                    matrixInverseFailCounter++;
-                    incMi();
-
-                    if (coefficientMI > MAX_MI)
-                    {
-                        coefficientMI = MI_DEFAULT;
-                    }
-
-                    //return false;
+                    return false;
                 }
             }
 
-            if (coefficientMI > MAX_MI)
+            if (coefficientMI > MAX_MI || coefficientMI < MIN_MI)
             {
+                NN.wInputHidden = NN.previousWeightsInputHidden;
+                NN.wHiddenOutput = NN.previousWeightsHiddenOutput;
+                Console.WriteLine("\nMin/Max wartość η osiągnięta! ({0})", coefficientMI);
                 return false;
             }
             return true;
@@ -550,11 +491,10 @@ namespace LearningBPandLM
             //obliczamy podmacierz q
             for (int n = 0; n < N; n++)
             {
-                for (int m = 0; m < N; m++)
+                for (int m = n; m < N; m++)
                 {
                     submatrixQ[n][m] = vectorJ[m] * vectorJ[n];
                 }
-                //TODO macierz trojkatna pozwoli oszczedzic niemal polowe obliczen
             }
 
             //obliczamy podwektor ETA
@@ -584,8 +524,7 @@ namespace LearningBPandLM
         {
             //zmiana wag = (Q + \mi*I)^{-1} * g
             double[][] delta = new double[N][];
-
-            //delta = matrixQ;
+            delta = initArray(delta, N, N);
 
             //Q + /mi * I
             for (int n = 0; n < N; n++)
@@ -593,11 +532,50 @@ namespace LearningBPandLM
                 matrixQ[n][n] += coefficientMI;
             }
 
-            //(Q + /mi * I)^(-1)
-            double[][] invertedMatrix = multidimensionalArrayToJaggedArray
-                (MatrixLibrary.Matrix.Inverse(jaggedArrayToMultidimensionalArray(matrixQ)));
+            double[][] invertedMatrix;
 
-            delta = initArray(delta, N, N);
+            try
+            {
+                //(Q + /mi * I)^(-1)
+                invertedMatrix = multidimensionalArrayToJaggedArray
+                    (MatrixLibrary.Matrix.Inverse(jaggedArrayToMultidimensionalArray(matrixQ)));
+            }
+            catch (MatrixLibrary.MatrixDeterminentZero)
+            {
+                //rozklad wedlug wartosci osobliwych (Singular Value Decomposition)
+                // Matrix = U x S x V'
+                double[,] U, S, V;
+                try
+                {
+                    MatrixLibrary.Matrix.SVD(jaggedArrayToMultidimensionalArray(matrixQ), out S, out U, out V);
+                }
+                catch
+                {
+                    return false;
+                }
+
+                // Matrix^{-1} = U x S^{-1} x V'
+                try
+                {
+                    S = MatrixLibrary.Matrix.Inverse(S);
+                }
+                catch (MatrixLibrary.MatrixDeterminentZero)
+                {
+                    try
+                    {
+                        S = MatrixLibrary.Matrix.PINV(S);
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                }
+                
+                invertedMatrix = multidimensionalArrayToJaggedArray
+                    (MatrixLibrary.Matrix.Multiply
+                    (MatrixLibrary.Matrix.Multiply(U, S), MatrixLibrary.Matrix.Transpose(V)));
+
+            }
 
             for (int n = 0; n < N; n++)
             {
@@ -644,9 +622,10 @@ namespace LearningBPandLM
         /// </summary>
         private void createFileNames()
         {
-            RESULTS = String.Format("wynik_{0}_LM-{1}-{2}.txt",
+            RESULTS = String.Format("wynik_{0}_LM-{1}-{2}-{3}-{4}.txt",
                 Enum.GetName(typeof(ZScore.EnumDataTypes), (int)Dataset.DataType),
-                NN.numHidden.ToString(), maxEpochs.ToString());
+                NN.numHidden.ToString(), maxEpochs.ToString(), 
+                coefficientMI.ToString(), adjustmentFactorV.ToString());
             weightsOutputFile = String.Format("weights_{0}_LM-{1}.txt",
                 Enum.GetName(typeof(ZScore.EnumDataTypes), (int)Dataset.DataType),
                 NN.numHidden.ToString());
@@ -661,8 +640,10 @@ namespace LearningBPandLM
             Console.WriteLine("Liczba neuronow w wartstwie ukrytej:\t{0}", NN.numHidden);
             Console.WriteLine("Liczba neuronow w warstwie wyjsciowej:\t{0}", NN.numOutput);
             Console.WriteLine("Parametry:");
+            Console.WriteLine("Domyślny współczynnik tłumienia μ:\t{0}", coefficientMI);
+            Console.WriteLine("Współczynnik przystosowania V:\t\t{0}", adjustmentFactorV);
             Console.WriteLine("Maksymalna liczba epok:\t\t{0}", maxEpochs);
-            Console.WriteLine("Docelowa dokładność modelu:\t{0}\n", desiredAccuracy);
+            Console.WriteLine("Docelowa dokładność modelu:\t{0}%\n", desiredAccuracy);
         }
 
         public void PrintStatus()
@@ -679,15 +660,11 @@ namespace LearningBPandLM
         /// Inicializacja macierzy Q i wektora gradientu g,
         /// musza byc zerowane na poczatku kazdej epoki
         /// </summary>
-        private void initializeForNewEpoch(bool check)
+        private void initializeForNewEpoch()
         {
             matrixQ = initArray(matrixQ, N, N);
             gradientVectorG = new double[N];
             deltaWeights = new double[N];
-            if (!check)
-            {
-                additionalEpochFailCounter = 0;
-            }
         }
 
         /// <summary>
