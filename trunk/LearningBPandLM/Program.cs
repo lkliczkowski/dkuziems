@@ -17,7 +17,7 @@ namespace LearningBPandLM
 
         //parametry konfiguracyjne
         private static int hiddenNodeRatioPar;
-        private static double learningRatePar, desiredAccuracyPar;
+        private static double learningRatePar, desiredAccuracyPar, coefficientMIpar, adjustmentFactorVpar;
         private static ulong maxEpochsPar;
 
         #region menu glowne
@@ -68,6 +68,8 @@ namespace LearningBPandLM
             desiredAccuracyPar = 99;
             maxEpochsPar = 1500;
             learningRatePar = 0.01;
+            coefficientMIpar = 0.00001;
+            adjustmentFactorVpar = 10;
         }
 
         private static void SetToHeartDisease()
@@ -209,7 +211,6 @@ namespace LearningBPandLM
         {
             double learningRateDefault = 0.01,
                 desiredAccuracyDefault = 99;
-            ulong maxEpochsDefault = 1500;
 
             Console.WriteLine("Podaj liczbę neuronów w warstwie ukrytej, obecna: {0}", hiddenNodeRatioPar);
             try
@@ -237,6 +238,7 @@ namespace LearningBPandLM
             }
             Console.WriteLine("Obecny wspołczynnik uczenia wynosi: {0}\n", learningRatePar);
 
+
             Console.WriteLine("Podaj maksymalną ilość epok, obecna: {0}", maxEpochsPar);
             try
             {
@@ -244,8 +246,7 @@ namespace LearningBPandLM
             }
             catch
             {
-                Console.WriteLine("Niepoprawna wartość, ustawiona na domyślną ({0})", maxEpochsDefault);
-                maxEpochsPar = maxEpochsDefault;
+                Console.WriteLine("Niepoprawna wartość, ustawiona na poprzednią...");
             }
             Console.WriteLine("Obecna maksymalna ilość epok: {0}\n", maxEpochsPar);
 
@@ -256,8 +257,7 @@ namespace LearningBPandLM
             }
             catch
             {
-                Console.WriteLine("Niepoprawna wartość, ustawiona automatycznie ({0}%)", desiredAccuracyDefault);
-                desiredAccuracyPar = desiredAccuracyDefault;
+                Console.WriteLine("Niepoprawna wartość, ustawiona na poprzednią");
             }
             if (desiredAccuracyPar > 100 || desiredAccuracyPar < 0)
             {
@@ -367,7 +367,6 @@ namespace LearningBPandLM
         private static void LMSetConfig()
         {
             double desiredAccuracyDefault = 99;
-            ulong maxEpochsDefault = 1500;
 
             Console.WriteLine("Podaj liczbę neuronów w warstwie ukrytej, obecna: {0}", hiddenNodeRatioPar);
             try
@@ -381,6 +380,29 @@ namespace LearningBPandLM
             }
             Console.WriteLine("Obecna liczba neuronów wynosi: {0}\n", hiddenNodeRatioPar);
 
+            Console.WriteLine("Podaj domyślną wartość wspolczynnik tlumienia μ, obecna {0}", 
+                coefficientMIpar);
+            try
+            {
+                coefficientMIpar = Double.Parse(Console.ReadLine());
+            }
+            catch
+            {
+                Console.WriteLine("Niepoprawna wartość, ustawiona wartość poprzednią");
+            }
+            Console.WriteLine("Obecna wartość μ wynosi: {0}\n", coefficientMIpar);
+
+            Console.WriteLine("Podaj wartość wspolczynnika przystosowania V, obecna {0}", adjustmentFactorVpar);
+            try
+            {
+                adjustmentFactorVpar = Double.Parse(Console.ReadLine());
+            }
+            catch
+            {
+                Console.WriteLine("Niepoprawna wartość, ustawiona wartość poprzednią");
+            }
+            Console.WriteLine("Obecna wartość V wynosi: {0}\n", adjustmentFactorVpar);
+
             Console.WriteLine("Podaj maksymalną ilość epok, obecna: {0}", maxEpochsPar);
             try
             {
@@ -388,8 +410,7 @@ namespace LearningBPandLM
             }
             catch
             {
-                Console.WriteLine("Niepoprawna wartość, ustawiona na domyślną ({0})", maxEpochsDefault);
-                maxEpochsPar = maxEpochsDefault;
+                Console.WriteLine("Niepoprawna wartość, ustawiona na poprzednią...");
             }
             Console.WriteLine("Obecna maksymalna ilość epok: {0}\n", maxEpochsPar);
 
@@ -400,8 +421,7 @@ namespace LearningBPandLM
             }
             catch
             {
-                Console.WriteLine("Niepoprawna wartość, ustawiona automatycznie ({0}%)", desiredAccuracyDefault);
-                desiredAccuracyPar = desiredAccuracyDefault;
+                Console.WriteLine("Niepoprawna wartość, ustawiona na poprzednią");
             }
             if (desiredAccuracyPar > 100 || desiredAccuracyPar < 0)
             {
@@ -418,7 +438,8 @@ namespace LearningBPandLM
         private static void LMCreateNN()
         {
             if (configured)
-                networkTrainerLM = new TrainerLMImproved(dataset, hiddenNodeRatioPar, maxEpochsPar, desiredAccuracyPar);
+                networkTrainerLM = new TrainerLMImproved(dataset, hiddenNodeRatioPar, 
+                    maxEpochsPar, desiredAccuracyPar, coefficientMIpar, adjustmentFactorVpar);
             else
                 networkTrainerLM = new TrainerLMImproved(dataset);
 
