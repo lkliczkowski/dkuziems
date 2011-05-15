@@ -12,23 +12,17 @@ namespace LearningBPandLM
     class DatasetOperateWindowed : DatasetStructure
     {
         const int DEFAULT_GENERALIZATIONSET_SIZE = 20,
-            DEFAULT_SAMPLE_SIZE = 10;
+            DEFAULT_SAMPLE_SIZE = 20;
         //niedostępny
         private DatasetOperateWindowed()
         { }
 
-        /*
-         * Konstruktor z domyslnym podzialem zbiorow
-         */ 
-        public DatasetOperateWindowed(int setLength)
-            : this(setLength, DEFAULT_GENERALIZATIONSET_SIZE)
-        { }
 
         /*
          * Konstruktor glowny
          */
-        public DatasetOperateWindowed(int setLength, int gPercent)
-            : base(setLength, gPercent, DEFAULT_SAMPLE_SIZE)
+        public DatasetOperateWindowed(int setLength, int sz)
+            : base(setLength, DEFAULT_GENERALIZATIONSET_SIZE, sz)
         {
             actualRange = 0;
             

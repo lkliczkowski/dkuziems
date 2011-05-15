@@ -263,7 +263,7 @@ namespace LearningBPandLM
             //obliczamy wartosci w hiddenLayer
             //hiddenNeurons = calculateOfOutputs(numInput, numHidden, inputNeurons, hiddenNeurons, wInputHidden, ref hiddenNets, true);
 
-            //dla sigmoid 
+            //dla ukrytej
             HiddenNeurons = calculateOfOutputs(numInput, numHidden, Inputs, HiddenNeurons, wInputHidden, 
                 ref hiddenNets, firstActivationIsSigmoid);
 
