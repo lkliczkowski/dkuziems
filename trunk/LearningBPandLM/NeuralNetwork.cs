@@ -205,8 +205,8 @@ namespace LearningBPandLM
                     if (i != numLayerFrom)
                     {
                         //losowe wagi
-                        weightList[i][j] = (r.NextDouble() * 2 - 1); // (-1.1)
-                        //weightList[i][j] = (r.NextDouble() * 1 - 0.5); // (-0.5,0.5)
+                        //weightList[i][j] = (r.NextDouble() * 2 - 1); // (-1.1)
+                        weightList[i][j] = (r.NextDouble() * 1 - 0.5); // (-0.5,0.5)
                         //weightList[i][j] = 0.1;
                     }
                     else
@@ -312,6 +312,18 @@ namespace LearningBPandLM
                 }
             }
             return neuronsCurrentLayer;
+        }
+
+        public void KeepWeightsToPrevious()
+        {
+            previousWeightsInputHidden = wInputHidden;
+            previousWeightsHiddenOutput = wHiddenOutput;
+        }
+
+        public void RestoreWeightsWithPrevious()
+        {
+            wInputHidden = previousWeightsInputHidden;
+            wHiddenOutput = previousWeightsHiddenOutput;
         }
 
         public void PrintWeights()

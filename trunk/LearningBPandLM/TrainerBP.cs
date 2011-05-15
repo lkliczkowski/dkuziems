@@ -590,7 +590,9 @@ namespace LearningBPandLM
             Console.WriteLine("Parametry:");
             Console.WriteLine("Współczynnik uczenia:\t\t{0}", learningRate);
             Console.WriteLine("Maksymalna liczba epok:\t\t{0}", maxEpochs);
-            Console.WriteLine("Docelowa dokładność modelu:\t{0}\n", desiredAccuracy);
+            Console.WriteLine("Docelowa dokładność modelu:\t{0}", desiredAccuracy);
+            Console.WriteLine("Wielkość próbki treningowej: {0} \nRozmiar zbioru walidacyjnego: {1}\n",
+                DatasetIndexes.TrainingSet.Length, DatasetIndexes.GeneralizationSet.Length);
         }
 
         /// <summary>

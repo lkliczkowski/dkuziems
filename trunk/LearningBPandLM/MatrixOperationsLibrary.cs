@@ -678,7 +678,7 @@ namespace MatrixLibrary
 				{A[row,col] = Mat_[row-1,col-1];}
 
 //			const int NMAX = 100;
-            const int NMAX = 1024;
+            const int NMAX = 2048;
 			v = new double[NP+1, NP+1];
 			w = new double[NP+1];
 
