@@ -136,6 +136,8 @@ namespace LearningBPandLM
         /// </summary>
         double generalizationSetMSE;
 
+        double previousTrainingSetMSE, previousGeneralizationSetMSE;
+
         #endregion
 
         #region dodatkowe parametry
@@ -171,14 +173,14 @@ namespace LearningBPandLM
             : this(dataset, (dataset.sample(0).Length > 40) ?
             (dataset.sample(0).Length / 4 - 1) :
             dataset.sample(0).Length / 2 - 1,
-            1500, 99, 0.00001, V_DEFAULT)
+            1500, 99, 0.00001, V_DEFAULT, 15)
         {}
 
-        public TrainerLMImproved(ZScore.ZScore dataset, int hiddenNodeRatio, ulong mE, double dAcc, double cMi, double aFV)
+        public TrainerLMImproved(ZScore.ZScore dataset, int hiddenNodeRatio, ulong mE, double dAcc, double cMi, double aFV, int sz)
         {
 
             Dataset = dataset;
-            DatasetIndexes = new DatasetOperateWindowed(Dataset.NormalizedData[0].GetNum());
+            DatasetIndexes = new DatasetOperateWindowed(Dataset.NormalizedData[0].GetNum(), sz);
 
             NN = new neuralNetwork(Dataset.sample(0).Length, hiddenNodeRatio, 1, Dataset.DataType, ActivationFuncType.Sigmoid, ActivationFuncType.Sigmoid);
 
@@ -202,6 +204,9 @@ namespace LearningBPandLM
             initializeForNewEpoch();
 
             NN.initializeWeights();
+            
+            NN.previousWeightsInputHidden = NN.wInputHidden;
+            NN.previousWeightsHiddenOutput = NN.wHiddenOutput;
 
             Program.PrintInfo("Utworzono sieć neuronową");
             networkStats();
@@ -240,12 +245,13 @@ namespace LearningBPandLM
 
             double bestGeneralizationSetMSE = generalizationSetMSE;
 
+            previousTrainingSetMSE = trainingSetMSE;
+            previousGeneralizationSetMSE = generalizationSetMSE;
+
             //while ((trainingSetAccuracy < desiredAccuracy || generalizationSetAccuracy < desiredAccuracy)
             //    && epochCounter < maxEpochs && !trainingComplete)
             while (epochCounter < maxEpochs && !trainingComplete)
             {
-                
-
                 timer.Restart();
 
                 // pojedyncza epoka
@@ -256,6 +262,8 @@ namespace LearningBPandLM
 
                     //kolejna epoka, zwiekszamy licznik
                     epochCounter++;
+
+                    previousTrainingSetMSE = trainingSetMSE;
 
                     //zapisujemy wyniki do pliku
                     saveResultsToFile(saveResult);
@@ -289,14 +297,18 @@ namespace LearningBPandLM
                     timer.Stop();
                     durationOfEachEpoch.Add(epochCounter + 1, timer.ElapsedMilliseconds);
 
+                    NN.wInputHidden = NN.previousWeightsInputHidden;
+                    NN.wHiddenOutput = NN.previousWeightsHiddenOutput;
 
-                    //kolejna epoka, zwiekszamy licznik
-                    epochCounter++;
+                    saveResult.WriteLine("#ended");
 
-                    //zapisujemy wyniki do pliku
-                    saveResultsToFile(saveResult);
+                    generalizationSetAccuracy = NN.getAccuracy(Dataset, DatasetIndexes.GeneralizationSet);
+                    generalizationSetMSE = NN.calcMSE(Dataset, DatasetIndexes.GeneralizationSet);
 
-                    for( ; epochCounter < maxEpochs; epochCounter++)
+                    trainingSetAccuracy = NN.getAccuracy(Dataset, DatasetIndexes.TrainingSet);
+                    trainingSetMSE = NN.calcMSE(Dataset, DatasetIndexes.TrainingSet);
+
+                    for(++epochCounter ; epochCounter <= maxEpochs; ++epochCounter)
                     {
                         fillResults(saveResult);
                     }
@@ -390,40 +402,50 @@ namespace LearningBPandLM
 
                 }
 
-                //zachowujemy stan wag
-                NN.previousWeightsInputHidden = NN.wInputHidden;
-                NN.previousWeightsHiddenOutput = NN.wHiddenOutput;
+
 
                 if (updateWeights())
                 {
-                    //aktualizuj wspolczynnik celnosci oraz blad dla zbioru uczacego
-                    double previousTrainingSetMSE = trainingSetMSE,
-                        previousGeneralizationSetMSE = generalizationSetMSE;
-
                     trainingSetMSE = NN.calcMSE(Dataset, trainingSet);
                     generalizationSetMSE = NN.calcMSE(Dataset, DatasetIndexes.GeneralizationSet);
 
+                    Debug.WriteLine(">> {0:N3}>{1:N3} ({4}) || [N/A] {2:N3} > {3:N3} ({5})", 
+                        previousTrainingSetMSE, trainingSetMSE,
+                        previousGeneralizationSetMSE, generalizationSetMSE,
+                        (previousTrainingSetMSE > trainingSetMSE) ? "T" : "F",
+                        (previousGeneralizationSetMSE > generalizationSetMSE) ? "T" : "F");
+
                     //jezeli kwadrat sumy bledow sie zmniejszyl
-                    if (previousTrainingSetMSE >= trainingSetMSE || generalizationSetMSE <= previousGeneralizationSetMSE)
+                    //if (previousTrainingSetMSE > trainingSetMSE || previousGeneralizationSetMSE > generalizationSetMSE)
+                    if ( previousTrainingSetMSE > trainingSetMSE )
                     {
-                        //iteracja sie konczy
-                        epochComplete = true;
+                        Debug.WriteLine(">> true");
+
+                        //zachowujemy stan wag
+                        NN.previousWeightsInputHidden = NN.wInputHidden;
+                        NN.previousWeightsHiddenOutput = NN.wHiddenOutput;
 
                         Console.WriteLine("\nWagi zostały zmienione dla μ: {0}", coefficientMI);
                         //zmniejszamy /mi
                         decMi();
+
+                        //iteracja sie konczy
+                        epochComplete = true;
                     }
                     else
                     {
+                        NN.wInputHidden = NN.previousWeightsInputHidden;
+                        NN.wHiddenOutput = NN.previousWeightsHiddenOutput;
+
+                        if (coefficientMI > MAX_MI || coefficientMI < MIN_MI)
+                            return false;
+
+                        Debug.WriteLine(">> false");
                         //powtarzamy iteracje epochComplete == false
                         //zwiekszamy /mi
                         incMi();
                         //odrzucamy nowe wagi
-                        NN.wInputHidden = NN.previousWeightsInputHidden;
-                        NN.wHiddenOutput = NN.previousWeightsHiddenOutput;
-//                        trainingSetMSE = previousTrainingSetMSE;
-//                        generalizationSetMSE = previousTrainingSetMSE;
-//                        //generalizationSetMSE = previousGeneralizationSetMSE;
+
                         if (!miMsgShown)
                         {
                             Console.WriteLine("\nNieudana zmiana wag" 
@@ -431,13 +453,38 @@ namespace LearningBPandLM
                                 + "zmiany wag cofnięte, zmiana wartości współczynnika μ:");
                             miMsgShown = true;
                         }
-                        Console.Write("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b{0:N6}",
-                            coefficientMI);
+                        Console.Write("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b" 
+                            + "\b\b\b\b\b\b{0}", coefficientMI);
+
+		        DatasetIndexes.IncreaseRange();
+		        Debug.WriteLine(">> SampleChangedToNext errDecFail ({0})", DatasetIndexes.TrainingSet.Length);
                     }
                 }
                 else
                 {
-                    return false;
+                    //odrzucamy nowe wagi
+                    NN.wInputHidden = NN.previousWeightsInputHidden;
+                    NN.wHiddenOutput = NN.previousWeightsHiddenOutput;
+
+                    if (coefficientMI > MAX_MI || coefficientMI < MIN_MI)
+                        return false;
+
+                    //powtarzamy iteracje epochComplete == false
+                    //zwiekszamy /mi
+                    incMi();
+
+                    if (!miMsgShown)
+                    {
+                        Console.WriteLine("\nNieudana zmiana wag"
+                            + " (niepowodzenia w wyliczaniu macierzy odwrotnej)\n"
+                            + "zmiany wag cofnięte, zmiana wartości współczynnika μ:");
+                        miMsgShown = true;
+                    }
+                    Console.Write("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
+                        + "\b\b\b\b\b\b{0}", coefficientMI);
+
+                    DatasetIndexes.IncreaseRange();
+                    Debug.WriteLine(">> SampleChangedToNext mInvFail ({0})", DatasetIndexes.TrainingSet.Length);
                 }
             }
 
@@ -520,6 +567,9 @@ namespace LearningBPandLM
             }
         }
 
+        
+
+
         private bool updateWeights()
         {
             //zmiana wag = (Q + \mi*I)^{-1} * g
@@ -532,7 +582,7 @@ namespace LearningBPandLM
                 matrixQ[n][n] += coefficientMI;
             }
 
-            double[][] invertedMatrix;
+            double[][] invertedMatrix = matrixQ;
 
             try
             {
@@ -542,15 +592,19 @@ namespace LearningBPandLM
             }
             catch (MatrixLibrary.MatrixDeterminentZero)
             {
+                Debug.WriteLine(">> {0}:: SVD", epochCounter);
                 //rozklad wedlug wartosci osobliwych (Singular Value Decomposition)
                 // Matrix = U x S x V'
                 double[,] U, S, V;
                 try
                 {
                     MatrixLibrary.Matrix.SVD(jaggedArrayToMultidimensionalArray(matrixQ), out S, out U, out V);
+                    Debug.WriteLine(">> Q = U[{0}x{1}] x S[{2}x{3}] x [{4}x{5}]", U.GetLength(0), U.GetLength(1), 
+                        S.GetLength(0), S.GetLength(1), V.GetLength(0), V.GetLength(1));
                 }
                 catch
                 {
+                    Debug.WriteLine(">> SVD niepowodzenie!");
                     return false;
                 }
 
@@ -564,17 +618,19 @@ namespace LearningBPandLM
                     try
                     {
                         S = MatrixLibrary.Matrix.PINV(S);
+                        Debug.WriteLine(">> Pseudo-Inverse for S success");
                     }
                     catch
                     {
+                        Debug.WriteLine(">> Pseudo-Inverse for S failed");
                         return false;
                     }
                 }
-                
-                invertedMatrix = multidimensionalArrayToJaggedArray
-                    (MatrixLibrary.Matrix.Multiply
-                    (MatrixLibrary.Matrix.Multiply(U, S), MatrixLibrary.Matrix.Transpose(V)));
 
+                invertedMatrix = multidimensionalArrayToJaggedArray
+                    (MatrixLibrary.Matrix.Multiply(MatrixLibrary.Matrix.Multiply(V, S), 
+                        MatrixLibrary.Matrix.Transpose(U)));
+                
             }
 
             for (int n = 0; n < N; n++)
@@ -606,6 +662,63 @@ namespace LearningBPandLM
 
             return true;
         }
+
+
+        private bool updateWeightsWithoutSVD()
+        {
+            //zmiana wag = (Q + \mi*I)^{-1} * g
+            double[][] delta = new double[N][];
+            delta = initArray(delta, N, N);
+
+            //Q + /mi * I
+            for (int n = 0; n < N; n++)
+            {
+                matrixQ[n][n] += coefficientMI;
+            }
+
+            double[][] invertedMatrix = matrixQ;
+
+            try
+            {
+                //(Q + /mi * I)^(-1)
+                invertedMatrix = multidimensionalArrayToJaggedArray
+                    (MatrixLibrary.Matrix.Inverse(jaggedArrayToMultidimensionalArray(matrixQ)));
+            }
+            catch (MatrixLibrary.MatrixDeterminentZero)
+            {
+                return false;
+            }
+
+            for (int n = 0; n < N; n++)
+            {
+                for (int m = 0; m < N; m++)
+                {
+                    deltaWeights[n] += invertedMatrix[n][m] * gradientVectorG[m];
+                }
+            }
+
+            int c = 0;
+            for (int i = 0; i < NN.numInput + 1; i++)
+            {
+                for (int j = 0; j < NN.numHidden; j++)
+                {
+                    NN.wInputHidden[i][j] -= deltaWeights[c];
+                    c++;
+                }
+            }
+
+            for (int i = 0; i < NN.numHidden + 1; i++)
+            {
+                for (int j = 0; j < NN.numOutput; j++)
+                {
+                    NN.wHiddenOutput[i][j] -= deltaWeights[c];
+                    c++;
+                }
+            }
+
+            return true;
+        }
+
 
         private void incMi()
         {

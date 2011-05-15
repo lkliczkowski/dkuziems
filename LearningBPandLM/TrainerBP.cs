@@ -113,17 +113,17 @@ namespace LearningBPandLM
         { }
 
         public TrainerBP(ZScore.ZScore dataset, int hiddenNodeRatio)
-            :this (dataset, hiddenNodeRatio, LEARNINGRATEDEFAULT, 1500, 99)
+            :this (dataset, hiddenNodeRatio, LEARNINGRATEDEFAULT, 1500, 99, 15)
         { }
 
-        public TrainerBP(ZScore.ZScore dataset, int hiddenNodeRatio, double lr, ulong mE, double desiredAcc)
+        public TrainerBP(ZScore.ZScore dataset, int hiddenNodeRatio, double lr, ulong mE, double desiredAcc, int sz)
         {
             this.Dataset = dataset;
 
             ///ostatnie 2 argumenty - false, true dla funkcji aktywacji ktore maja byc tanh(x), true dla sigmoid
             NN = new neuralNetwork(Dataset.sample(0).Length, hiddenNodeRatio, 
                 1, dataset.DataType, ActivationFuncType.Tanh, ActivationFuncType.Sigmoid);
-            DatasetIndexes = new DatasetOperateWindowed(Dataset.NormalizedData[0].GetNum());
+            DatasetIndexes = new DatasetOperateWindowed(Dataset.NormalizedData[0].GetNum(), sz);
 
             maxEpochs = mE;
             learningRate = lr;
@@ -488,7 +488,7 @@ namespace LearningBPandLM
                             }
                             catch
                             {
-                                Console.WriteLine("Kontynuuje nauczanie...");
+                                Console.WriteLine("Kontynuuje...");
                             }
                             break;
                     }

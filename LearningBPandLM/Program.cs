@@ -13,12 +13,14 @@ namespace LearningBPandLM
 
         //flagi menu
         private static bool endFlag, BPendFlag, LMendFlag, readyToZScore, readyToCreateNN, 
-            readyToBackpropagate, configured;
+            readyToTrain, configured;
 
         //parametry konfiguracyjne
-        private static int hiddenNodeRatioPar;
+        private static int hiddenNodeRatioPar, sampleSizePar;
         private static double learningRatePar, desiredAccuracyPar, coefficientMIpar, adjustmentFactorVpar;
         private static ulong maxEpochsPar;
+
+        const string VER = "0.54b";
 
         #region menu glowne
         
@@ -53,7 +55,8 @@ namespace LearningBPandLM
         private static void programInfo()
         {
             Console.WriteLine("W programie zaimplementowane są 2 metody nauczania sieci neuronowych, " 
-                + "na danych wykonywana jest także standaryzacja, wybierz jedną z poniższych opcji.");
+                + "na danych wykonywana jest także standaryzacja, wybierz jedną z poniższych opcji.\n"
+                + VER);
         }
 
         private static void setOptionsToDefault()
@@ -61,14 +64,15 @@ namespace LearningBPandLM
             inputFile = outputFile = "";
             dataType = ZScore.EnumDataTypes.unknown;
             //flagi menu
-            endFlag = BPendFlag = LMendFlag = readyToZScore = readyToCreateNN = readyToBackpropagate = configured = false;
+            endFlag = BPendFlag = LMendFlag = readyToZScore = readyToCreateNN = readyToTrain = configured = false;
             
             //parametry konfiguracji
             hiddenNodeRatioPar = 4;
+            sampleSizePar = 15;
             desiredAccuracyPar = 99;
             maxEpochsPar = 1500;
             learningRatePar = 0.01;
-            coefficientMIpar = 0.00001;
+            coefficientMIpar = 0.01;
             adjustmentFactorVpar = 10;
         }
 
@@ -135,6 +139,78 @@ namespace LearningBPandLM
             Console.WriteLine("Maksymalna liczba epok:\t\t{0}", maxEpochsPar);
             Console.WriteLine("Docelowa dokładność modelu:\t{0}\n", desiredAccuracyPar);
         }
+
+        private static void setHiddenRatio()
+        {
+            Console.WriteLine("Podaj liczbę neuronów w warstwie ukrytej, obecna: {0}", hiddenNodeRatioPar);
+            try
+            {
+                hiddenNodeRatioPar = Int32.Parse(Console.ReadLine());
+            }
+            catch
+            {
+                Console.WriteLine("Niepoprawna wartość, ustawiona automatycznie (liczba WE - 1)");
+                hiddenNodeRatioPar = dataset.sample(0).Length - 1;
+            }
+            Console.WriteLine("Obecna liczba neuronów wynosi: {0}\n", hiddenNodeRatioPar);
+        }
+
+        private static void setMaxEpoch()
+        {
+            Console.WriteLine("Podaj maksymalną ilość epok, obecna: {0}", maxEpochsPar);
+            try
+            {
+                maxEpochsPar = ulong.Parse(Console.ReadLine());
+            }
+            catch
+            {
+                Console.WriteLine("Niepoprawna wartość, ustawiona na poprzednią...");
+            }
+            Console.WriteLine("Obecna maksymalna ilość epok: {0}\n", maxEpochsPar);
+        }
+
+        private static void setAcc()
+        {
+            double desiredAccuracyDefault = 99;
+            Console.WriteLine("Podaj docelową dokładność (w %) modelu, obecna: {0}%", desiredAccuracyPar);
+            try
+            {
+                desiredAccuracyPar = Double.Parse(Console.ReadLine());
+            }
+            catch
+            {
+                Console.WriteLine("Niepoprawna wartość, ustawiona na poprzednią");
+            }
+            if (desiredAccuracyPar > 100 || desiredAccuracyPar < 0)
+            {
+                Console.WriteLine("Niepoprawna wartość, powinna wynosić pomiędzy (0-100)%");
+                Console.WriteLine("ustawiona na domyślną ({0}%)", desiredAccuracyDefault);
+                desiredAccuracyPar = desiredAccuracyDefault;
+            }
+            Console.WriteLine("Obecna dokładność docelowa modelu wynosi: {0}%\n", desiredAccuracyPar);
+        }
+
+        private static void setSampleSize()
+        {
+            int sampleSizeDefault = 30;
+            Console.WriteLine("Podaj wielkosc jednorazowej próbki danych (w %), obecna: {0}%", desiredAccuracyPar);
+            Console.WriteLine("(Jednorazowa próbka danych ze zbioru treningowego analizowana w każdej epoce)");
+            try
+            {
+                sampleSizePar = Int32.Parse(Console.ReadLine());
+            }
+            catch
+            {
+                Console.WriteLine("Niepoprawna wartość, ustawiona na poprzednią");
+            }
+            if (desiredAccuracyPar > 100 || desiredAccuracyPar < 0)
+            {
+                Console.WriteLine("Niepoprawna wartość, powinna wynosić pomiędzy (0-100)%");
+                Console.WriteLine("ustawiona na domyślną ({0}%)", sampleSizeDefault);
+                sampleSizePar = sampleSizeDefault;
+            }
+            Console.WriteLine("Obecna wielkosc próbki wynosi: {0}%\n", sampleSizePar);
+        }
         #endregion
 
         #region podmenu Backprop
@@ -178,7 +254,12 @@ namespace LearningBPandLM
                     BPmenu.Add("Powrót do menu głównego", BPEnd);
                 }
 
-                if (readyToBackpropagate)
+                if (!readyToTrain)
+                {
+                    BPmenu.Remove(">> Rozpocznij/kontynuuj działanie sieci", BPstart);
+                }
+
+                if (readyToTrain)
                 {
                     BPmenu.Remove("Powrót do menu głównego", BPEnd);
                     BPmenu.Add(">> Rozpocznij/kontynuuj działanie sieci", BPstart);
@@ -209,21 +290,9 @@ namespace LearningBPandLM
 
         private static void BPSetConfig()
         {
-            double learningRateDefault = 0.01,
-                desiredAccuracyDefault = 99;
+            double learningRateDefault = 0.01;
 
-            Console.WriteLine("Podaj liczbę neuronów w warstwie ukrytej, obecna: {0}", hiddenNodeRatioPar);
-            try
-            {
-                hiddenNodeRatioPar = Int32.Parse(Console.ReadLine());
-            }
-            catch
-            {
-                Console.WriteLine("Niepoprawna wartość, ustawiona automatycznie (liczba WE - 1)");
-                hiddenNodeRatioPar = dataset.sample(0).Length - 1;
-            }
-            Console.WriteLine("Obecna liczba neuronów wynosi: {0}\n", hiddenNodeRatioPar);
-
+            setHiddenRatio();
 
             Console.WriteLine("Podaj współczynnik uczenia, obecny: {0}, domyślny: {1}", 
                 learningRatePar, learningRateDefault);
@@ -239,33 +308,11 @@ namespace LearningBPandLM
             Console.WriteLine("Obecny wspołczynnik uczenia wynosi: {0}\n", learningRatePar);
 
 
-            Console.WriteLine("Podaj maksymalną ilość epok, obecna: {0}", maxEpochsPar);
-            try
-            {
-                maxEpochsPar = ulong.Parse(Console.ReadLine());
-            }
-            catch
-            {
-                Console.WriteLine("Niepoprawna wartość, ustawiona na poprzednią...");
-            }
-            Console.WriteLine("Obecna maksymalna ilość epok: {0}\n", maxEpochsPar);
+            setMaxEpoch();
 
-            Console.WriteLine("Podaj docelową dokładność (w %) modelu, obecna: {0}%", desiredAccuracyPar);
-            try
-            {
-                desiredAccuracyPar = Double.Parse(Console.ReadLine());
-            }
-            catch
-            {
-                Console.WriteLine("Niepoprawna wartość, ustawiona na poprzednią");
-            }
-            if (desiredAccuracyPar > 100 || desiredAccuracyPar < 0)
-            {
-                Console.WriteLine("Niepoprawna wartość, powinna wynosić pomiędzy (0-100)%");
-                Console.WriteLine("ustawiona na domyślną ({0}%)", desiredAccuracyDefault);
-                desiredAccuracyPar = desiredAccuracyDefault;
-            }
-            Console.WriteLine("Obecna dokładność docelowa modelu wynosi: {0}%\n", desiredAccuracyPar);
+            setAcc();
+
+            setSampleSize();
 
             configured = true;
 
@@ -274,16 +321,18 @@ namespace LearningBPandLM
         private static void BPCreateNN()
         {
             if (configured)
-                networkTrainerBP = new TrainerBP(dataset, hiddenNodeRatioPar, learningRatePar, maxEpochsPar, desiredAccuracyPar);
+                networkTrainerBP = new TrainerBP(dataset, hiddenNodeRatioPar, 
+                    learningRatePar, maxEpochsPar, desiredAccuracyPar, sampleSizePar);
             else
                 networkTrainerBP = new TrainerBP(dataset);
 
-            readyToBackpropagate = true;
+            readyToTrain = true;
         }
 
         private static void BPstart()
         {
             networkTrainerBP.TrainNetwork();
+            readyToTrain = false;
             networkTrainerBP.ShowOptions();
         }
 
@@ -335,7 +384,12 @@ namespace LearningBPandLM
                     LMmenu.Add("Powrót do menu głównego", LMEnd);
                 }
 
-                if (readyToBackpropagate)
+                if(!readyToTrain)
+                {
+                    LMmenu.Remove(">> Rozpocznij/kontynuuj działanie sieci", LMStart);
+                }
+
+                if (readyToTrain)
                 {
                     LMmenu.Remove("Powrót do menu głównego", LMEnd);
                     LMmenu.Add(">> Rozpocznij/kontynuuj działanie sieci", LMStart);
@@ -366,19 +420,10 @@ namespace LearningBPandLM
 
         private static void LMSetConfig()
         {
-            double desiredAccuracyDefault = 99;
 
-            Console.WriteLine("Podaj liczbę neuronów w warstwie ukrytej, obecna: {0}", hiddenNodeRatioPar);
-            try
-            {
-                hiddenNodeRatioPar = Int32.Parse(Console.ReadLine());
-            }
-            catch
-            {
-                Console.WriteLine("Niepoprawna wartość, ustawiona automatycznie (liczba WE - 1)");
-                hiddenNodeRatioPar = dataset.sample(0).Length - 1;
-            }
-            Console.WriteLine("Obecna liczba neuronów wynosi: {0}\n", hiddenNodeRatioPar);
+            
+
+            setHiddenRatio();
 
             Console.WriteLine("Podaj domyślną wartość wspolczynnik tlumienia μ, obecna {0}", 
                 coefficientMIpar);
@@ -403,33 +448,11 @@ namespace LearningBPandLM
             }
             Console.WriteLine("Obecna wartość V wynosi: {0}\n", adjustmentFactorVpar);
 
-            Console.WriteLine("Podaj maksymalną ilość epok, obecna: {0}", maxEpochsPar);
-            try
-            {
-                maxEpochsPar = ulong.Parse(Console.ReadLine());
-            }
-            catch
-            {
-                Console.WriteLine("Niepoprawna wartość, ustawiona na poprzednią...");
-            }
-            Console.WriteLine("Obecna maksymalna ilość epok: {0}\n", maxEpochsPar);
+            setMaxEpoch();
 
-            Console.WriteLine("Podaj docelową dokładność (w %) modelu, obecna: {0}%", desiredAccuracyPar);
-            try
-            {
-                desiredAccuracyPar = Double.Parse(Console.ReadLine());
-            }
-            catch
-            {
-                Console.WriteLine("Niepoprawna wartość, ustawiona na poprzednią");
-            }
-            if (desiredAccuracyPar > 100 || desiredAccuracyPar < 0)
-            {
-                Console.WriteLine("Niepoprawna wartość, powinna wynosić pomiędzy (0-100)%");
-                Console.WriteLine("ustawiona na domyślną ({0}%)", desiredAccuracyDefault);
-                desiredAccuracyPar = desiredAccuracyDefault;
-            }
-            Console.WriteLine("Obecna dokładność docelowa modelu wynosi: {0}%\n", desiredAccuracyPar);
+            setAcc();
+
+            setSampleSize();
 
             configured = true;
 
@@ -438,12 +461,12 @@ namespace LearningBPandLM
         private static void LMCreateNN()
         {
             if (configured)
-                networkTrainerLM = new TrainerLMImproved(dataset, hiddenNodeRatioPar, 
-                    maxEpochsPar, desiredAccuracyPar, coefficientMIpar, adjustmentFactorVpar);
+                networkTrainerLM = new TrainerLMImproved(dataset, hiddenNodeRatioPar, maxEpochsPar, 
+                    desiredAccuracyPar, coefficientMIpar, adjustmentFactorVpar, sampleSizePar);
             else
                 networkTrainerLM = new TrainerLMImproved(dataset);
 
-            readyToBackpropagate = true;
+            readyToTrain = true;
         }
 
         private static void LMStart()
@@ -456,6 +479,7 @@ namespace LearningBPandLM
             {
                 Console.WriteLine("Zakończono trenowanie sieci neuronowej! (Niepowodzenie)");
             }
+            readyToTrain = false;
         }
 
         private static void LMEnd()
