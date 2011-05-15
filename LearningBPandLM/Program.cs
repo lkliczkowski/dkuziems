@@ -13,14 +13,14 @@ namespace LearningBPandLM
 
         //flagi menu
         private static bool endFlag, BPendFlag, LMendFlag, readyToZScore, readyToCreateNN, 
-            readyToTrain, configured;
+            readyToTrain, configured, LMuseGenSetToo;
 
         //parametry konfiguracyjne
         private static int hiddenNodeRatioPar, sampleSizePar;
         private static double learningRatePar, desiredAccuracyPar, coefficientMIpar, adjustmentFactorVpar;
         private static ulong maxEpochsPar;
 
-        const string VER = "0.54b";
+        const string VER = "0.69b";
 
         #region menu glowne
         
@@ -64,7 +64,8 @@ namespace LearningBPandLM
             inputFile = outputFile = "";
             dataType = ZScore.EnumDataTypes.unknown;
             //flagi menu
-            endFlag = BPendFlag = LMendFlag = readyToZScore = readyToCreateNN = readyToTrain = configured = false;
+            endFlag = BPendFlag = LMendFlag = readyToZScore = readyToCreateNN 
+                = readyToTrain = configured = LMuseGenSetToo = false;
             
             //parametry konfiguracji
             hiddenNodeRatioPar = 4;
@@ -119,7 +120,7 @@ namespace LearningBPandLM
             if (dataset.NormalizeRun())
             {
                 Console.WriteLine("Standaryzacja Z-Score zakończona z powodzeniem!");
-                hiddenNodeRatioPar = dataset.sample(0).Length - 1;
+                hiddenNodeRatioPar = (dataset.sample(0).Length - 1) / 4 + 1;
                 readyToCreateNN = true;
             }
             else
@@ -149,8 +150,7 @@ namespace LearningBPandLM
             }
             catch
             {
-                Console.WriteLine("Niepoprawna wartość, ustawiona automatycznie (liczba WE - 1)");
-                hiddenNodeRatioPar = dataset.sample(0).Length - 1;
+                Console.WriteLine("Niepoprawna wartość, ustawiona wartość poprzednia.");
             }
             Console.WriteLine("Obecna liczba neuronów wynosi: {0}\n", hiddenNodeRatioPar);
         }
@@ -193,8 +193,9 @@ namespace LearningBPandLM
         private static void setSampleSize()
         {
             int sampleSizeDefault = 30;
-            Console.WriteLine("Podaj wielkosc jednorazowej próbki danych (w %), obecna: {0}%", desiredAccuracyPar);
+            Console.WriteLine("Podaj wielkosc jednorazowej próbki danych (w %), obecna: {0}%", sampleSizePar);
             Console.WriteLine("(Jednorazowa próbka danych ze zbioru treningowego analizowana w każdej epoce)");
+            Console.WriteLine("Nie mniej niż 1%, nie więcej niż 50%");
             try
             {
                 sampleSizePar = Int32.Parse(Console.ReadLine());
@@ -203,7 +204,7 @@ namespace LearningBPandLM
             {
                 Console.WriteLine("Niepoprawna wartość, ustawiona na poprzednią");
             }
-            if (desiredAccuracyPar > 100 || desiredAccuracyPar < 0)
+            if (sampleSizePar > 51 || sampleSizePar < 0)
             {
                 Console.WriteLine("Niepoprawna wartość, powinna wynosić pomiędzy (0-100)%");
                 Console.WriteLine("ustawiona na domyślną ({0}%)", sampleSizeDefault);
@@ -290,12 +291,18 @@ namespace LearningBPandLM
 
         private static void BPSetConfig()
         {
-            double learningRateDefault = 0.01;
-
             setHiddenRatio();
+            BPsetLearningRate();
+            setMaxEpoch();
+            setAcc();
+            setSampleSize();
+            configured = true;
+        }
 
-            Console.WriteLine("Podaj współczynnik uczenia, obecny: {0}, domyślny: {1}", 
-                learningRatePar, learningRateDefault);
+        private static void BPsetLearningRate()
+        {
+            double learningRateDefault = 0.01;
+            Console.WriteLine("Podaj współczynnik uczenia, obecny: {0}, domyślny: {1}",learningRatePar, learningRateDefault);
             try
             {
                 learningRatePar = Double.Parse(Console.ReadLine());
@@ -306,16 +313,6 @@ namespace LearningBPandLM
                 learningRatePar = learningRateDefault;
             }
             Console.WriteLine("Obecny wspołczynnik uczenia wynosi: {0}\n", learningRatePar);
-
-
-            setMaxEpoch();
-
-            setAcc();
-
-            setSampleSize();
-
-            configured = true;
-
         }
 
         private static void BPCreateNN()
@@ -420,11 +417,18 @@ namespace LearningBPandLM
 
         private static void LMSetConfig()
         {
-
-            
-
             setHiddenRatio();
+            LMsetMi();
+            LMsetV();
+            setMaxEpoch();
+            setAcc();
+            setSampleSize();
+            LMsetUseGenSet();
+            configured = true;
+        }
 
+        private static void LMsetMi()
+        {
             Console.WriteLine("Podaj domyślną wartość wspolczynnik tlumienia μ, obecna {0}", 
                 coefficientMIpar);
             try
@@ -436,7 +440,10 @@ namespace LearningBPandLM
                 Console.WriteLine("Niepoprawna wartość, ustawiona wartość poprzednią");
             }
             Console.WriteLine("Obecna wartość μ wynosi: {0}\n", coefficientMIpar);
+        }
 
+        private static void LMsetV()
+        {
             Console.WriteLine("Podaj wartość wspolczynnika przystosowania V, obecna {0}", adjustmentFactorVpar);
             try
             {
@@ -447,22 +454,45 @@ namespace LearningBPandLM
                 Console.WriteLine("Niepoprawna wartość, ustawiona wartość poprzednią");
             }
             Console.WriteLine("Obecna wartość V wynosi: {0}\n", adjustmentFactorVpar);
+        }
 
-            setMaxEpoch();
-
-            setAcc();
-
-            setSampleSize();
-
-            configured = true;
-
+        private static void LMsetUseGenSet()
+        {
+            char useGenSetToo = 'n';
+            Console.WriteLine("Czy przy ustalaniu zmian wag algorytm LM ma zwracać także uwagę "
+                + "na celność zbioru walidacyjnego? (t/N) Obecnie: {0}\n", LMuseGenSetToo ? "True" : "False");
+            Console.Write("Domyślnie wyłączona opcja. Info: W trakcie nauczania algorytm może także"
+                + " przyjąć nowe wagi jako dobre jeżeli zmniejszył się Kwadrat Sumy Błędów dla zbioru"
+                + " walidacyjnego, (same zmiany wciąż są oparte tylko i wyłącznie o wyliczenia gradientów"
+                + " na próbkach ze zbioru treningowego). Włączenie tej opcji może znacznie polepszyć"
+                + " końcowe wyniki gdyż algorytm LM potrafi szybko się zakończyć ze względu na"
+                + " ograniczenie przyjmowanych wartości zmiennego współczynnika μ i utknięcie w Minimum"
+                + " Lokalnym(!) \n (t/N)\t");
+            try
+            {
+                useGenSetToo = Char.Parse(Console.ReadLine());
+            }
+            catch
+            {
+                Console.WriteLine("Niepoprawna wartość/lub [Enter], opcja ustawiona na domyślną");
+            }
+            if (useGenSetToo == 't' || useGenSetToo == 'T')
+            {
+                Console.WriteLine("Opcja ustawiona na True");
+                LMuseGenSetToo = true;
+            }
+            else
+            {
+                Console.WriteLine("Opcja ustawiona na False");
+                LMuseGenSetToo = false;
+            }
         }
 
         private static void LMCreateNN()
         {
             if (configured)
                 networkTrainerLM = new TrainerLMImproved(dataset, hiddenNodeRatioPar, maxEpochsPar, 
-                    desiredAccuracyPar, coefficientMIpar, adjustmentFactorVpar, sampleSizePar);
+                    desiredAccuracyPar, coefficientMIpar, adjustmentFactorVpar, sampleSizePar, LMuseGenSetToo);
             else
                 networkTrainerLM = new TrainerLMImproved(dataset);
 

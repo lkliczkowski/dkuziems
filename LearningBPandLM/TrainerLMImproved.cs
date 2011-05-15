@@ -71,11 +71,11 @@ namespace LearningBPandLM
         /// <summary>
         /// Maksymalna wielkość współczynnika \mi
         /// </summary>
-        const double MAX_MI = 10000000000000000000;
+        const double MAX_MI = 100000000000000000;
         /// <summary>
         /// Minimalna wielkość współczynnika \mi
         /// </summary>
-        const double MIN_MI = 0.00000000000000000000000001;
+        const double MIN_MI = 0.00000000000000000000000000001;
         /// <summary>
         /// wspołczynnik przystosowania, wartosc domyślna
         /// </summary>
@@ -138,6 +138,12 @@ namespace LearningBPandLM
 
         double previousTrainingSetMSE, previousGeneralizationSetMSE;
 
+        /// <summary>
+        /// Czy w trakcie nauczania ma zwracać uwagę na polepszenie wyniku MSE dla GeneralizationSet 
+        /// i nie odrzucać zmian, które mogą być korzystne
+        /// </summary>
+        bool useGen;
+
         #endregion
 
         #region dodatkowe parametry
@@ -173,10 +179,10 @@ namespace LearningBPandLM
             : this(dataset, (dataset.sample(0).Length > 40) ?
             (dataset.sample(0).Length / 4 - 1) :
             dataset.sample(0).Length / 2 - 1,
-            1500, 99, 0.00001, V_DEFAULT, 15)
+            1500, 99, 0.001, V_DEFAULT, 15, false)
         {}
 
-        public TrainerLMImproved(ZScore.ZScore dataset, int hiddenNodeRatio, ulong mE, double dAcc, double cMi, double aFV, int sz)
+        public TrainerLMImproved(ZScore.ZScore dataset, int hiddenNodeRatio, ulong mE, double dAcc, double cMi, double aFV, int sz, bool uGen)
         {
 
             Dataset = dataset;
@@ -189,6 +195,7 @@ namespace LearningBPandLM
             desiredAccuracy = dAcc;
             coefficientMI = mi_default = cMi;
             adjustmentFactorV = aFV;
+            useGen = uGen;
 
             createFileNames();
             durationOfEachEpoch = new Hashtable();
@@ -204,9 +211,8 @@ namespace LearningBPandLM
             initializeForNewEpoch();
 
             NN.initializeWeights();
-            
-            NN.previousWeightsInputHidden = NN.wInputHidden;
-            NN.previousWeightsHiddenOutput = NN.wHiddenOutput;
+
+            NN.KeepWeightsToPrevious();
 
             Program.PrintInfo("Utworzono sieć neuronową");
             networkStats();
@@ -275,7 +281,7 @@ namespace LearningBPandLM
                         NN.bestWeightInputHidden = NN.wInputHidden;
                         NN.bestWeightHiddenOutput = NN.wHiddenOutput;
                         //zapis wag do pliku pod warunkiem, ze minelo wiecej niz n-epok
-                        if (epochCounter > 5)
+                        if (epochCounter > 0)
                         {
                             NN.SaveWeights(weightsOutputFile);
                         }
@@ -297,16 +303,10 @@ namespace LearningBPandLM
                     timer.Stop();
                     durationOfEachEpoch.Add(epochCounter + 1, timer.ElapsedMilliseconds);
 
-                    NN.wInputHidden = NN.previousWeightsInputHidden;
-                    NN.wHiddenOutput = NN.previousWeightsHiddenOutput;
+                    NN.RestoreWeightsWithPrevious();
+                    Debug.WriteLine(">> Wagi przywrócone (tMSE: {0})", NN.calcMSE(Dataset, DatasetIndexes.TrainingSet));
 
                     saveResult.WriteLine("#ended");
-
-                    generalizationSetAccuracy = NN.getAccuracy(Dataset, DatasetIndexes.GeneralizationSet);
-                    generalizationSetMSE = NN.calcMSE(Dataset, DatasetIndexes.GeneralizationSet);
-
-                    trainingSetAccuracy = NN.getAccuracy(Dataset, DatasetIndexes.TrainingSet);
-                    trainingSetMSE = NN.calcMSE(Dataset, DatasetIndexes.TrainingSet);
 
                     for(++epochCounter ; epochCounter <= maxEpochs; ++epochCounter)
                     {
@@ -320,57 +320,6 @@ namespace LearningBPandLM
             saveResult.Flush();
             saveResult.Close();
             return true;
-        }
-
-        /// <summary>
-        /// Zapis pomiarow do pliku
-        /// </summary>
-        /// <param name="saveResult">uchwyt do pliku z wynikami</param>
-        private void saveResultsToFile(TextWriter saveResult)
-        {
-            //pobieramy celnosc modelu i sume kwadratow bledu uczenia
-            generalizationSetAccuracy = NN.getAccuracy(Dataset, DatasetIndexes.GeneralizationSet);
-            generalizationSetMSE = NN.calcMSE(Dataset, DatasetIndexes.GeneralizationSet);
-
-            trainingSetAccuracy = NN.getAccuracy(Dataset, DatasetIndexes.TrainingSet);
-            trainingSetMSE = NN.calcMSE(Dataset, DatasetIndexes.TrainingSet);
-
-            try
-            {
-                string line = String.Format("{0}\t{1:N4}\t{2:N2}\t{3:N4}\t{4:N2}\t{5}",
-                    epochCounter, trainingSetMSE, trainingSetAccuracy, generalizationSetMSE,
-                    generalizationSetAccuracy, durationOfEachEpoch[epochCounter]);
-                line = line.Replace(",", ".");
-                saveResult.WriteLine(line);
-
-                saveResult.Flush();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Nieudany zapis do pliku wyników:\n{0}", e.Message);
-            }
-        }
-
-        /// <summary>
-        /// Zapis pomiarow do pliku bez wyliczania MSE i Acc
-        /// </summary>
-        /// <param name="saveResult">uchwyt do pliku z wynikami</param>
-        private void fillResults(TextWriter saveResult)
-        {
-            try
-            {
-                string line = String.Format("{0}\t{1:N4}\t{2:N2}\t{3:N4}\t{4:N2}\t{5}",
-                    epochCounter, trainingSetMSE, trainingSetAccuracy, generalizationSetMSE,
-                    generalizationSetAccuracy, durationOfEachEpoch[epochCounter]);
-                line = line.Replace(",", ".");
-                saveResult.WriteLine(line);
-
-                saveResult.Flush();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Nieudany zapis do pliku wyników:\n{0}", e.Message);
-            }
         }
 
         /// <summary>
@@ -391,51 +340,56 @@ namespace LearningBPandLM
                 if (coefficientMI > MAX_MI || coefficientMI < MIN_MI)
                     epochComplete = true;
 
+                Debug.WriteLine(">> feedforward, backward");
                 for (int i = 0; i < trainingSet.Length; i++)
                 {
-
                     //wyliczamy wyjscia i propagujemy wstecz
                     NN.feedForward(Dataset.sample(trainingSet[i]));
+                    
 
                     //faza wstecz
                     backward(Dataset.target(trainingSet[i]), i);
-
+                    
                 }
 
-
-
+                Debug.WriteLine(">> update weights");
                 if (updateWeights())
                 {
-                    trainingSetMSE = NN.calcMSE(Dataset, trainingSet);
-                    generalizationSetMSE = NN.calcMSE(Dataset, DatasetIndexes.GeneralizationSet);
+                    Debug.WriteLine(">>>> if (updateWeights()) (true)");
+                    recalcMSE();
 
-                    Debug.WriteLine(">> {0:N3}>{1:N3} ({4}) || [N/A] {2:N3} > {3:N3} ({5})", 
+                    Debug.WriteLine(">> {0:N3}>{1:N3} ({4}) || {6} {2:N3} > {3:N3} ({5})", 
                         previousTrainingSetMSE, trainingSetMSE,
                         previousGeneralizationSetMSE, generalizationSetMSE,
                         (previousTrainingSetMSE > trainingSetMSE) ? "T" : "F",
-                        (previousGeneralizationSetMSE > generalizationSetMSE) ? "T" : "F");
+                        (previousGeneralizationSetMSE > generalizationSetMSE) ? "T" : "F",
+                        useGen?"[T]":"[F]");
 
                     //jezeli kwadrat sumy bledow sie zmniejszyl
-                    //if (previousTrainingSetMSE > trainingSetMSE || previousGeneralizationSetMSE > generalizationSetMSE)
-                    if ( previousTrainingSetMSE > trainingSetMSE )
+                    if (previousTrainingSetMSE > trainingSetMSE || ((previousGeneralizationSetMSE > generalizationSetMSE)&&useGen))
                     {
                         Debug.WriteLine(">> true");
-
-                        //zachowujemy stan wag
-                        NN.previousWeightsInputHidden = NN.wInputHidden;
-                        NN.previousWeightsHiddenOutput = NN.wHiddenOutput;
 
                         Console.WriteLine("\nWagi zostały zmienione dla μ: {0}", coefficientMI);
                         //zmniejszamy /mi
                         decMi();
 
+                        //zachowujemy stan wag
+                        NN.KeepWeightsToPrevious();
+                        Debug.WriteLine(">> Wagi zapisane (tMSE: {0})", NN.calcMSE(Dataset, DatasetIndexes.TrainingSet));
+
+                        previousTrainingSetMSE = trainingSetMSE;
+                        previousGeneralizationSetMSE = generalizationSetMSE;
+
                         //iteracja sie konczy
-                        epochComplete = true;
+                        //epochComplete = true;
+                        return true;
                     }
                     else
                     {
-                        NN.wInputHidden = NN.previousWeightsInputHidden;
-                        NN.wHiddenOutput = NN.previousWeightsHiddenOutput;
+                        NN.RestoreWeightsWithPrevious();
+                        recalcMSE();
+                        Debug.WriteLine(">> Wagi przywrócone (tMSE: {0})", trainingSetMSE);
 
                         if (coefficientMI > MAX_MI || coefficientMI < MIN_MI)
                             return false;
@@ -462,9 +416,13 @@ namespace LearningBPandLM
                 }
                 else
                 {
+                    Debug.WriteLine(">>>> if (updateWeights()) (false)");
+
+
                     //odrzucamy nowe wagi
-                    NN.wInputHidden = NN.previousWeightsInputHidden;
-                    NN.wHiddenOutput = NN.previousWeightsHiddenOutput;
+                    NN.RestoreWeightsWithPrevious();
+                    recalcMSE();
+                    Debug.WriteLine(">> Wagi przywrócone (tMSE: {0})", trainingSetMSE);
 
                     if (coefficientMI > MAX_MI || coefficientMI < MIN_MI)
                         return false;
@@ -490,12 +448,13 @@ namespace LearningBPandLM
 
             if (coefficientMI > MAX_MI || coefficientMI < MIN_MI)
             {
-                NN.wInputHidden = NN.previousWeightsInputHidden;
-                NN.wHiddenOutput = NN.previousWeightsHiddenOutput;
+                NN.RestoreWeightsWithPrevious();
+                recalcMSE();
+                Debug.WriteLine(">> Wagi przywrócone (tMSE): {0})", NN.calcMSE(Dataset, DatasetIndexes.TrainingSet));
                 Console.WriteLine("\nMin/Max wartość η osiągnięta! ({0})", coefficientMI);
                 return false;
             }
-            return true;
+            return false;
         }
 
         /// <summary>
@@ -567,9 +526,6 @@ namespace LearningBPandLM
             }
         }
 
-        
-
-
         private bool updateWeights()
         {
             //zmiana wag = (Q + \mi*I)^{-1} * g
@@ -601,36 +557,47 @@ namespace LearningBPandLM
                     MatrixLibrary.Matrix.SVD(jaggedArrayToMultidimensionalArray(matrixQ), out S, out U, out V);
                     Debug.WriteLine(">> Q = U[{0}x{1}] x S[{2}x{3}] x [{4}x{5}]", U.GetLength(0), U.GetLength(1), 
                         S.GetLength(0), S.GetLength(1), V.GetLength(0), V.GetLength(1));
+
+                    // Matrix^{-1} = V x S^{-1} x U'
+                    try
+                    {
+                        S = MatrixLibrary.Matrix.Inverse(S);
+                    }
+                    catch (MatrixLibrary.MatrixDeterminentZero)
+                    {
+                        try
+                        {
+                            S = MatrixLibrary.Matrix.PINV(S);
+                            Debug.WriteLine(">> Pseudo-Inverse for S success");
+                        }
+                        catch
+                        {
+                            Debug.WriteLine(">> Pseudo-Inverse for S failed");
+                            return false;
+                        }
+                    }
+
+                    invertedMatrix = multidimensionalArrayToJaggedArray
+                        (MatrixLibrary.Matrix.Multiply(MatrixLibrary.Matrix.Multiply(V, S),
+                            MatrixLibrary.Matrix.Transpose(U)));
+
                 }
                 catch
                 {
                     Debug.WriteLine(">> SVD niepowodzenie!");
-                    return false;
-                }
-
-                // Matrix^{-1} = U x S^{-1} x V'
-                try
-                {
-                    S = MatrixLibrary.Matrix.Inverse(S);
-                }
-                catch (MatrixLibrary.MatrixDeterminentZero)
-                {
                     try
                     {
-                        S = MatrixLibrary.Matrix.PINV(S);
-                        Debug.WriteLine(">> Pseudo-Inverse for S success");
+                        invertedMatrix = multidimensionalArrayToJaggedArray
+                            (MatrixLibrary.Matrix.Inverse(jaggedArrayToMultidimensionalArray(matrixQ)));
                     }
                     catch
                     {
-                        Debug.WriteLine(">> Pseudo-Inverse for S failed");
+                        Debug.WriteLine(">> PINV niepowodzenie! return;");
                         return false;
                     }
+                    
                 }
-
-                invertedMatrix = multidimensionalArrayToJaggedArray
-                    (MatrixLibrary.Matrix.Multiply(MatrixLibrary.Matrix.Multiply(V, S), 
-                        MatrixLibrary.Matrix.Transpose(U)));
-                
+               
             }
 
             for (int n = 0; n < N; n++)
@@ -662,7 +629,6 @@ namespace LearningBPandLM
 
             return true;
         }
-
 
         private bool updateWeightsWithoutSVD()
         {
@@ -719,7 +685,6 @@ namespace LearningBPandLM
             return true;
         }
 
-
         private void incMi()
         {
             coefficientMI *= adjustmentFactorV;
@@ -728,6 +693,66 @@ namespace LearningBPandLM
         private void decMi()
         {
             coefficientMI /= adjustmentFactorV;
+        }
+
+        private void recalcMSE()
+        {
+            trainingSetMSE = NN.calcMSE(Dataset, DatasetIndexes.TrainingSet);
+            generalizationSetMSE = NN.calcMSE(Dataset, DatasetIndexes.GeneralizationSet);
+        }
+
+        private void recalcAcc()
+        {
+            trainingSetAccuracy = NN.getAccuracy(Dataset, DatasetIndexes.TrainingSet);
+            generalizationSetAccuracy = NN.getAccuracy(Dataset, DatasetIndexes.GeneralizationSet);
+        }
+
+        /// <summary>
+        /// Zapis pomiarow do pliku
+        /// </summary>
+        /// <param name="saveResult">uchwyt do pliku z wynikami</param>
+        private void saveResultsToFile(TextWriter saveResult)
+        {
+            //pobieramy celnosc modelu i sume kwadratow bledu uczenia
+            recalcMSE();
+            recalcAcc();
+
+            try
+            {
+                string line = String.Format("{0}\t{1:N4}\t{2:N2}\t{3:N4}\t{4:N2}\t{5}",
+                    epochCounter, trainingSetMSE, trainingSetAccuracy, generalizationSetMSE,
+                    generalizationSetAccuracy, durationOfEachEpoch[epochCounter]);
+                line = line.Replace(",", ".");
+                saveResult.WriteLine(line);
+
+                saveResult.Flush();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Nieudany zapis do pliku wyników:\n{0}", e.Message);
+            }
+        }
+
+        /// <summary>
+        /// Zapis pomiarow do pliku bez wyliczania MSE i Acc
+        /// </summary>
+        /// <param name="saveResult">uchwyt do pliku z wynikami</param>
+        private void fillResults(TextWriter saveResult)
+        {
+            try
+            {
+                string line = String.Format("{0}\t{1:N4}\t{2:N2}\t{3:N4}\t{4:N2}\t{5}",
+                    epochCounter, previousTrainingSetMSE, trainingSetAccuracy, previousGeneralizationSetMSE,
+                    generalizationSetAccuracy, durationOfEachEpoch[epochCounter]);
+                line = line.Replace(",", ".");
+                saveResult.WriteLine(line);
+
+                saveResult.Flush();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Nieudany zapis do pliku wyników:\n{0}", e.Message);
+            }
         }
 
         /// <summary>
@@ -755,8 +780,13 @@ namespace LearningBPandLM
             Console.WriteLine("Parametry:");
             Console.WriteLine("Domyślny współczynnik tłumienia μ:\t{0}", coefficientMI);
             Console.WriteLine("Współczynnik przystosowania V:\t\t{0}", adjustmentFactorV);
+            Console.WriteLine("Wielkość Macierzy Hessego: {0}x{0}", N);
             Console.WriteLine("Maksymalna liczba epok:\t\t{0}", maxEpochs);
             Console.WriteLine("Docelowa dokładność modelu:\t{0}%\n", desiredAccuracy);
+            Console.WriteLine("Wielkość próbki treningowej: {0}, \nRozmiar zbioru walidacyjnego: {1}",
+                DatasetIndexes.TrainingSet.Length, DatasetIndexes.GeneralizationSet.Length);
+            Console.WriteLine("Korzysta ze wiedzy o aktualnym błędzie na zbiorze walidacyjnym? {0}\n", 
+                useGen?"Prawda":"Fałsz");
         }
 
         public void PrintStatus()
