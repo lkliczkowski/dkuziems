@@ -271,7 +271,8 @@ namespace SimplifiedFuzzyRules
             }
 
             //plik nagłówkowy umieszczony w komentarzu w pierwszej linii
-            string header = String.Format("Wykres funkcji dla uproszczonych reguł rozmytych");
+            string header = String.Format("Wykres funkcji dla uproszczonych reguł rozmytych, {0}: {1}",
+			                              "liczba reguł", numberOfRules);
             Console.WriteLine(header);
 
             if (DataWrite.WriteData(path, results, header))
@@ -304,7 +305,7 @@ namespace SimplifiedFuzzyRules
 
                 double target = infer(xs);
 
-                err += 0.5 * Math.Pow(dataset.Target(i) - target, 2);
+                err += Math.Pow(dataset.Target(i) - target, 2);
 
                 foreach (double d in xs)
                 {
@@ -316,9 +317,11 @@ namespace SimplifiedFuzzyRules
                 results.Add(singleRecord.ToArray());
                 singleRecord.Clear();
             }
+			err /= howMany;
 
             //plik nagłówkowy umieszczony w komentarzu w pierwszej linii
-            string header = String.Format("Wyniki dla uproszczonych reguł rozmytych, błąd: {0}", err);
+            string header = String.Format("Wyniki dla uproszczonych reguł rozmytych, błąd: {0}, {1}: {2}", 
+			                              err, "liczba reguł", numberOfRules);
             Console.WriteLine(header);
 
             if (DataWrite.WriteData(path, results, header))

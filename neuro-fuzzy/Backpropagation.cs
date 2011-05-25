@@ -124,7 +124,7 @@ namespace FunahashiNeuralNetwork
             Console.WriteLine("\n{0}\t{1}", "Epoka", "MSE");
 			while(epoch < maxEpoch && !done)
 			{
-				
+				epoch++;
 				for(int i = 0; i < dataset.Count; i++)
 				{
 					//faza w przód
@@ -132,8 +132,9 @@ namespace FunahashiNeuralNetwork
 					//faza wstecz
 					backward(dataset.Target(i));
 					//mean square error
-					mse += Math.Pow(dataset.Target(i) - NN.OutputNeuron, 2) / 2; 
+					mse += Math.Pow(dataset.Target(i) - NN.OutputNeuron, 2); 
 				}
+				mse /= dataset.Count;
 
                 if(useBatchLearning)
                     updateWeights();
@@ -142,11 +143,14 @@ namespace FunahashiNeuralNetwork
                 if (epoch % (howOftenSaveResult / 50 + 1) == 0)
                 {
                     Console.WriteLine("{0}\t{1}", epoch, mse);
+                }
+
+				//co n epok wyświetla info o stanie nauczania
+                if (epoch % ((howOftenSaveResult * 2) / 50 + 1) == 0)
+				{
                     errorTable.Add(epoch, mse);
                 }
 				
-				epoch++;
-
                 try
                 {
                     //co n epok zapisujemy wyniki
@@ -154,9 +158,6 @@ namespace FunahashiNeuralNetwork
                     {
                         if (!SaveResults(domainFrom, domainTo, dataset.Count, resultFilename))
                             Console.WriteLine("Nieudany zapis wyników!");
-                        if (!DataWrite.WriteData(String.Format("mse_{0}", resultFilename), errorTable,
-                            String.Format("Epoka \tMSE")))
-                            Console.WriteLine("Nieudany zapis wyników funkcji błędu");
                     }
                 }
                 catch (DivideByZeroException)
@@ -165,12 +166,9 @@ namespace FunahashiNeuralNetwork
                     {
                         if (!SaveResults(domainFrom, domainTo, dataset.Count, resultFilename))
                             Console.WriteLine("Nieudany zapis wyników!");
-                        if (!DataWrite.WriteData(String.Format("mse_{0}", resultFilename), errorTable,
-                            String.Format("Epoka \tMSE")))
-                            Console.WriteLine("Nieudany zapis wyników funkcji błędu");
                     }
                 }
-
+				
                 if (mse < 0.05)
                     done = true;
 				
@@ -243,7 +241,7 @@ namespace FunahashiNeuralNetwork
         /// <returns>pochodna dla funkcji aktywacji w punkcie net_ij</returns>
 		double derivationOfActivation(double x)
 		{
-			double h = 0.000000000001;
+			double h = 0.000001;
 			return (NN.ActivationFunction(x+h) - NN.ActivationFunction(x)) / h;
 		}
 		

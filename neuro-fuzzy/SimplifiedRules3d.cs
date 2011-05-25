@@ -354,7 +354,7 @@ namespace SimplifiedFuzzyRules
 
                 double target = infer(xs);
 
-                err += 0.5 * Math.Pow(dataset.Target(i) - target, 2);
+                err += Math.Pow(dataset.Target(i) - target, 2);
 
                 foreach (double d in xs)
                 {
@@ -366,6 +366,7 @@ namespace SimplifiedFuzzyRules
                 results.Add(singleRecord.ToArray());
                 singleRecord.Clear();
             }
+			err /= howMany;
 
             //plik nagłówkowy umieszczony w komentarzu w pierwszej linii
             string header = String.Format("Wyniki dla uproszczonych reguł rozmytych, błąd: {0}", err);
@@ -376,60 +377,6 @@ namespace SimplifiedFuzzyRules
             else return false;
 
             return true;
-        }
-
-        /// <summary>
-        /// wylicza wyniki działania sieci i zapisuje do pliku
-        /// </summary>
-        /// <param name="domainFrom">dziedzina od</param>
-        /// <param name="domainTo">dziedzina do</param>
-        /// <param name="howMany">ile punktów ma zostać zbadane na przedziale</param>
-        /// <param name="path">ścieżka do pliku</param>
-        /// <returns>"true" dla udanego zapisu do pliku</returns>
-        public bool SaveResultsNew(double domainFrom, double domainTo, int howMany, string path)
-        {
-            double[] xs = new double[dataset.LengthOfPattern];
-
-            List<double[]> results = new List<double[]>();
-            List<double> singleRecord = new List<double>();
-            Random r = new Random();
-
-            for (int i = 0; i < howMany; i++)
-            {
-                if (dataset.LengthOfPattern == 1)
-                {
-                    xs[0] = domainFrom + Math.Abs(domainFrom - domainTo) / howMany * (i + 1);
-                }
-                else
-                {
-                    for (int j = 0; j < dataset.LengthOfPattern; j++)
-                    {
-
-                        xs[j] = r.NextDouble() * Math.Abs(domainFrom - domainTo) + domainFrom;
-                    }
-                }
-                double target = infer(xs);
-
-                foreach (double d in xs)
-                {
-                    singleRecord.Add(d);
-                }
-
-                singleRecord.Add(target);
-
-                results.Add(singleRecord.ToArray());
-                singleRecord.Clear();
-            }
-
-            //plik nagłówkowy umieszczony w komentarzu w pierwszej linii
-            string header = String.Format("Wyniki dla uproszczonych reguł rozmytych");
-
-            if (DataWrite.WriteData(path, results, header))
-                Console.WriteLine("Zapisano wyniki w {0}", path);
-            else return false;
-
-            return true;
-        }
-    
+        }    
     }
 }
