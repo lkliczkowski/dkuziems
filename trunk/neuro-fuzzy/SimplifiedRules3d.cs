@@ -4,29 +4,6 @@ using MyData;
 
 namespace SimplifiedFuzzyRules
 {
-    /// <summary>
-    /// punkt w przestrzeni
-    /// </summary>
-    public struct Point
-    {
-        public double X, Y;
-    }
-    /// <summary>
-    /// struktura normy trojkatnej
-    /// </summary>
-    public struct Section3d
-    {
-        /// <summary>
-        /// numer przedzialu
-        /// </summary>
-        public int Index;
-        
-        /// <summary>
-        /// stożek z wierzchołkiem c
-        /// </summary>
-        public Point A, B, C, D, E;
-    }
-
     /*  Zmodyfikowana wersja "SimplifiedRules2d.class",
      * zamist trójkątów, stożki. Zrezygnowałem z możliwości
      * utorzenia wszystkiego w jednym pliku aby uniknąć niepotrzebnego 
@@ -77,9 +54,32 @@ namespace SimplifiedFuzzyRules
     class SimplifiedRules3d
     {
         /// <summary>
+        /// punkt w przestrzeni
+        /// </summary>
+        private struct point
+        {
+            public double X, Y;
+        }
+        /// <summary>
+        /// struktura normy trojkatnej
+        /// </summary>
+        private struct section3d
+        {
+            /// <summary>
+            /// numer przedzialu
+            /// </summary>
+            public int Index;
+
+            /// <summary>
+            /// stożek z wierzchołkiem c
+            /// </summary>
+            public point A, B, C, D, E;
+        }
+
+        /// <summary>
         /// Lista z przedziałami rozmytymi
         /// </summary>
-        List<Section3d> Sections;
+        private List<section3d> sections;
 
         /// <summary>
         /// Obsługuje przepływ danych:
@@ -141,9 +141,9 @@ namespace SimplifiedFuzzyRules
 
             b = new double[numberOfRules];
 
-            Sections = generateSections(numberOfRules, domainXFrom, domainXTo, domainYFrom, domainYTo);
+            sections = generateSections(numberOfRules, domainXFrom, domainXTo, domainYFrom, domainYTo);
 
-            foreach (Section3d s in Sections)
+            foreach (section3d s in sections)
             {
                 Console.WriteLine("({0:N1}, {1:N1}), ({2:N1}, {3:N1}), (({4:N1}, {5:N1})), ({6:N1}, {7:N1}), ({8:N1}, {9:N1})",
                     s.A.X, s.A.Y, s.B.X, s.B.Y, s.C.X, s.C.Y, s.D.X, s.D.Y, s.E.X, s.E.Y);
@@ -172,6 +172,8 @@ namespace SimplifiedFuzzyRules
             double w;
             //zmianna sumujaca w (mianownik w 4.46)
             double sum;
+			
+			Console.WriteLine("{0}\t{1:N2}", "nr", "reguła");
 
             //liczba rozmytych etykiet nadawanych wartosci wejsciowej
             for (int i = 0; i < numberOfRules; i++)
@@ -193,7 +195,7 @@ namespace SimplifiedFuzzyRules
                 }
                 b[i] = b[i] / sum; //ważona suma i obserwacji zmiennej zależnej wzór(4.46)
 
-                Console.WriteLine("{0}\t{1:N2}", i, b[i]);
+                Console.WriteLine("{0}\t{1:N2}", i+1, b[i]);
             }
             Console.WriteLine("Koniec fazy identyfikacji");
         }
@@ -204,17 +206,17 @@ namespace SimplifiedFuzzyRules
          */
         private double infer(double[] x)
         {
-            double s = 0, y = 0, z;
+            double sum = 0, y = 0, z;
             for (int i = 0; i < numberOfRules; i++)
             {
                 z = 1;
                 for (int j = 0; j < dataset.LengthOfPattern; j++ )
                     z *= compatibility(x[j], i, j);
 
-                s += z;
+                sum += z;
                 y += z * b[i]; //ważenie, konkluzja i-tej reguły
             }
-            return (y / s);
+            return (y / sum);
         }
 
         /// <summary>
@@ -229,9 +231,9 @@ namespace SimplifiedFuzzyRules
             switch(dim)
             {
                 case 0:
-                    return triangle(x, Sections[what].A.X, Sections[what].C.X, Sections[what].B.X);
+                    return triangle(x, sections[what].A.X, sections[what].C.X, sections[what].B.X);
                 case 1:
-                    return triangle(x, Sections[what].A.Y, Sections[what].C.Y, Sections[what].D.Y);
+                    return triangle(x, sections[what].A.Y, sections[what].C.Y, sections[what].D.Y);
                 default:
                     Console.WriteLine("[!] Funkcja niedostosowana do podanej liczby wymiarów...");
                     return 0;
@@ -273,11 +275,11 @@ namespace SimplifiedFuzzyRules
         /// <param name="domainYFrom">dziedzina Y, przedzial od</param>
         /// <param name="domainYTo">dziedzina Y, przedzial do</param>
         /// <returns>lista przedzialow </returns>
-        private static List<Section3d> generateSections
+        private static List<section3d> generateSections
             (int howMany, double domainXFrom, double domainXTo,
             double domainYFrom, double domainYTo)
         {
-            List<Section3d> Sections = new List<Section3d>();
+            List<section3d> Sections = new List<section3d>();
             int inEachRow = (int)Math.Sqrt(howMany);
             double stepX = Math.Abs(domainXFrom - domainXTo) / (inEachRow - 1);
             double stepY = Math.Abs(domainYFrom - domainYTo) / (inEachRow - 1);
@@ -286,7 +288,7 @@ namespace SimplifiedFuzzyRules
             {
                 for (int y = 0; y < inEachRow; y++)
                 {
-                    Section3d tmp = new Section3d();
+                    section3d tmp = new section3d();
 
                     tmp.Index = x + y;
 
@@ -369,7 +371,8 @@ namespace SimplifiedFuzzyRules
 			err /= howMany;
 
             //plik nagłówkowy umieszczony w komentarzu w pierwszej linii
-            string header = String.Format("Wyniki dla uproszczonych reguł rozmytych, błąd: {0}", err);
+            string header = String.Format("Wyniki dla uproszczonych reguł rozmytych, błąd: {0}, obszarów: {1}",
+			                              err, numberOfRules);
             Console.WriteLine(header);
 
             if (DataWrite.WriteData(path, results, header))

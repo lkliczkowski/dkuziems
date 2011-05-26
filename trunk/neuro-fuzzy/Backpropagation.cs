@@ -11,7 +11,8 @@ namespace FunahashiNeuralNetwork
         /// <summary>
         /// gradient funkcji błędu dla WY, na jego podstawie są ustalane zmiany wag pomiędzy hidden-output
         /// </summary>
-		private double outputErrorGradient;
+        private double outputErrorGradient;
+		
         /// <summary>
         /// gradient błędu dla warstwy ukrytej, na jego podstawie są ustalane zmiany wag pomiędzy input-hidden
         /// </summary>
@@ -79,7 +80,8 @@ namespace FunahashiNeuralNetwork
         /// <param name="results">ściezka do pliku z wynikami</param>
         /// <param name="df">dziedzina (przedział od)</param>
         /// <param name="dt">dziedzina (przedział do)</param>
-		public Backpropagation (int hiddenRatio, double lr, ulong mE, string path, string results, double df, double dt)
+		public Backpropagation (int hiddenRatio, double lr, ulong mE, 
+		                        string path, string results, double df, double dt)
 		{
             //tworzymy zbiór danych
 			dataset = new DataSet(path);
@@ -89,22 +91,23 @@ namespace FunahashiNeuralNetwork
 			maxEpoch = mE;
 			learningRate = lr;
 			
-            //inicjacja wektora błędu
+			//inicjacja wektora błędu
 			hiddenErrorGradients = new double[NN.numHidden];
 			
 			resultFilename = results;
 			domainFrom = df;
 			domainTo = dt;
 
-            useBatchLearning = false;
+			useBatchLearning = false;
 
-            deltaHiddenOutput = new double[NN.numHidden + 1];
-            deltaInputHidden = new double[NN.numInput + 1][];
-            for (int i = 0; i <= NN.numInput; i++)
+			deltaHiddenOutput = new double[NN.numHidden + 1];
+			deltaInputHidden = new double[NN.numInput + 1][];
+			for (int i = 0; i <= NN.numInput; i++)
             {
-                deltaInputHidden[i] = new double[NN.numHidden];
-            }
+				deltaInputHidden[i] = new double[NN.numHidden];
+			}
 		}
+		
 		
         /// <summary>
         /// Uczenie sieci, główna funkcja
@@ -132,45 +135,42 @@ namespace FunahashiNeuralNetwork
 					//faza wstecz
 					backward(dataset.Target(i));
 					//mean square error
-					mse += Math.Pow(dataset.Target(i) - NN.OutputNeuron, 2); 
+					mse += Math.Pow(dataset.Target(i) - NN.OutputNeuron, 2);
 				}
 				mse /= dataset.Count;
 
-                if(useBatchLearning)
-                    updateWeights();
+				if(useBatchLearning)
+					updateWeights();
 
 				//co n epok wyświetla info o stanie nauczania
-                if (epoch % (howOftenSaveResult / 50 + 1) == 0)
-                {
-                    Console.WriteLine("{0}\t{1}", epoch, mse);
-                }
-
-				//co n epok wyświetla info o stanie nauczania
-                if (epoch % ((howOftenSaveResult * 2) / 50 + 1) == 0)
+				if (epoch % (howOftenSaveResult / 50 + 1) == 0)
 				{
-                    errorTable.Add(epoch, mse);
-                }
+					Console.WriteLine("{0}\t{1}", epoch, mse);
+				}
+
+				//co n*2 epok zapisuje mse
+				if (epoch % ((howOftenSaveResult * 2) / 50 + 1) == 0)
+				{
+					errorTable.Add(epoch, mse);
+				}
 				
-                try
-                {
-                    //co n epok zapisujemy wyniki
-                    if ((epoch % howOftenSaveResult) == 0)
-                    {
-                        if (!SaveResults(domainFrom, domainTo, dataset.Count, resultFilename))
-                            Console.WriteLine("Nieudany zapis wyników!");
-                    }
-                }
-                catch (DivideByZeroException)
-                {
-                    if ((epoch % howOftenSaveResult + 1) == 0)
-                    {
-                        if (!SaveResults(domainFrom, domainTo, dataset.Count, resultFilename))
-                            Console.WriteLine("Nieudany zapis wyników!");
-                    }
-                }
+				//co n epok zapisujemy wyniki do pliku
+				if ((epoch % howOftenSaveResult) == 0)
+				{
+					if (!SaveResults(domainFrom, domainTo, dataset.Count, resultFilename))
+						Console.WriteLine("Nieudany zapis wyników!");
+				}
 				
-                if (mse < 0.05)
-                    done = true;
+				//gdy blad osiagnie poziom 0.01 koncz nauczanie, zapisz wyniki
+				if (mse < 0.01)
+				{
+					done = true;
+					if (!SaveResults(domainFrom, domainTo, dataset.Count, resultFilename))
+						Console.WriteLine("Nieudany zapis wyników!");
+					if (!DataWrite.WriteData(String.Format("mse_{0}", resultFilename), errorTable,
+					                         String.Format("Epoka \tMSE")))
+						Console.WriteLine("Nieudany zapis wyników funkcji błędu");
+				}
 				
 				//zerujemy błąd
 				mse = 0;
@@ -187,28 +187,28 @@ namespace FunahashiNeuralNetwork
         /// <param name="desiredOutput">wartość data.Target(i)</param>
 		void backward(double desiredOutput)
 		{
-            //błąd dla wyjścia
+			//błąd dla wyjścia
 			outputErrorGradient = (desiredOutput - NN.OutputNeuron) *
 				derivationOfActivation(NN.weightedSumOutput);
 			for(int j = 0; j < NN.numHidden; j++)
 			{
-                if(useBatchLearning)
-				    deltaHiddenOutput[j] += learningRate * outputErrorGradient * NN.HiddenNeurons[j];
-                else
-                    NN.wHiddenOutput[j] += learningRate * outputErrorGradient * NN.HiddenNeurons[j];
+				if(useBatchLearning)
+					deltaHiddenOutput[j] += learningRate * outputErrorGradient * NN.HiddenNeurons[j];
+				else
+					NN.wHiddenOutput[j] += learningRate * outputErrorGradient * NN.HiddenNeurons[j];
 			}
 			
-            //błąd dla warstwy ukrytej
+			//błąd dla warstwy ukrytej
 			for(int j = 0; j < NN.numHidden; j++)
 			{
-				hiddenErrorGradients[j] = outputErrorGradient * NN.wHiddenOutput[j] 
-                    * derivationOfActivation(NN.weightedSumHidden[j]);
+				hiddenErrorGradients[j] = outputErrorGradient * NN.wHiddenOutput[j] * 
+					derivationOfActivation(NN.weightedSumHidden[j]);
 				for(int i = 0; i < NN.numInput; i++)
 				{
-                    if(useBatchLearning)
-					    deltaInputHidden[i][j] += learningRate * hiddenErrorGradients[j] * NN.Inputs[i];
-                    else
-                        NN.wInputHidden[i][j] += learningRate * hiddenErrorGradients[j] * NN.Inputs[i];
+					if(useBatchLearning)
+						deltaInputHidden[i][j] += learningRate * hiddenErrorGradients[j] * NN.Inputs[i];
+					else
+						NN.wInputHidden[i][j] += learningRate * hiddenErrorGradients[j] * NN.Inputs[i];
 				}
 			}
 		}
@@ -216,23 +216,23 @@ namespace FunahashiNeuralNetwork
         /// <summary>
         /// aktualizacja wag
         /// </summary>
-        private void updateWeights()
-        {
-            for (int j = 0; j < NN.numHidden; j++)
-            {
-                NN.wHiddenOutput[j] += deltaHiddenOutput[j];
-                deltaHiddenOutput[j] = 0;
-            }
+		private void updateWeights()
+		{
+			for (int j = 0; j < NN.numHidden; j++)
+			{
+				NN.wHiddenOutput[j] += deltaHiddenOutput[j];
+				deltaHiddenOutput[j] = 0;
+			}
 
-            for (int j = 0; j < NN.numHidden; j++)
-            {
-                for (int i = 0; i < NN.numInput; i++)
-                {
-                    NN.wInputHidden[i][j] += deltaInputHidden[i][j];
-                    deltaInputHidden[i][j] = 0;
-                }
-            }
-        }
+			for (int j = 0; j < NN.numHidden; j++)
+			{
+				for (int i = 0; i < NN.numInput; i++)
+				{
+					NN.wInputHidden[i][j] += deltaInputHidden[i][j];
+					deltaInputHidden[i][j] = 0;
+				}
+			}
+		}
 				
         /// <summary>
         /// pochodna z funkcji aktywacji
@@ -253,38 +253,37 @@ namespace FunahashiNeuralNetwork
         /// <param name="howMany">ile punktów ma zostać zbadane na przedziale</param>
         /// <param name="path">ścieżka do pliku</param>
         /// <returns>"true" dla udanego zapisu do pliku</returns>
-        public bool SaveResults(double domainFrom, double domainTo, int howMany, string path)
-        {
-            double[] xs = new double[dataset.LengthOfPattern];
+		public bool SaveResults(double domainFrom, double domainTo, int howMany, string path)
+		{
+			double[] xs = new double[dataset.LengthOfPattern];
 
-            List<double[]> results = new List<double[]>();
-            List<double> singleRecord = new List<double>();
-            Random r = new Random();
+			List<double[]> results = new List<double[]>();
+			List<double> singleRecord = new List<double>();
+			Random r = new Random();
 
-            for (int i = 0; i < howMany; i++)
-            {
-                if (dataset.LengthOfPattern == 1)
+			for (int i = 0; i < howMany; i++)
+			{
+				if (dataset.LengthOfPattern == 1)
+				{
+					xs[0] = domainFrom + Math.Abs(domainFrom - domainTo) / howMany * (i + 1);
+				}
+				else
+				{
+					for (int j = 0; j < dataset.LengthOfPattern; j++)
+					{
+						xs[j] = r.NextDouble() * Math.Abs(domainFrom - domainTo) + domainFrom;
+					}
+				}
+				NN.FeedForward(xs);
+				foreach (double d in xs)
                 {
-                    xs[0] = domainFrom + Math.Abs(domainFrom - domainTo) / howMany * (i + 1);
-                }
-                else
-                {
-                    for (int j = 0; j < dataset.LengthOfPattern; j++)
-                    {
+					singleRecord.Add(d);
+				}
 
-                        xs[j] = r.NextDouble() * Math.Abs(domainFrom - domainTo) + domainFrom;
-                    }
-                }
-                NN.FeedForward(xs);
-                foreach (double d in xs)
-                {
-                    singleRecord.Add(d);
-                }
+				singleRecord.Add(NN.OutputNeuron);
 
-                singleRecord.Add(NN.OutputNeuron);
-
-                results.Add(singleRecord.ToArray());
-                singleRecord.Clear();
+				results.Add(singleRecord.ToArray());
+				singleRecord.Clear();
             }
 
             //plik nagłówkowy umieszczony w komentarzu w pierwszej linii

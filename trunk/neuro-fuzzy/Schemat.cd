@@ -1,0 +1,154 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="ProjektNeuroFuzzy.Program">
+    <Position X="4.25" Y="0.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAABAAAAAA=</HashCode>
+      <FileName>Program.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FunahashiNeuralNetwork.Backpropagation">
+    <Position X="1.25" Y="8" Width="2.5" />
+    <Members>
+      <Method Name="Backpropagation" Hidden="true" />
+    </Members>
+    <AssociationLine Name="NN" Type="FunahashiNeuralNetwork.NeuralNetwork" FixedToPoint="true">
+      <Path>
+        <Point X="2.188" Y="11.828" />
+        <Point X="2.188" Y="12.5" />
+      </Path>
+    </AssociationLine>
+    <AssociationLine Name="dataset" Type="MyData.DataSet" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="3.75" Y="9.618" />
+        <Point X="4.562" Y="9.618" />
+        <Point X="4.562" Y="10.5" />
+      </Path>
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="0.101" Y="0.639" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>IAAgBAAAAAAUgAACEAAAAAAEAAAUAAUAAQQBAAAQBAA=</HashCode>
+      <FileName>Backpropagation.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="NN" />
+      <Field Name="dataset" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="MyData.DataSet">
+    <Position X="4.25" Y="10.5" Width="2.5" />
+    <Members>
+      <Method Name="DataSet" Hidden="true" />
+    </Members>
+    <TypeIdentifier>
+      <HashCode>AAAAAAACAAAAAAAABAAAACQQAAAAAAAAAAIQAAAAAAA=</HashCode>
+      <FileName>DataSet.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FunahashiNeuralNetwork.NeuralNetwork">
+    <Position X="1.25" Y="12.5" Width="2.5" />
+    <Members>
+      <Method Name="NeuralNetwork" Hidden="true" />
+    </Members>
+    <TypeIdentifier>
+      <HashCode>AIAAAAAgAAAAAAMAAQAAAAAIEAQAAAAAAAJAAAAAAAA=</HashCode>
+      <FileName>NeuralNetwork.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FunahashiNeuralNetwork.BackpropagationTest">
+    <Position X="1.25" Y="2" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAEAAAAAAACAAEAAAAAAAAAAAAAAAAAgAACAIIAAA=</HashCode>
+      <FileName>BackpropagationTest.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MyData.DataWrite">
+    <Position X="7.25" Y="14" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAEAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>DataWrite.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MyData.DataRead">
+    <Position X="4.25" Y="7.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAEAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAA=</HashCode>
+      <FileName>DataRead.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MyData.DataGenerator">
+    <Position X="4.25" Y="2.75" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAEAAAAAAAAAAAAAAAAAMAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>DataGenerator.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimplifiedFuzzyRules.SimplifiedFuzzyRulesTest">
+    <Position X="8.5" Y="2" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAADAAAAAAAAAAAAAAAAAAAAABAACAAIAAA=</HashCode>
+      <FileName>SimplifiedFuzzyRulesPreconfig.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimplifiedFuzzyRules.SimplifiedRules2d">
+    <Position X="7.25" Y="8" Width="2.5" />
+    <Members>
+      <Method Name="SimplifiedRules2d" Hidden="true" />
+    </Members>
+    <Compartments>
+      <Compartment Name="Nested Types" Collapsed="false" />
+    </Compartments>
+    <NestedTypes>
+      <Struct Name="SimplifiedFuzzyRules.SimplifiedRules2d.section">
+        <TypeIdentifier>
+          <NewMemberFileName>SimplifiedRules2d.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+    </NestedTypes>
+    <AssociationLine Name="dataset" Type="MyData.DataSet" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="7.25" Y="9.577" />
+        <Point X="6.438" Y="9.577" />
+        <Point X="6.438" Y="10.5" />
+      </Path>
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="-0.73" Y="0.683" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>QQAACAAgAABAAAACQAAAAQAAQAAAQAUAAQAQAAAAAAI=</HashCode>
+      <FileName>SimplifiedRules2d.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="dataset" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="SimplifiedFuzzyRules.SimplifiedRules3d">
+    <Position X="10" Y="8" Width="2.5" />
+    <Members>
+      <Method Name="SimplifiedRules3d" Hidden="true" />
+    </Members>
+    <Compartments>
+      <Compartment Name="Nested Types" Collapsed="false" />
+    </Compartments>
+    <NestedTypes>
+      <Struct Name="SimplifiedFuzzyRules.SimplifiedRules3d.section3d">
+        <TypeIdentifier>
+          <NewMemberFileName>SimplifiedRules3d.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Struct Name="SimplifiedFuzzyRules.SimplifiedRules3d.point">
+        <TypeIdentifier>
+          <NewMemberFileName>SimplifiedRules3d.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AQAAiAAgAABAAAACEBgAAQAAQAAAQAQAAQAQAAAAAEI=</HashCode>
+      <FileName>SimplifiedRules3d.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Tahoma" Size="8.25" />
+</ClassDiagram>
