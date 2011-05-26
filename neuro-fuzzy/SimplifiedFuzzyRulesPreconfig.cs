@@ -2,7 +2,7 @@
 
 namespace SimplifiedFuzzyRules
 {
-    partial class SimplifiedFuzzyRules
+    partial class SimplifiedFuzzyRulesTest
     {
         # region funkcje konfiguracji
 
@@ -48,12 +48,13 @@ namespace SimplifiedFuzzyRules
         {
             Console.WriteLine("Podaj liczbę zbiorów rozmytych, obecna: {0}", numberOfSections);
             if (selectedFunc == 3)
-                Console.WriteLine("info: 4,9,16,25,36,49,64,81,100,121,169(etc.) zadziała najlepiej dla funkcji 3D");
+                Console.WriteLine("info: dla funkcji 3D (n^2): 4,9,16,25,36,49,64,81,100,121,169(etc.)");
             Console.WriteLine("Im więcej obszarów tym większa dokładność aproksymacji funkcji\n{0}",
                 "Uwaga! Zbyt duża ilość dla funkcji jednej zmiennej prowadzi także do błędnych wyników!");
             try
             {
                 int num = Int32.Parse(Console.ReadLine());
+								
                 if (num > 0)
                 {
                     numberOfSections = num;

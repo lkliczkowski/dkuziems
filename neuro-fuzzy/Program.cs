@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SimplifiedFuzzyRules;
 
 namespace ProjektNeuroFuzzy
 {
@@ -20,11 +16,11 @@ namespace ProjektNeuroFuzzy
                 {
                     case 1:
                         Console.Clear();
-                        SimplifiedFuzzyRules.SimplifiedFuzzyRules.SimplifiedFuzzyRulesTest();
+                        SimplifiedFuzzyRules.SimplifiedFuzzyRulesTest.SimplifiedFuzzyRulesMain();
                         break;
                     case 2:
                         Console.Clear();
-                        FunahashiNeuralNetwork.BackpropagationTest.BackpropagationLearningTest();
+                        FunahashiNeuralNetwork.BackpropagationTest.BackpropagationLearningMain();
                         break;
 
                     case 3:

@@ -3,19 +3,23 @@ using MyData;
 
 namespace SimplifiedFuzzyRules
 {
-    partial class SimplifiedFuzzyRules
+    partial class SimplifiedFuzzyRulesTest
     {
-        public static void SimplifiedFuzzyRulesTest()
+        public static void SimplifiedFuzzyRulesMain()
         {
             int option;
             while (!selectFunction(out option)) { }
 
+			//nazwy plików
             string inputFilename, resultFilename;
+			
+			//liczba podzialow, liczba obserwacji (punktow)
             int numberOfSections, pointNumber;
-            /// <summary>
-            /// Przedziały funkcji (dziedzina)
-            /// </summary>
+			
+            // Przedziały funkcji (dziedzina)
             double domainXFrom, domainXTo, domainYFrom, domainYTo;
+			
+			//wspolczynnik alpha
             double alpha;
 
             switch (option)
@@ -39,7 +43,8 @@ namespace SimplifiedFuzzyRules
                     {
                         pointNumber = 100;
                         setPointsNumber(ref pointNumber);
-                        DataGenerator.Function1(inputFilename, pointNumber);
+						DataGenerator.Function1a(inputFilename, pointNumber); //dla \eps [-0.05, 0.05]
+	                    //DataGenerator.Function1b(inputFilename, pointNumber); //dla \eps [-0.1, 0.1]
                     }
                     else
                         Console.WriteLine("Nazwa pliku z danymi powinna się nazywać: \"{0}\"", inputFilename);
@@ -50,6 +55,7 @@ namespace SimplifiedFuzzyRules
                     new SimplifiedRules2d(inputFilename, resultFilename, alpha, domainXFrom, domainXTo, numberOfSections).Run();
 
                     break;
+				
                 case 2:
                     inputFilename = "funkcja2.dat";
                     resultFilename = "wyniki2_SimpleRules.dat";
@@ -78,6 +84,7 @@ namespace SimplifiedFuzzyRules
 
                     new SimplifiedRules2d(inputFilename, resultFilename, alpha, domainXFrom, domainXTo, numberOfSections).Run();
                     break;
+				
                 case 3:
                     inputFilename = "funkcja3.dat";
                     resultFilename = "wyniki3_SimpleRules.dat";
@@ -107,7 +114,7 @@ namespace SimplifiedFuzzyRules
                     new SimplifiedRules3d(inputFilename, resultFilename, alpha, domainXFrom, domainXTo, domainYFrom, domainYTo, numberOfSections).Run();
                     break;
             }
-            Console.WriteLine("Zakończono nauczanie sieci! (Naciśnij dowolny przycisk aby powrócić do Menu)");
+            Console.WriteLine("Zakończono! (Naciśnij dowolny przycisk aby powrócić do Menu)");
             Console.ReadKey();
         }
     }

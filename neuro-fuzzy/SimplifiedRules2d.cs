@@ -4,22 +4,6 @@ using MyData;
 
 namespace SimplifiedFuzzyRules
 {
-    /// <summary>
-    /// struktura normy trojkatnej
-    /// </summary>
-    struct section
-    {
-        /// <summary>
-        /// numer przedzialu
-        /// </summary>
-        public int index;
-        
-        /// <summary>
-        /// przedzial trojkatny w postaci (a, b, c)
-        /// </summary>
-        public double a, b, c;
-    }
-
     /* Uproszczone reguły dla norm trójkątnych
      * (a,b,c)
      *   b 
@@ -32,9 +16,25 @@ namespace SimplifiedFuzzyRules
     class SimplifiedRules2d
     {
         /// <summary>
+        /// struktura normy trojkatnej
+        /// </summary>
+        private struct section
+        {
+            /// <summary>
+            /// numer przedzialu
+            /// </summary>
+            public int index;
+
+            /// <summary>
+            /// przedzial trojkatny w postaci (a, b, c)
+            /// </summary>
+            public double a, b, c;
+        }
+
+        /// <summary>
         /// Lista z przedziałami rozmytymi
         /// </summary>
-        List<section> Sections;
+        private List<section> sections;
 
         /// <summary>
         /// Obsługuje przepływ danych:
@@ -92,9 +92,9 @@ namespace SimplifiedFuzzyRules
 
             b = new double[numberOfRules];
 
-            Sections = generateSections(numberOfRules, domainFrom, domainTo);
+            sections = generateSections(numberOfRules, domainFrom, domainTo);
 
-            foreach (section s in Sections)
+            foreach (section s in sections)
             {
                 Console.WriteLine("{0}\t({1:N2}, {2:N2}, {3:N2})",
                     s.index, s.a, s.b, s.c);
@@ -104,7 +104,10 @@ namespace SimplifiedFuzzyRules
         }
 
 
-        public void Run()
+        /// <summary>
+        ///funkcja uruchamiająca etap identyfikacji i walidacji 
+        /// </summary>
+		public void Run()
         {
             //faza identyfikacji
             identify();
@@ -172,7 +175,7 @@ namespace SimplifiedFuzzyRules
         /// <returns>stopien zgodnosci</returns>
         private double compatibility(double x, int what)
         {
-            return triangle(x, Sections[what].a, Sections[what].b, Sections[what].c);
+            return triangle(x, sections[what].a, sections[what].b, sections[what].c);
         }
 
         /// <summary>

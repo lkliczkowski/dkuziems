@@ -9,10 +9,10 @@ namespace MyData
 		const char Delimeter = (char)9; //9 == tab
 		
 		/// <summary>
-		///	sin(x)+ε
+		///	sin(x)+ε [-0.05, 0.05]
 		/// </summary>
 		/// <param name="path">ścieżka do pliku</param>
-		public static bool Function1(string path, int numberOfPoints)
+		public static bool Function1a(string path, int numberOfPoints)
 		{
 			//losowa wartość
 			Random r = new Random();
@@ -22,6 +22,45 @@ namespace MyData
 			
 			double domainFrom = 0, domainTo = 2*Math.PI;
 			double noiseDomainFrom = -0.05, noiseDomainTo = 0.05;
+
+			try
+            {
+                TextWriter writeFile = new StreamWriter(path);
+				writeFile.WriteLine("#{0}{1}{2}", "x", Delimeter, "f(x)");
+				
+                for (int j = 0; j < numberOfPoints; j++)
+                {
+					x = r.NextDouble() * Math.Abs(domainFrom - domainTo) + domainFrom;
+					e = r.NextDouble() * Math.Abs(noiseDomainFrom - noiseDomainTo) + noiseDomainFrom;
+					
+					writeFile.WriteLine(String.Format("{0}{1}{2}", x, Delimeter, Math.Sin(x) + e).Replace(",","."));
+					writeFile.Flush();
+                }
+                writeFile.Close();
+                return true;
+            }
+            catch (Exception err)
+            {
+                Console.WriteLine("Nieudany zapis do pliku: ", err.Message);
+				return false;
+            }
+
+		}
+		
+		/// <summary>
+		///	sin(x)+ε [-0.1,0.1]
+		/// </summary>
+		/// <param name="path">ścieżka do pliku</param>
+		public static bool Function1b(string path, int numberOfPoints)
+		{
+			//losowa wartość
+			Random r = new Random();
+			
+			//wartość x i szum
+			double x, e;
+			
+			double domainFrom = 0, domainTo = 2*Math.PI;
+			double noiseDomainFrom = -0.1, noiseDomainTo = 0.1;
 
 			try
             {

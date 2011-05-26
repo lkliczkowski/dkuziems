@@ -5,7 +5,7 @@ namespace FunahashiNeuralNetwork
 {
 	partial class BackpropagationTest
 	{
-		public static void BackpropagationLearningTest ()
+		public static void BackpropagationLearningMain ()
 		{
 			int option;
 			while(!selectFunction(out option)){ }
@@ -13,8 +13,8 @@ namespace FunahashiNeuralNetwork
 			string inputFilename, resultFilename;
 			int hiddenRatio, pointNumber;
 			double learningRate;
-            bool useBatch = false;
-            ulong maxEpoch = 100000;
+			bool useBatch = false;
+			ulong maxEpoch = 100000;
 			
 			double domainFrom, domainTo;
 			
@@ -33,7 +33,8 @@ namespace FunahashiNeuralNetwork
                 {
                     pointNumber = 100;
                     setPointsNumber(ref pointNumber);
-                    DataGenerator.Function1(inputFilename, pointNumber);
+					DataGenerator.Function1a(inputFilename, pointNumber); //dla \eps [-0.05, 0.05]
+                    //DataGenerator.Function1b(inputFilename, pointNumber); //dla \eps [-0.1, 0.1]
                 }
                 else
                     Console.WriteLine("Nazwa pliku z danymi powinna się nazywać: \"{0}\"", inputFilename);
@@ -81,7 +82,7 @@ namespace FunahashiNeuralNetwork
 
             new Backpropagation(hiddenRatio, learningRate, maxEpoch, 
                 inputFilename, resultFilename, domainFrom, domainTo).Train();
-            Console.WriteLine("Zakończono generowanie reguł! (Naciśnij dowolny przycisk aby powrócić do Menu)");
+            Console.WriteLine("Zakończono nauczanie sieci! (Naciśnij dowolny przycisk aby powrócić do Menu)");
             Console.ReadKey();
 		}
     }
