@@ -1,0 +1,4 @@
+Sieć neuronowa typu MLP z algorytmami nauczania Propagacji wstecznej(batch) oraz Levenberga-Marquardta (z systemem obliczeń Wilamowskiego) pracujące na ustandaryzowanych danych (z-score) w zagadnieniach klasyfikacji.
+
+.NET 3.5, C#
+Projekt własny, proszę o nie kopiowanie.
