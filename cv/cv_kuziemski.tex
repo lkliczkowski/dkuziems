@@ -1,0 +1,220 @@
+% kompilowac pdflatex-em
+\documentclass[a4paper,11pt]{article}
+\usepackage{polski}
+\usepackage[utf8]{inputenc}
+\usepackage[OT4]{fontenc}
+\usepackage{graphicx}		% wstawianie, manipulowanie grafika
+\usepackage{geometry}		% do ustawienia marginesow
+\usepackage{url}		% obsluga url
+\usepackage{hyperref}\hypersetup{colorlinks=true,urlcolor=blue}		%
+\usepackage{multirow}
+\usepackage{color}
+
+
+% marginesy {lewy,,prawy}
+\geometry{hdivide={1.75cm,,2.0cm}}
+% marginesy {gora,,dol}
+\geometry{vdivide={2.3cm,,2.3cm}}
+
+% ustawienie odstępów między wierszami na 1.5
+\renewcommand\baselinestretch{1.5}
+
+% \hline\hline da linię pogrubioną
+\setlength{\doublerulesep}{\arrayrulewidth}
+
+\pagestyle{empty}
+
+\hypersetup{
+  pdftitle={Dariusz Piotr Kuziemski - curriculum vitae},
+  pdfauthor={Dariusz Kuziemski},
+}
+
+\makeatletter
+\def\section{\@ifstar\unnumberedsection\numberedsection}
+\def\numberedsection{\@ifnextchar[%]
+  \numberedsectionwithtwoarguments\numberedsectionwithoneargument}
+\def\unnumberedsection{\@ifnextchar[%]
+  \unnumberedsectionwithtwoarguments\unnumberedsectionwithoneargument}
+\def\numberedsectionwithoneargument#1{\numberedsectionwithtwoarguments[#1]{#1}}
+\def\unnumberedsectionwithoneargument#1{\unnumberedsectionwithtwoarguments[#1]{#1}}
+\def\numberedsectionwithtwoarguments[#1]#2{%
+  \ifhmode\par\fi
+  \removelastskip
+  \vskip 5ex\goodbreak
+  \refstepcounter{section}%
+  \hbox to \hsize{\hss\vbox{\advance\hsize by 0cm
+      \noindent
+      \leavevmode\Large\bfseries\raggedright
+      \thesection.\ 
+      #2\par
+      \vskip -2ex
+      \noindent
+      \textcolor[rgb]{0.5,0.5,0.5}{\rule{\textwidth}{0.5pt}}
+      }}\nobreak
+  \vskip 2ex\nobreak
+  \addcontentsline{toc}{section}{%
+    \protect\numberline{\thesection}%
+    #1}%
+  }
+\def\unnumberedsectionwithtwoarguments[#1]#2{%
+  \ifhmode\par\fi
+  \removelastskip
+  \vskip 5ex\goodbreak
+  \refstepcounter{section}% spis treści
+  \hbox to \hsize{\hss\vbox{\advance\hsize by 0cm
+      \noindent
+      \leavevmode\Large\bfseries\raggedright\sc
+%      \thesection\ 
+      #2\par
+      \vskip -4ex
+      \noindent
+%\hrulefill
+\textcolor[rgb]{0.5,0.5,0.5}{\rule{\textwidth}{0.5pt}}
+      }}\nobreak
+  \vskip 2ex\nobreak
+  \addcontentsline{toc}{section}{%
+%    \protect\numberline{\thesection}%
+    #1}%
+  }
+
+\makeatother
+\pagestyle{empty}
+
+\newcommand{\poz}[2]{
+{\textsc{#1}} & #2\\}
+
+\newcommand{\cvsection}[1]{\section*{#1}}
+
+\newenvironment{cvtabular}%
+	{\begin{tabular}{p{0.25\textwidth} p{0.75\textwidth}} }%
+	{\end{tabular}}%
+
+\newenvironment{cvheader}%
+	{\begin{tabular}{p{0.22\textwidth} p{0.55\textwidth} p{0.15\textwidth}}%
+	}%
+	{\end{tabular}}%
+
+
+\begin{document}
+\centering{\Large{\textsc{Curriculum Vitae}}\\}
+\centering{\LARGE{\textsc{Dariusz Kuziemski}}}
+
+\cvsection{Dane osobowe}
+	\begin{cvheader}
+	\textsc{adres} & Semlin 39, 83--206 Kleszczewo & \multirow{5}{*}{ }\\
+	\textsc{data urodzenia} & 21 grudnia 1987 \\
+	\textsc{stan cywilny} & single \\
+	\textsc{telefon} & 781044000 \\
+	\textsc{email} &\href{mailto:kuziemski.dariusz@mailplus.pl}
+			      {kuziemski.dariusz@mailplus.pl} \\
+	\end{cvheader}
+	
+
+\cvsection{Wykształcenie}
+  \begin{cvtabular}
+
+      \poz{Paź 2009--do dziś}{Uniwersytet Gdański, Wydział MFI,
+		      Informatyka/Inteligencja obliczeniowa, \newline
+	      \begin{small}\emph{aktualnie piszę pracę magisterską
+		      ``Algorytmy BI w Microsoft SQL Server 2008``}          
+	      \end{small}\vspace*{0.2cm}}
+
+      \poz{Paź 2008--do dziś}{Uniwersytet Gdański, Wydział MFI, Matematyka
+		      \newline specjalizacja: Matematyka Ekonomiczna
+	      \begin{small}\emph{(roczny urlop dziekański)}          
+	      \end{small}\vspace*{0.2cm}}
+
+      \poz{Lipiec 2009}{Uniwersytet Gdański, Wydział MFI, Informatyka 1
+			stopnia, \newline \emph{Egzamin licencjacki}
+			\vspace*{0.2cm}}
+
+      \poz{Maj 2006}{I Liceum ogólnokształcące im. Marii Skłodowskiej-Curie
+		    w Starogardzie \newline Gdańskim, \emph{Matura: j. polski,
+		    j. angielski, Matematyka, Informatyka}}
+  \end{cvtabular}
+
+\cvsection{Nabyte umiejętności}
+  \begin{cvtabular}
+      \poz{języki \mbox{programowania}}{\textit{[Dobra znajomość]} C, C$\#$;
+
+      \textit{[Podstawowa znajomość]} Ajax, ASP.NET, Assembler, bash, C++, CSS,
+      \newline Fortran, Haskell, HTML, Java/J2EE, JavaScript, LaTeX, MDX, PHP,
+      \newline Prolog, Python, SQL, XML \vspace*{0.35cm}}
+
+      \poz{środowiska \mbox{programistyczne}}{Borland C++ Builder,
+      Code::Blocks, Eclipse IDE, Microsoft Visual\newline Studio/SQL Server
+      Business Intelligence Development Studio, MonoDevelop \vspace*{0.35cm}}
+
+      \poz{systemy \mbox{operacyjne}}{Windows, GNU/Linux\vspace*{0.35cm}}
+
+      \poz{inne}{Android SDK, Grafika 2D/3D (GIMP, Blender 3D), JADE,
+      MVC(ASP.NET), Pakiety biurowe (typu Office), PostgreSQL, SVN, UML, Vim
+      \vspace*{0.35cm}}
+
+      \poz{obecnie \mbox{uczę się}}{C$\#$, Python}
+  \end{cvtabular}
+
+\pagebreak
+
+\cvsection{Języki obce}
+	\begin{cvtabular}
+	\poz{angielski}{komunikatywny podstawowy, brak problemów ze
+zrozumieniem dokumentacji}
+	\poz{niemiecki}{podstawowy}
+\end{cvtabular}
+
+\cvsection{Doświadczenie}
+
+\begin{cvtabular}
+\begin{Large}Zawodowe\newline\end{Large}
+ \poz{\href{http://it-portal.pl/}{it-portal.pl}}
+  {\vspace*{0.5cm}Analityk IT, Paź 2009 - Lut 2010 \newline 
+    \emph{ W ramach praktyk (matematyka ekonomiczna).\newline 
+	  Jako analityk portalu byłem odpowiedzialny za wprowadzanie
+	  skategoryzowanych informacji na temat oprogramowania biznesowego. } }
+\end{cvtabular}
+
+\begin{cvtabular}
+\begin{Large}Projekty zespołowe\end{Large}
+  \poz{\href{http://code.google.com/p/goodfeeling/}{GoodFeeling}}
+  {\vspace*{0.5cm}Android SDK, Weka 3.6.3, Java \newline
+    \emph{ Efektem była aplikacja data-mining na system Android. } }
+
+ \poz{\href{http://code.google.com/p/padaly/source/browse/\#svn\%2Ftrunk\%2Fsrc}
+     {jabsRoom}}{C, GTK+2.0, Empathy \newline 
+    \emph{Efektem był komunikator w GTK opierający działanie na Empathy.} }
+\end{cvtabular}
+
+\begin{cvtabular}
+\begin{Large}Własne\newline\end{Large}
+  \poz{\href{http://code.google.com/p/dkuziems/source/browse/\#svn\%2Ftrunk}
+      {svn-dkuziems}}{\vspace*{0.5cm}C, C$\#$ \newline 
+    \emph{Ostatnio zacząłem prowadzić system kontroli wersji także dla projektów
+  \newline własnych (np.: z sieci neuronowych.) } }
+\end{cvtabular}
+
+\cvsection{Dodatkowe umiejętności}
+  \begin{cvtabular}
+    \poz{Prawo Jazdy kat. B}{}
+  \end{cvtabular}
+
+\cvsection{Zainteresowania}
+	\begin{cvtabular}
+	\poz{naukowe}{data mining, sieci neuronowe}
+	\poz{grafika 3D}{Blender 3D}
+	\poz{literatura fantasy}{Forgotten Realms}
+	\poz{muzyka}{Blues, Classic Rock (\emph{uczę się także grać na
+gitarze})}
+	\poz{sport}{piłka nożna, tenis stołowy}
+\end{cvtabular}
+
+\vspace{10ex}
+\begin{center}
+\textsf{\textcolor[rgb]{0.3,0.3,0.3}{
+{\footnotesize Wyrażam zgodę na przetwarzanie moich danych osobowych dla
+	    potrzeb niezbędnych do realizacji procesu rekrutacji\newline
+	    (zgodnie z Ustawą z dn. 29.08.97 r. o Ochronie Danych Osobowych 
+	    Dz. Ust. 133 poz. 883).}}}
+\end{center}
+
+\end{document}
