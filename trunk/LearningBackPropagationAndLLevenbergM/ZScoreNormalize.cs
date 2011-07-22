@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace ZScore
 {
-    partial class ZScore
+    partial class ZScoreData
     {
         private static void normalize(ref Column<double>[] normalized,
             Column<double>[] discretized, EnumDataTypes dataType, int[] tabType)

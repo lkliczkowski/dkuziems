@@ -5,7 +5,7 @@ namespace ZScore
     /// <summary>
     /// Scoring Method, discretize + z-score
     /// </summary>
-    partial class ZScore
+    partial class ZScoreData
     {
         private readonly string DATAFILE, OUTPUTFILE;
         public EnumDataTypes DataType;
@@ -20,15 +20,15 @@ namespace ZScore
             get { return normalizedData; }
         }
 
-        private ZScore()
+        private ZScoreData()
             : this("ExampleData.csv", "normalizedExample.csv", EnumDataTypes.HeartDisease)
         {}
 
-        public ZScore(string f1, EnumDataTypes dt)
+        public ZScoreData(string f1, EnumDataTypes dt)
             :this (f1, null, dt)
         { }
 
-        public ZScore(string f1, string f2, EnumDataTypes dt)
+        public ZScoreData(string f1, string f2, EnumDataTypes dt)
         {
             DATAFILE = f1;
             OUTPUTFILE = f2;
@@ -63,7 +63,7 @@ namespace ZScore
             for (int i = 0; i < columnType.Length; i++)
                 rawData[i] = new Column<string>();
 
-            if (ZScore.CSVread(DATAFILE, ref rawData))
+            if (ZScoreData.CSVread(DATAFILE, ref rawData))
             {
                 if (DataType == EnumDataTypes.HeartDisease)
                     RemoveFromRecords(ref rawData, 0, 2);

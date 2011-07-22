@@ -2,7 +2,7 @@
 
 namespace ZScore
 {
-    partial class ZScore
+    partial class ZScoreData
     {
         public static Column<double>[] Discretize(Column<string>[] rawData,
             EnumDataTypes switchType,int[] columnType)

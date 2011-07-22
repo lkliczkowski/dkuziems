@@ -4,8 +4,13 @@ using System.Linq;
 
 namespace ZScore
 {
-    partial class ZScore
+    partial class ZScoreData
     {
+        /// <summary>
+        /// odchylenie standardowe dla kolumn z danymi typu ciaglego
+        /// </summary>
+        /// <param name="doubleList">kolumna danych</param>
+        /// <returns>odchylenie standardowe</returns>
         private static double stdDevContinuous(double[] doubleList)
         {
             double average = doubleList.Average();
@@ -18,6 +23,13 @@ namespace ZScore
             return Math.Sqrt(sumOfDerivationAverage - (average * average));
         }
 
+        /// <summary>
+        /// prawdopodobienstwa posteri wystepowania poszczegolnych jednostek
+        /// typu dyskretnego dla HeartDisease
+        /// </summary>
+        /// <param name="discretizedList">kolumna danych</param>
+        /// <param name="discreteType">typ kolumny</param>
+        /// <returns>tablice z obliczonymi prawdopodobienstwami</returns>
         private static double[] probabilityDiscrete(double[] discretizedList,
             EnumHeartDisease discreteType)
         {
@@ -66,6 +78,13 @@ namespace ZScore
             return probabilityList.ToArray();
         }
 
+        /// <summary>
+        /// prawdopodobienstwa posteri wystepowania poszczegolnych jednostek
+        /// typu dyskretnego dla GermanCreditData
+        /// </summary>
+        /// <param name="discretizedList">kolumna danych</param>
+        /// <param name="discreteType">typ kolumny</param>
+        /// <returns>tablice z obliczonymi prawdopodobienstwami</returns>
         private static double[] probabilityDiscrete(double[] discretizedList,
             EnumGermanCreditData discreteType)
         {
@@ -214,6 +233,13 @@ namespace ZScore
             return probabilityList.ToArray();
         }
 
+        /// <summary>
+        /// prawdopodobienstwa posteri wystepowania poszczegolnych jednostek
+        /// typu dyskretnego dla CreditRisk
+        /// </summary>
+        /// <param name="discretizedList">kolumna danych</param>
+        /// <param name="discreteType">typ kolumny</param>
+        /// <returns>tablice z obliczonymi prawdopodobienstwami</returns>
         private static double[] probabilityDiscrete(double[] discretizedList, 
             EnumCreditRisk discreteType)
         {
@@ -323,18 +349,33 @@ namespace ZScore
             return probabilityList.ToArray();
         }
 
+        /// <summary>
+        /// odchylenie standardowe dla wartosci dyskretnych
+        /// </summary>
+        /// <param name="probability"></param>
+        /// <returns></returns>
         private static double stdDevDiscrete(double probability)
         {
             return Math.Sqrt(probability * (1 - probability));
         }
 
-
+        /// <summary>
+        /// tworzy liste o podanej dlugosci (uzyteczne w celu refaktoryzacji)
+        /// </summary>
+        /// <param name="list">lista</param>
+        /// <param name="times">wskazana dlugosc</param>
         private static void addZero(ref List<double> list, int times)
         {
             for (int i = 0; i < times; i++)
                 list.Add(0);
         }
 
+        /// <summary>
+        /// oblicza ilosc kolumn danych ustandaryzowanych przez proces z-score
+        /// </summary>
+        /// <param name="tabTypes">typy kolumn dla wskazanych danych</param>
+        /// <param name="en">typ danych</param>
+        /// <returns></returns>
         private static int GetNormalizeLength(int[] tabTypes, EnumDataTypes en)
         {
             int len = 0;
@@ -475,6 +516,13 @@ namespace ZScore
             return len;
         }
 
+        /// <summary>
+        /// usuwa wskazany przedzial danych
+        /// </summary>
+        /// <typeparam name="T">typ danych (string/double/..)</typeparam>
+        /// <param name="toRemove">dane typu Column<T>[]</param>
+        /// <param name="from">index od</param>
+        /// <param name="to">index do</param>
         private static void RemoveFromRecords<T>(ref Column<T>[] toRemove, int from, int to)
         {
             for (int i = 0; i < toRemove.Length; i++)
