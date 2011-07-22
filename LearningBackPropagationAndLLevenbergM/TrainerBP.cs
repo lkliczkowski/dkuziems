@@ -2,6 +2,7 @@
 using System.IO;
 using System.Diagnostics;
 using System.Collections;
+using ZScore;
 
 namespace LearningBPandLM
 {
@@ -12,21 +13,21 @@ namespace LearningBPandLM
         /// <summary>
         /// wspolczynnik uczenia wyznacza szybkosc z jaka zmieniaja sie wagi
         /// </summary>
-        double learningRate;
+        private double learningRate;
 
         /// <summary>
         /// wspolczynniki zmian wag dla reguly delta dla wag pomiedzy warstwa WE a ukryta
         /// </summary>
-        double[][] deltaInputHidden;
+        private double[][] deltaInputHidden;
         /// <summary>
         /// wspolczynniki zmian wag dla reguly delta dla wag pomiedzy warstwa ukryta a WY
         /// </summary>
-        double[][] deltaHiddenOutput;
+        private double[][] deltaHiddenOutput;
 
         /// <summary>
         /// Wektory z bledami dla warstwy ukrytej i WY
         /// </summary>
-        double[] hiddenErrorGradients, outputErrorGradients;
+        private double[] hiddenErrorGradients, outputErrorGradients;
 
         #endregion
 
@@ -35,47 +36,46 @@ namespace LearningBPandLM
         /// <summary>
         /// liczniki epok
         /// </summary>
-        ulong epochCounter;
-        ulong maxEpochs;
+        private ulong epochCounter, maxEpochs;
 
         /// <summary>
         /// docelowa dokladnosc modelu
         /// </summary>
-        double desiredAccuracy;
+        private double desiredAccuracy;
 
         /// <summary>
         /// celnosc modelu dla kazdej z epok dla zbioru trenujacego i testujacego
         /// </summary>
-        double trainingSetAccuracy, generalizationSetAccuracy;
+        private double trainingSetAccuracy, generalizationSetAccuracy;
 
         /// <summary>
         /// suma kwadratow bledu dla zbioru trenujacego i testujacego
         /// </summary>
-        double trainingSetMSE, generalizationSetMSE;
+        private double trainingSetMSE, generalizationSetMSE;
 
         /// <summary>
         /// domyślna docelowa wartosc MSE
         /// </summary>
-        protected const double DEFAUT_DESIRED_MSE = 0.001;
+        protected const double DefaultDesiredMSE = 0.001;
 
         /// <summary>
         /// struktura sieci neuronowej (sieć MLP (multilayer perceptron networks))
         /// </summary>
-        neuralNetwork NN;
+        private neuralNetwork NN;
 
         /// <summary>
         /// Zbior danych, klasa ZScore zawiera zstandaryzowane dane:
         /// Dataset.sample(i) - i-ta probka danych (WE) 
         /// Dataset.target(i) - i-ta wartosc docelowa (WY) dla i-tej probki
         /// </summary>
-        ZScore.ZScore Dataset;
+        private ZScoreData Dataset;
 
         /// <summary>
         /// Zbior indeksow wydzielajacych zbiory danych
         /// DatasetIndexes.TrainingSet - int[] dane trenujace (uczace)
         /// DatasetIndexes.GeneralizationSet - int[] dane testujace
         /// </summary>
-        DatasetOperateWindowed DatasetIndexes;
+        private DatasetOperateWindowed DatasetIndexes;
 
         #endregion
 
@@ -84,49 +84,58 @@ namespace LearningBPandLM
         /// <summary>
         /// nazwa pliku z wynikami pomiarów
         /// </summary>
-        string RESULTS;
+        private string resultsFileName;
 
         /// <summary>
         /// nazwa pliku do ktorego zostana zapisane najlepsze wagi oraz wybrane (customWeightsOutputFile)
         /// </summary>
-        string weightsOutputFile, customWeightsOutputFile;
+        private string weightsOutputFile, customWeightsOutputFile;
 
         /// <summary>
         /// flaga czy kontynuowac nauczanie
         /// </summary>
-        bool trainingComplete;
+        private bool trainingComplete;
 
         /// <summary>
         /// domyslna wartosc wspolczynnika uczenia
         /// </summary>
-        const double LEARNINGRATEDEFAULT = 0.1;
+        private const double DefaultLearningRate = 0.1;
 
-        Hashtable durationOfEachEpoch;
-        Stopwatch timer;
+        /// <summary>
+        /// Zawiera wyliczenia dlugosci czasowych poszczegolnych epok
+        /// </summary>
+        private Hashtable durationOfEachEpoch;
+        /// <summary>
+        /// Uzywany do mierzenia probek czasowych
+        /// </summary>
+        private Stopwatch timer;
+
+        /// <summary>
+        /// Flaga czy uruchomienie programu ma przebiec automatycznie czy manualnie
+        /// </summary>
+        private bool automatedRun = false;
 
         #endregion
 
         #region konstruktory
 
-        public TrainerBP(ZScore.ZScore dataset)
-            : this(dataset, dataset.sample(0).Length - 1)
+        public TrainerBP(ZScoreData dataset)
+            : this(dataset, dataset.sample(0).Length - 1, DefaultLearningRate, 1500, 99, 15, false)
         { }
 
-        public TrainerBP(ZScore.ZScore dataset, int hiddenNodeRatio)
-            :this (dataset, hiddenNodeRatio, LEARNINGRATEDEFAULT, 1500, 99, 15)
-        { }
-
-        public TrainerBP(ZScore.ZScore dataset, int hiddenNodeRatio, double lr, ulong mE, double desiredAcc, int sz)
+        public TrainerBP(ZScoreData dataset, int hiddenNodeRatio, double lr, ulong mE, double desiredAcc, 
+            int sz, bool runAutomated)
         {
             this.Dataset = dataset;
 
             ///ostatnie 2 argumenty - false, true dla funkcji aktywacji ktore maja byc tanh(x), true dla sigmoid
-            NN = new neuralNetwork(Dataset.sample(0).Length, hiddenNodeRatio, 
+            NN = new neuralNetwork(Dataset.sample(0).Length, hiddenNodeRatio,
                 1, dataset.DataType, ActivationFuncType.Tanh, ActivationFuncType.Sigmoid);
             DatasetIndexes = new DatasetOperateWindowed(Dataset.NormalizedData[0].GetNum(), sz);
 
             maxEpochs = mE;
             learningRate = lr;
+            automatedRun = runAutomated;
 
             createFileNames();
             durationOfEachEpoch = new Hashtable();
@@ -155,14 +164,14 @@ namespace LearningBPandLM
         /// </summary>
         private void createFileNames()
         {
-            RESULTS = String.Format("wynik_{0}_BP-{1}-{2}-{3}.txt", 
-                Enum.GetName(typeof(ZScore.EnumDataTypes), (int)Dataset.DataType),
+            resultsFileName = String.Format("wynik_{0}_BP-{1}-{2}-{3}.txt",
+                Enum.GetName(typeof(EnumDataTypes), (int)Dataset.DataType),
                 learningRate.ToString(), NN.numHidden.ToString(), maxEpochs.ToString());
-            weightsOutputFile = String.Format("weights_{0}_BP-{1}.txt", 
-                Enum.GetName(typeof(ZScore.EnumDataTypes), (int)Dataset.DataType),
+            weightsOutputFile = String.Format("weights_{0}_BP-{1}.txt",
+                Enum.GetName(typeof(EnumDataTypes), (int)Dataset.DataType),
                 NN.numHidden.ToString());
-            customWeightsOutputFile = String.Format("customWeights_{0}_BP-{1}.txt", 
-                Enum.GetName(typeof(ZScore.EnumDataTypes), (int)Dataset.DataType),
+            customWeightsOutputFile = String.Format("customWeights_{0}_BP-{1}.txt",
+                Enum.GetName(typeof(EnumDataTypes), (int)Dataset.DataType),
                 NN.numHidden.ToString());
         }
 
@@ -172,16 +181,18 @@ namespace LearningBPandLM
         public void TrainNetwork()
         {
             //uchwyt do pliku w ktorym zapisujemy wyniki
-            TextWriter saveResult = new StreamWriter(RESULTS);
+            TextWriter saveResult = new StreamWriter(resultsFileName);
 
             //inicjalizacja licznika epok oraz wag
             epochCounter = 0;
-            
+
             trainingComplete = false;
 
-            Console.Write("\nNaciśnij dowolny przycisk by rozpocząć nauczanie sieci...\n");
-            Console.ReadKey();
-
+            if (!automatedRun)
+            {
+                Console.Write("\nNaciśnij dowolny przycisk by rozpocząć nauczanie sieci...\n");
+                Console.ReadKey();
+            }
             ShowOptions();
 
             //naglowki w pliku z wynikami
@@ -197,7 +208,7 @@ namespace LearningBPandLM
 
             double bestGeneralizationSetMSE = generalizationSetMSE;
 
-            while ((trainingSetAccuracy < desiredAccuracy || generalizationSetAccuracy < desiredAccuracy) 
+            while ((trainingSetAccuracy < desiredAccuracy || generalizationSetAccuracy < desiredAccuracy)
                 && epochCounter < maxEpochs && !trainingComplete)
             {
 
@@ -419,7 +430,7 @@ namespace LearningBPandLM
                 string line = String.Format("{0}\t{1:N4}\t{2:N2}\t{3:N4}\t{4:N2}\t{5}",
                     epochCounter, trainingSetMSE, trainingSetAccuracy, generalizationSetMSE,
                     generalizationSetAccuracy, durationOfEachEpoch[epochCounter]);
-                line = line.Replace(",",".");
+                line = line.Replace(",", ".");
                 saveResult.WriteLine(line);
 
                 saveResult.Flush();
@@ -435,7 +446,11 @@ namespace LearningBPandLM
         /// </summary>
         public void ShowOptions()
         {
-            if (!trainingComplete)
+            if (automatedRun)
+            {
+                Console.WriteLine("Zautomatyzowany przebieg programu.");
+            }
+            else if (!trainingComplete)
             {
                 Console.WriteLine("[Enter] by kontynuować, [1] Zapisac wagi, [2] Wczytac wagi, [3] Przerwac");
                 int option;
@@ -572,9 +587,9 @@ namespace LearningBPandLM
         public void PrintStatus()
         {
             Program.PrintLongLine();
-            Console.Write("Epoka: {0} {3}ms  tMSE: {1:N4}\ttAcc: {2:N2}%", 
+            Console.Write("Epoka: {0} {3}ms  tMSE: {1:N4}\ttAcc: {2:N2}%",
                 epochCounter, trainingSetMSE, trainingSetAccuracy, durationOfEachEpoch[epochCounter]);
-            Console.WriteLine("\tgMSE: {0:N4}\t gAcc: {1:N2}%\t", 
+            Console.WriteLine("\tgMSE: {0:N4}\t gAcc: {1:N2}%\t",
                 generalizationSetMSE, generalizationSetAccuracy);
             Program.PrintLongLine();
         }
@@ -600,7 +615,7 @@ namespace LearningBPandLM
         /// </summary>
         /// <param name="durationHashtable">Hashtable durationOfEachEpoch</param>
         /// <returns>durationOfEachEpoch.Average()</returns>
-        private static double calcMeanDuration(Hashtable durationOfEachEpoch) 
+        private static double calcMeanDuration(Hashtable durationOfEachEpoch)
         {
             long total = new long();
 

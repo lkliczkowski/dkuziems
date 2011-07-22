@@ -3,7 +3,7 @@ using System.IO;
 
 namespace ZScore
 {
-    partial class ZScore
+    partial class ZScoreData
     {
         private static bool CSVread(string path, ref Column<string>[] Data)
         {

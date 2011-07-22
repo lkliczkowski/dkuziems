@@ -3,7 +3,7 @@ using System.IO;
 
 namespace ZScore
 {
-    partial class ZScore
+    partial class ZScoreData
     {
         private static bool CSVwrite(string path, Column<double>[] toWrite)
         {

@@ -1,6 +1,8 @@
 //------------------------------------------------------------------------
 // Korzystam z tej bibliotegi w celu obliczenia macierzy odwrotnej
-// (funkcja public static double[,] Inverse(double[,] Mat))
+// (funkcja public static double[,] Inverse(double[,] Mat)),
+//  rozk³adu wed³ug wartoœci osobliwych (funkacja public static void 
+//  SVD(double[,] Mat_, out double[,] S_, out double[,] U_, out double[,] V_))
 //
 // Author      : Anas Abidi
 // Date        : 18 Dec 2004
@@ -35,7 +37,7 @@ namespace MatrixLibrary
 	class MatrixDeterminentZero: ApplicationException
 	{
 		public MatrixDeterminentZero():
-            base("Wyznacznik macierzy równy zeru") { }
+			base("Wyznacznik macierzy równy zeru") { }
 		//	base("Determinent of matrix equals zero, inverse can't be found !"){}
 	}
 	class VectorDimensionException: ApplicationException
@@ -62,7 +64,7 @@ namespace MatrixLibrary
 	public class Matrix
 	{
 		private double[,] in_Mat;
-        
+		
 		#region "Class Constructor and Indexer"
 		/// <summary>
 		/// Matrix object constructor, constructs an empty
@@ -157,7 +159,7 @@ namespace MatrixLibrary
 			//Find The dimensions !!
 			try{Find_R_C(Mat,out Rows);}
 			catch{throw new MatrixNullException();}
-            
+			
 			double[,] Sol = new double[Rows+1,1];
 
 			for (int i=0; i<=Rows;i++)
@@ -186,7 +188,7 @@ namespace MatrixLibrary
 			catch{throw new MatrixNullException();}
 
 			if (Cols!=0) throw new MatrixDimensionException();
-            
+			
 			double[] Sol = new double[Rows+1];
 
 			for (int i=0; i<=Rows;i++)
@@ -272,7 +274,7 @@ namespace MatrixLibrary
 		/// <returns>Sum of Mat1 and Mat2 as a Matrix object</returns>
 		public static Matrix operator+(Matrix Mat1, Matrix Mat2)
 		{return new Matrix(Add(Mat1.in_Mat,Mat2.in_Mat));}
-        #endregion
+		#endregion
 
 		#region "Subtract Matrices"
 
@@ -336,9 +338,9 @@ namespace MatrixLibrary
 		/// <returns>Difference of Mat1 and Mat2 as a Matrix object</returns>
 		public static Matrix operator-(Matrix Mat1, Matrix Mat2)
 		{return new Matrix(Subtract(Mat1.in_Mat,Mat2.in_Mat));}
-        #endregion
+		#endregion
 
-	    #region "Multiply Matrices"
+		#region "Multiply Matrices"
 		
 		/// <summary>
 		/// Returns the multiplication of two matrices with compatible 
@@ -430,7 +432,7 @@ namespace MatrixLibrary
 				return new Matrix(Multiply(Mat1.in_Mat,Mat2.in_Mat));
 			}
 		}
-	    #endregion
+		#endregion
 
 		#region "Determinant of a Matrix"		
 		/// <summary>
@@ -613,7 +615,7 @@ namespace MatrixLibrary
 
 			for (i = 0; i<=Rows;i++)
 				for (j = 0; j<= Cols;j++) Tr_Mat[j, i] = Mat[i, j];
-            
+			
 			return Tr_Mat;
 		}		
 		
@@ -678,7 +680,7 @@ namespace MatrixLibrary
 				{A[row,col] = Mat_[row-1,col-1];}
 
 //			const int NMAX = 100;
-            const int NMAX = 2048;
+			const int NMAX = 2048;
 			v = new double[NP+1, NP+1];
 			w = new double[NP+1];
 
@@ -688,7 +690,7 @@ namespace MatrixLibrary
 			double[,] U_temp, S_temp, V_temp;
 			double anorm, c, f, g, h, s, scale, x, y, z;
 			double [] rv1 = new double[NMAX];
-            
+			
 			l=0;
 			nm = 0;
 			g = 0.0;
@@ -743,15 +745,15 @@ namespace MatrixLibrary
 						g = -Sign(Math.Sqrt(s),f);
 						h=f*g-s;
 						A[i,l]=f-g;
-                        try
-                        {
-                            for (k = l; k <= n; k++)
-                                rv1[k] = A[i, k] / h;
-                        }
-                        catch
-                        {
-                            Console.WriteLine();
-                        }
+						try
+						{
+							for (k = l; k <= n; k++)
+								rv1[k] = A[i, k] / h;
+						}
+						catch
+						{
+							Console.WriteLine();
+						}
 						if (i != m) 
 						{
 							for (j=l;j<=m;j++) 
@@ -1076,7 +1078,7 @@ namespace MatrixLibrary
 					Dum = 1.0 / A[j, j];
 					for (i = j + 1; i<=N; i++)
 						A[i, j] = A[i, j] * Dum;
-          
+		  
 				}
 			}
 
@@ -1244,7 +1246,7 @@ namespace MatrixLibrary
 					Dum = 1.0 / A[j, j];
 					for (i = j + 1; i<=N; i++)
 						A[i, j] = A[i, j] * Dum;
-          
+		  
 				}
 			}
 			if (A[N, N] == 0.0) A[N, N] = TINY;
@@ -1388,7 +1390,7 @@ namespace MatrixLibrary
 					MulAdd = 0;
 				}
 			}
-      
+	  
 			for (i = 0;i < m; i++)
 			{
 				for (j = 0; j < n; j++)

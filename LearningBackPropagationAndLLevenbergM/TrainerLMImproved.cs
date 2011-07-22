@@ -3,6 +3,7 @@ using System.Linq;
 using System.IO;
 using System.Diagnostics;
 using System.Collections;
+using MatrixLibrary;
 
 namespace LearningBPandLM
 {
@@ -45,42 +46,41 @@ namespace LearningBPandLM
         /// wspolczynnik tlumienia, wykorzystywany w trakcie aktualizacji wag,
         /// najczesciej oznaczany jako \mi lub \lambda
         /// </summary>
-        double coefficientMI;
+        private double coefficientMI;
 
         /// <summary>
         /// wspolczynnik przystosowania V - jezeli wspolczynnik tlumienia \mi ma zostac
         /// zwiekszony to mnozymy go przez V, jezeli zmniejszony to dzielimy go przez V
         /// </summary>
-        double adjustmentFactorV;
+        private double adjustmentFactorV;
 
         /// <summary>
         /// Wektor bledu, wyliczanyw dla kazdej probki w kazdej probce blad
         /// e = actual_output - desired
         /// </summary>
-        double error;
+        private double error;
 
         /// <summary>
-        /// Wektor Nx1 wyznaczajacy rzyrost/zmiany wag
+        /// Wektor Nx1 wyznaczajacy przyrost/zmiany wag
         /// </summary>
         private double[] deltaWeights;
 
         /// <summary>
-        /// domyślna wartość startowa współczynnika "tłumienia"
-        /// </summary>
-        double mi_default;
-        /// <summary>
         /// Maksymalna wielkość współczynnika \mi
         /// </summary>
-        const double MAX_MI = 100000000000000000;
+        private const double MaxMiCoefficient = 100000;
         /// <summary>
         /// Minimalna wielkość współczynnika \mi
         /// </summary>
-        const double MIN_MI = 0.00000000000000000000000000001;
+        private const double MinMiCoefficient = 0.000000001;
+        /// <summary>
+        /// domyślna wartość startowa współczynnika "tłumienia"
+        /// </summary>
+        private double defaultMi;
         /// <summary>
         /// wspołczynnik przystosowania, wartosc domyślna
         /// </summary>
-        const double V_DEFAULT = 10;
-
+        private const double VDefault = 10;
         #endregion
 
         #region parametry cyklu nauczania sieci
@@ -93,18 +93,18 @@ namespace LearningBPandLM
         /// <summary>
         /// Licznik epok, informuje nas o aktualnej epoce
         /// </summary>
-        ulong epochCounter;
+        private ulong epochCounter;
         /// <summary>
         /// Maksymalna ilość epok
         /// </summary>
-        ulong maxEpochs;
+        private ulong maxEpochs;
 
         /// <summary>
         /// Zbior danych, klasa ZScore zawiera zstandaryzowane dane:
         /// Dataset.sample(i) - i-ta probka danych (WE) 
         /// Dataset.target(i) - i-ta wartosc docelowa (WY) dla i-tej probki
         /// </summary>
-        private ZScore.ZScore Dataset;
+        private ZScore.ZScoreData Dataset;
         /// <summary>
         /// Zbior indeksow wydzielajacych zbiory danych
         /// DatasetIndexes.TrainingSet - int[] dane trenujace (uczace)
@@ -115,35 +115,46 @@ namespace LearningBPandLM
         /// <summary>
         /// docelowa dokladnosc modelu
         /// </summary>
-        double desiredAccuracy;
+        private double desiredAccuracy;
         //TODO - desiredAcc
 
         /// <summary>
         /// celnosc modelu dla kazdej z epok dla zbioru trenujacego
         /// </summary>
-        double trainingSetAccuracy;
+        private double trainingSetAccuracy;
         /// <summary>
         /// celnosc modelu dla kazdej z epok dla zbioru testujacego
         /// </summary>
-        double generalizationSetAccuracy;
+        private double generalizationSetAccuracy;
 
         /// <summary>
         /// suma kwadratow bledu dla zbioru trenujacego
         /// </summary>
-        double trainingSetMSE;
+        private double trainingSetMSE;
         /// <summary>
         /// suma kwadratow bledu dla zbioru testujacego
         /// </summary>
-        double generalizationSetMSE;
+        private double generalizationSetMSE;
+        /// <summary>
+        /// Wartosci MSE uzyskane w poprzednich epokach
+        /// </summary>
+        private double previousTrainingSetMSE, previousGeneralizationSetMSE;
 
-        double previousTrainingSetMSE, previousGeneralizationSetMSE;
+        /// <summary>
+        /// Okresla sposob postepowania z odwracaniem macierzy osobliwych
+        /// </summary>
+        private readonly SingularMatrixProceeding ProceedingWithSingularMatrix;
+
+        /// <summary>
+        /// Domyslne zachowanie podczas proby odwrocenia macierzy osobliwej
+        /// </summary>
+        private const SingularMatrixProceeding DefaultProceedingWithSingularMatrix = SingularMatrixProceeding.Regularization;
 
         /// <summary>
         /// Czy w trakcie nauczania ma zwracać uwagę na polepszenie wyniku MSE dla GeneralizationSet 
         /// i nie odrzucać zmian, które mogą być korzystne
         /// </summary>
-        bool useGen;
-
+        private bool useGen;
         #endregion
 
         #region dodatkowe parametry
@@ -151,12 +162,12 @@ namespace LearningBPandLM
         /// <summary>
         /// nazwa pliku z wynikami pomiarów
         /// </summary>
-        string RESULTS;
+        private string resultsFileName;
 
         /// <summary>
         /// nazwa pliku do ktorego zostana zapisane najlepsze wagi oraz wybrane (customWeightsOutputFile)
         /// </summary>
-        string weightsOutputFile, customWeightsOutputFile;
+        private string weightsOutputFile, customWeightsOutputFile;
 
         /// <summary>
         /// Przyrost - dla metody skonczonych roznic
@@ -166,45 +177,62 @@ namespace LearningBPandLM
         /// <summary>
         /// flaga czy kontynuowac nauczanie
         /// </summary>
-        bool trainingComplete;
+        private bool trainingComplete;
 
-        Hashtable durationOfEachEpoch;
-        Stopwatch timer;
+        /// <summary>
+        /// Zawiera wyliczenia dlugosci czasowych poszczegolnych epok
+        /// </summary>
+        private Hashtable durationOfEachEpoch;
+        /// <summary>
+        /// Uzywany do mierzenia probek czasowych
+        /// </summary>
+        private Stopwatch timer;
+
+        /// <summary>
+        /// Flaga czy uruchomienie programu ma przebiec automatycznie czy manualnie
+        /// </summary>
+        private bool automatedRun = false;
 
         #endregion
 
         #region konstruktory
 
-        public TrainerLMImproved(ZScore.ZScore dataset)
+        public TrainerLMImproved(ZScore.ZScoreData dataset)
             : this(dataset, (dataset.sample(0).Length > 40) ?
             (dataset.sample(0).Length / 4 - 1) :
             dataset.sample(0).Length / 2 - 1,
-            1500, 99, 0.001, V_DEFAULT, 15, false)
-        {}
+            1500, 99, 0.001, VDefault, 15,
+            DefaultProceedingWithSingularMatrix, 
+            false, false)
+        { }
 
-        public TrainerLMImproved(ZScore.ZScore dataset, int hiddenNodeRatio, ulong mE, double dAcc, double cMi, double aFV, int sz, bool uGen)
+        public TrainerLMImproved(ZScore.ZScoreData dataset, int hiddenNodeRatio, ulong mE, double dAcc, 
+            double cMi, double aFV, int sz, SingularMatrixProceeding smp, bool uGen, bool runAutomated)
         {
 
             Dataset = dataset;
             DatasetIndexes = new DatasetOperateWindowed(Dataset.NormalizedData[0].GetNum(), sz);
 
-            NN = new neuralNetwork(Dataset.sample(0).Length, hiddenNodeRatio, 1, Dataset.DataType, ActivationFuncType.Sigmoid, ActivationFuncType.Sigmoid);
+            NN = new neuralNetwork(Dataset.sample(0).Length, hiddenNodeRatio, 1, Dataset.DataType, 
+                ActivationFuncType.Sigmoid, ActivationFuncType.Sigmoid);
 
             trainingSetMSE = generalizationSetMSE = double.MaxValue;
             maxEpochs = mE;
             desiredAccuracy = dAcc;
-            coefficientMI = mi_default = cMi;
+            coefficientMI = defaultMi = cMi;
             adjustmentFactorV = aFV;
+            ProceedingWithSingularMatrix = smp;
             useGen = uGen;
+            automatedRun = runAutomated;
 
             createFileNames();
             durationOfEachEpoch = new Hashtable();
             timer = new Stopwatch();
 
-            N = (NN.numInput + 1) * NN.numHidden 
+            N = (NN.numInput + 1) * NN.numHidden
                 + (NN.numHidden + 1) * NN.numOutput; //liczba wag = N
-            vectorJ = new double[ N ];
-            subvectorETA = new double[ N ];
+            vectorJ = new double[N];
+            subvectorETA = new double[N];
             //error = new double[numTrainingPatternsInSingleEpoch];
             error = new double();
             submatrixQ = initArray(submatrixQ, N, N);
@@ -226,21 +254,23 @@ namespace LearningBPandLM
         public bool TrainNetwork()
         {
             //uchwyt do pliku w ktorym zapisujemy wyniki
-            TextWriter saveResult = new StreamWriter(RESULTS);
+            TextWriter saveResult = new StreamWriter(resultsFileName);
 
             //inicjalizacja licznika epok oraz wag oraz flagi
             epochCounter = 0;
 
             trainingComplete = false;
 
-            Console.Write("\nNaciśnij dowolny przycisk by rozpocząć nauczanie sieci...\n");
-            Console.ReadKey();
-
+            if (!automatedRun)
+            {
+                Console.Write("\nNaciśnij dowolny przycisk by rozpocząć nauczanie sieci...\n");
+                Console.ReadKey();
+            }
             ShowOptions();
 
             //naglowki w pliku z wynikami
             saveResult.WriteLine("#LMtraining: default μ = {0}, V = {1}, NN: {2}(+1):{3}(+1):{4}",
-                mi_default, adjustmentFactorV, NN.numInput, NN.numHidden, NN.numOutput);
+                defaultMi, adjustmentFactorV, NN.numInput, NN.numHidden, NN.numOutput);
             saveResult.WriteLine("#{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t",
                 "epoch", "tMSE", "tAcc", "gMSE", "gAcc", "ms");
             saveResult.Flush();
@@ -254,8 +284,10 @@ namespace LearningBPandLM
             previousTrainingSetMSE = trainingSetMSE;
             previousGeneralizationSetMSE = generalizationSetMSE;
 
-            //while ((trainingSetAccuracy < desiredAccuracy || generalizationSetAccuracy < desiredAccuracy)
-            //    && epochCounter < maxEpochs && !trainingComplete)
+            //TODO usunac potem - test only
+            if (epochCounter == 0 && trainingSetMSE < 0.35)
+                ShowOptions();
+
             while (epochCounter < maxEpochs && !trainingComplete)
             {
                 timer.Restart();
@@ -264,7 +296,7 @@ namespace LearningBPandLM
                 if (runTrainingEpoch(DatasetIndexes.TrainingSet))
                 {
                     timer.Stop();
-                    durationOfEachEpoch.Add(epochCounter+1, timer.ElapsedMilliseconds);
+                    durationOfEachEpoch.Add(epochCounter + 1, timer.ElapsedMilliseconds);
 
                     //kolejna epoka, zwiekszamy licznik
                     epochCounter++;
@@ -292,11 +324,6 @@ namespace LearningBPandLM
 
                     PrintStatus();
 
-                    //co n-ta epoke pyta co zrobic
-                    if (epochCounter % 5 == 0)
-                    {
-//                        ShowOptions();
-                    }
                 }
                 else
                 {
@@ -308,13 +335,13 @@ namespace LearningBPandLM
 
                     saveResult.WriteLine("#ended");
 
-                    for(++epochCounter ; epochCounter <= maxEpochs; ++epochCounter)
+                    for (++epochCounter; epochCounter <= maxEpochs; ++epochCounter)
                     {
                         fillResults(saveResult);
                     }
                     trainingComplete = true;
                 }
-                
+
             }
             saveResult.WriteLine("#ms.average(): {0}", calcMeanDuration(durationOfEachEpoch));
             saveResult.Flush();
@@ -337,7 +364,7 @@ namespace LearningBPandLM
 
             while (!epochComplete)
             {
-                if (coefficientMI > MAX_MI || coefficientMI < MIN_MI)
+                if (coefficientMI > MaxMiCoefficient || coefficientMI < MinMiCoefficient)
                     epochComplete = true;
 
                 Debug.WriteLine(">> feedforward, backward");
@@ -345,11 +372,10 @@ namespace LearningBPandLM
                 {
                     //wyliczamy wyjscia i propagujemy wstecz
                     NN.feedForward(Dataset.sample(trainingSet[i]));
-                    
 
                     //faza wstecz
                     backward(Dataset.target(trainingSet[i]), i);
-                    
+
                 }
 
                 Debug.WriteLine(">> update weights");
@@ -358,15 +384,15 @@ namespace LearningBPandLM
                     Debug.WriteLine(">>>> if (updateWeights()) (true)");
                     recalcMSE();
 
-                    Debug.WriteLine(">> {0:N3}>{1:N3} ({4}) || {6} {2:N3} > {3:N3} ({5})", 
+                    Debug.WriteLine(">> {0:N3}>{1:N3} ({4}) || {6} {2:N3} > {3:N3} ({5})",
                         previousTrainingSetMSE, trainingSetMSE,
                         previousGeneralizationSetMSE, generalizationSetMSE,
                         (previousTrainingSetMSE > trainingSetMSE) ? "T" : "F",
                         (previousGeneralizationSetMSE > generalizationSetMSE) ? "T" : "F",
-                        useGen?"[T]":"[F]");
+                        useGen ? "[T]" : "[F]");
 
                     //jezeli kwadrat sumy bledow sie zmniejszyl
-                    if (previousTrainingSetMSE > trainingSetMSE || ((previousGeneralizationSetMSE > generalizationSetMSE)&&useGen))
+                    if (previousTrainingSetMSE > trainingSetMSE || ((previousGeneralizationSetMSE > generalizationSetMSE) && useGen))
                     {
                         Debug.WriteLine(">> true");
 
@@ -391,7 +417,7 @@ namespace LearningBPandLM
                         recalcMSE();
                         Debug.WriteLine(">> Wagi przywrócone (tMSE: {0})", trainingSetMSE);
 
-                        if (coefficientMI > MAX_MI || coefficientMI < MIN_MI)
+                        if (coefficientMI > MaxMiCoefficient || coefficientMI < MinMiCoefficient)
                             return false;
 
                         Debug.WriteLine(">> false");
@@ -402,16 +428,16 @@ namespace LearningBPandLM
 
                         if (!miMsgShown)
                         {
-                            Console.WriteLine("\nNieudana zmiana wag" 
+                            Console.WriteLine("\nNieudana zmiana wag"
                                 + " (błąd dla zmienionych wag przyjmuje większa wartość)\n"
                                 + "zmiany wag cofnięte, zmiana wartości współczynnika μ:");
                             miMsgShown = true;
                         }
-                        Console.Write("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b" 
+                        Console.Write("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
                             + "\b\b\b\b\b\b{0}", coefficientMI);
 
-		        DatasetIndexes.IncreaseRange();
-		        Debug.WriteLine(">> SampleChangedToNext errDecFail ({0})", DatasetIndexes.TrainingSet.Length);
+                        DatasetIndexes.IncreaseRange();
+                        Debug.WriteLine(">> SampleChangedToNext errDecFail ({0})", DatasetIndexes.TrainingSet.Length);
                     }
                 }
                 else
@@ -424,7 +450,7 @@ namespace LearningBPandLM
                     recalcMSE();
                     Debug.WriteLine(">> Wagi przywrócone (tMSE: {0})", trainingSetMSE);
 
-                    if (coefficientMI > MAX_MI || coefficientMI < MIN_MI)
+                    if (coefficientMI > MaxMiCoefficient || coefficientMI < MinMiCoefficient)
                         return false;
 
                     //powtarzamy iteracje epochComplete == false
@@ -446,7 +472,7 @@ namespace LearningBPandLM
                 }
             }
 
-            if (coefficientMI > MAX_MI || coefficientMI < MIN_MI)
+            if (coefficientMI > MaxMiCoefficient || coefficientMI < MinMiCoefficient)
             {
                 NN.RestoreWeightsWithPrevious();
                 recalcMSE();
@@ -466,13 +492,11 @@ namespace LearningBPandLM
         {
             //odliczamy aktualny blad sieci dla wyjscia dla aktualnej probki
             error = desiredOutputs - NN.OutputNeurons[0];
-            //error[sampleNum] = desiredOutputs - NN.outputNeurons[0];
-
 
             //lista pochodnych dla funkcji bledu oraz sum wazonych 
             //D(e_ij)/D(net_ij)
             double[] s = new double[NN.numHidden + NN.numOutput];
-            s[s.Length - 1] =  derivativeOfNetsSigmoid(NN.OutputNets[0]);
+            s[s.Length - 1] = derivativeOfNetsSigmoid(NN.OutputNets[0]);
             for (int i = s.Length - 2; i >= 0; --i)
             {
                 s[i] = derivativeOfNetsSigmoid(NN.HiddenNets[i]) * NN.wHiddenOutput[i][0] * (-s.Last());
@@ -507,7 +531,6 @@ namespace LearningBPandLM
             for (int i = 0; i < N; i++)
             {
                 subvectorETA[i] = vectorJ[i] * error;
-                //subvectorETA[i] = vectorJ[i] * error[sampleNum];
             }
 
             //Q = Q + q
@@ -515,7 +538,7 @@ namespace LearningBPandLM
             {
                 for (int m = 0; m < N; m++)
                 {
-                    matrixQ[n][m] = matrixQ[n][m] + submatrixQ[n][m]; 
+                    matrixQ[n][m] = matrixQ[n][m] + submatrixQ[n][m];
                 }
             }
 
@@ -526,6 +549,10 @@ namespace LearningBPandLM
             }
         }
 
+        /// <summary>
+        /// Aktualizacja wag
+        /// </summary>
+        /// <returns>True jesli wagi zostaly zmienione, False jesli nie zostaly zmienione</returns>
         private bool updateWeights()
         {
             //zmiana wag = (Q + \mi*I)^{-1} * g
@@ -540,6 +567,7 @@ namespace LearningBPandLM
 
             double[][] invertedMatrix = matrixQ;
 
+            //proba odwrocenia macierzy "normalnie"
             try
             {
                 //(Q + /mi * I)^(-1)
@@ -548,111 +576,104 @@ namespace LearningBPandLM
             }
             catch (MatrixLibrary.MatrixDeterminentZero)
             {
-                Debug.WriteLine(">> {0}:: SVD", epochCounter);
-                //rozklad wedlug wartosci osobliwych (Singular Value Decomposition)
-                // Matrix = U x S x V'
-                double[,] U, S, V;
-                try
+                switch (ProceedingWithSingularMatrix)
                 {
-                    MatrixLibrary.Matrix.SVD(jaggedArrayToMultidimensionalArray(matrixQ), out S, out U, out V);
-                    Debug.WriteLine(">> Q = U[{0}x{1}] x S[{2}x{3}] x [{4}x{5}]", U.GetLength(0), U.GetLength(1), 
-                        S.GetLength(0), S.GetLength(1), V.GetLength(0), V.GetLength(1));
 
-                    // Matrix^{-1} = V x S^{-1} x U'
-                    try
-                    {
-                        S = MatrixLibrary.Matrix.Inverse(S);
-                    }
-                    catch (MatrixLibrary.MatrixDeterminentZero)
-                    {
+                    //regularyzacja i ponowne odwrocenie
+                    case SingularMatrixProceeding.Regularization:
+
+                        Debug.WriteLine(">> {0}:: Regularization", epochCounter);
+                        //wspolczynnik regularyzacji
+                        double factor = 0;
+                        for (int i = 0; i < matrixQ.Length; i++)
+                            factor += matrixQ[i][i];
+
+                        for (int n = 0; n < N; n++)
+                            matrixQ[n][n] += factor;
+
                         try
                         {
-                            S = MatrixLibrary.Matrix.PINV(S);
-                            Debug.WriteLine(">> Pseudo-Inverse for S success");
+                            invertedMatrix = multidimensionalArrayToJaggedArray
+                                (MatrixLibrary.Matrix.Inverse(jaggedArrayToMultidimensionalArray(matrixQ)));
                         }
-                        catch
+                        catch (MatrixLibrary.MatrixDeterminentZero)
                         {
-                            Debug.WriteLine(">> Pseudo-Inverse for S failed");
+                            Debug.WriteLine(">> Regularization didn't work!");
                             return false;
                         }
-                    }
+                        break;
 
-                    invertedMatrix = multidimensionalArrayToJaggedArray
-                        (MatrixLibrary.Matrix.Multiply(MatrixLibrary.Matrix.Multiply(V, S),
-                            MatrixLibrary.Matrix.Transpose(U)));
 
-                }
-                catch
-                {
-                    Debug.WriteLine(">> SVD niepowodzenie!");
-                    try
-                    {
-                        invertedMatrix = multidimensionalArrayToJaggedArray
-                            (MatrixLibrary.Matrix.Inverse(jaggedArrayToMultidimensionalArray(matrixQ)));
-                    }
-                    catch
-                    {
-                        Debug.WriteLine(">> PINV niepowodzenie! return;");
+                    //rozklad wedlug wartosci osobliwych (Singular Value Decomposition)
+                    case SingularMatrixProceeding.SVD:
+                        Debug.WriteLine(">> {0}:: SVD", epochCounter);
+
+                        // Matrix = U x S x V'
+                        double[,] U, S, V;
+                        try
+                        {
+                            MatrixLibrary.Matrix.SVD(jaggedArrayToMultidimensionalArray(matrixQ), out S, out U, out V);
+                            Debug.WriteLine(">> Q = U[{0}x{1}] x S[{2}x{3}] x [{4}x{5}]", U.GetLength(0), U.GetLength(1),
+                                S.GetLength(0), S.GetLength(1), V.GetLength(0), V.GetLength(1));
+
+                            // Matrix^{-1} = V x S^{-1} x U'
+                            try
+                            {
+                                S = MatrixLibrary.Matrix.Inverse(S);
+                            }
+                            catch (MatrixLibrary.MatrixDeterminentZero)
+                            {
+                                try
+                                {
+                                    S = MatrixLibrary.Matrix.PINV(S);
+                                    Debug.WriteLine(">> Pseudo-Inverse for S success");
+                                }
+                                catch (MatrixLibrary.MatrixDeterminentZero)
+                                {
+                                    Debug.WriteLine(">> Pseudo-Inverse for S failed");
+                                    return false;
+                                }
+                            }
+
+                            invertedMatrix = multidimensionalArrayToJaggedArray
+                                (MatrixLibrary.Matrix.Multiply(MatrixLibrary.Matrix.Multiply(V, S),
+                                    MatrixLibrary.Matrix.Transpose(U)));
+
+                        }
+                        catch (MatrixLibrary.MatrixDeterminentZero)
+                        {
+                            Debug.WriteLine(">> SVD fail!");
+                            try
+                            {
+                                invertedMatrix = multidimensionalArrayToJaggedArray
+                                    (MatrixLibrary.Matrix.PINV(jaggedArrayToMultidimensionalArray(matrixQ)));
+                            }
+                            catch (MatrixLibrary.MatrixDeterminentZero)
+                            {
+                                Debug.WriteLine(">> PINV niepowodzenie! return;");
+                                return false;
+                            }
+
+                        }
+                        break;
+
+                    case SingularMatrixProceeding.PINV:
+                        Debug.WriteLine(">> {0}:: PINV", epochCounter);
+                        try
+                        {
+                            invertedMatrix = multidimensionalArrayToJaggedArray
+                                (MatrixLibrary.Matrix.PINV(jaggedArrayToMultidimensionalArray(matrixQ)));
+                        }
+                        catch (MatrixLibrary.MatrixDeterminentZero)
+                        {
+                            return false;
+                        }
+                        break;
+
+                    case SingularMatrixProceeding.None:
+                    default:
                         return false;
-                    }
-                    
                 }
-               
-            }
-
-            for (int n = 0; n < N; n++)
-            {
-                for (int m = 0; m < N; m++)
-                {
-                    deltaWeights[n] += invertedMatrix[n][m] * gradientVectorG[m];
-                }
-            }
-
-            int c = 0;
-            for (int i = 0; i < NN.numInput + 1; i++)
-            {
-                for (int j = 0; j < NN.numHidden; j++)
-                {
-                    NN.wInputHidden[i][j] -= deltaWeights[c];
-                    c++;
-                }
-            }
-
-            for (int i = 0; i < NN.numHidden + 1; i++)
-            {
-                for (int j = 0; j < NN.numOutput; j++)
-                {
-                    NN.wHiddenOutput[i][j] -= deltaWeights[c];
-                    c++;
-                }
-            }
-
-            return true;
-        }
-
-        private bool updateWeightsWithoutSVD()
-        {
-            //zmiana wag = (Q + \mi*I)^{-1} * g
-            double[][] delta = new double[N][];
-            delta = initArray(delta, N, N);
-
-            //Q + /mi * I
-            for (int n = 0; n < N; n++)
-            {
-                matrixQ[n][n] += coefficientMI;
-            }
-
-            double[][] invertedMatrix = matrixQ;
-
-            try
-            {
-                //(Q + /mi * I)^(-1)
-                invertedMatrix = multidimensionalArrayToJaggedArray
-                    (MatrixLibrary.Matrix.Inverse(jaggedArrayToMultidimensionalArray(matrixQ)));
-            }
-            catch (MatrixLibrary.MatrixDeterminentZero)
-            {
-                return false;
             }
 
             for (int n = 0; n < N; n++)
@@ -760,10 +781,12 @@ namespace LearningBPandLM
         /// </summary>
         private void createFileNames()
         {
-            RESULTS = String.Format("wynik_{0}_LM-{1}-{2}-{3}-{4}.txt",
+
+            resultsFileName = String.Format("wynik_{0}_LM-{1}-{2}-{3}-{4}-{5}.txt",
                 Enum.GetName(typeof(ZScore.EnumDataTypes), (int)Dataset.DataType),
-                NN.numHidden.ToString(), maxEpochs.ToString(), 
-                coefficientMI.ToString(), adjustmentFactorV.ToString());
+                NN.numHidden.ToString(), coefficientMI.ToString(), adjustmentFactorV.ToString(),
+                Enum.GetName(typeof(SingularMatrixProceeding), ProceedingWithSingularMatrix),
+                useGen ? "T" : "F");
             weightsOutputFile = String.Format("weights_{0}_LM-{1}.txt",
                 Enum.GetName(typeof(ZScore.EnumDataTypes), (int)Dataset.DataType),
                 NN.numHidden.ToString());
@@ -785,16 +808,18 @@ namespace LearningBPandLM
             Console.WriteLine("Docelowa dokładność modelu:\t{0}%\n", desiredAccuracy);
             Console.WriteLine("Wielkość próbki treningowej: {0}, \nRozmiar zbioru walidacyjnego: {1}",
                 DatasetIndexes.TrainingSet.Length, DatasetIndexes.GeneralizationSet.Length);
-            Console.WriteLine("Korzysta ze wiedzy o aktualnym błędzie na zbiorze walidacyjnym? {0}\n", 
-                useGen?"Prawda":"Fałsz");
+            Console.WriteLine("Postępowanie w przypadku macierzy osobliwych: {0}", 
+                Enum.GetName(typeof(SingularMatrixProceeding), ProceedingWithSingularMatrix));
+            Console.WriteLine("Korzysta ze wiedzy o aktualnym błędzie na zbiorze walidacyjnym? {0}\n",
+                useGen ? "Prawda" : "Fałsz");
         }
 
         public void PrintStatus()
         {
             Program.PrintLongLine();
-            Console.Write("Epoka: {0} {3}ms  tMSE: {1:N4}\ttAcc: {2:N2}%", 
+            Console.Write("Epoka: {0} {3}ms  tMSE: {1:N4}\ttAcc: {2:N2}%",
                 epochCounter, trainingSetMSE, trainingSetAccuracy, durationOfEachEpoch[epochCounter]);
-            Console.WriteLine("\tgMSE: {0:N4}\t gAcc: {1:N2}%\t", 
+            Console.WriteLine("\tgMSE: {0:N4}\t gAcc: {1:N2}%\t",
                 generalizationSetMSE, generalizationSetAccuracy);
             Program.PrintLongLine();
         }
@@ -872,7 +897,11 @@ namespace LearningBPandLM
         /// </summary>
         public void ShowOptions()
         {
-            if (!trainingComplete)
+            if (automatedRun)
+            {
+                Console.WriteLine("Zautomatyzowany przebieg programu.");
+            }
+            else if (!trainingComplete)
             {
                 Console.WriteLine("[Enter] by kontynuować, [1] Zapisac wagi, [2] Wczytac wagi, [3] Przerwac");
                 int option;
@@ -1016,8 +1045,15 @@ namespace LearningBPandLM
             {
                 total += l;
             }
-
-            return (double)(total / durationOfEachEpoch.Count);
+            try
+            {
+                return (double)(total / durationOfEachEpoch.Count);
+            }
+            catch (DivideByZeroException e)
+            {
+                Debug.WriteLine("Not a single epoch? {0}", e.Message);
+                return (double)total;
+            }
         }
 
         private static double[][] multidimensionalArrayToJaggedArray(double[,] mArray)
@@ -1077,5 +1113,28 @@ namespace LearningBPandLM
                 Console.WriteLine();
             }
         }
+    }
+
+    /// <summary>
+    /// Rodzaj postepowania w przypadku odwracania macierzy osobliwej
+    /// </summary>
+    public enum SingularMatrixProceeding
+    {
+        /// <summary>
+        /// Regularyzuj macierz (Tikhonov-Miller regularization)
+        /// </summary>
+        Regularization,
+        /// <summary>
+        /// Singular value decomposition
+        /// </summary>
+        SVD,
+        /// <summary>
+        /// Moore–Penrose pseudoinverse
+        /// </summary>
+        PINV,
+        /// <summary>
+        /// Nie podejmuj prob odwracania gdy wyznacznik jest rowny zero
+        /// </summary>
+        None,
     }
 }

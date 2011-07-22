@@ -43,6 +43,11 @@ namespace ZScore
             return cell.Count();
         }
 
+        /// <summary>
+        /// usuwa wskazany przedzial danych
+        /// </summary>
+        /// <param name="from">index od</param>
+        /// <param name="to">index do</param>
         public void RemoveRange(int from, int to)
         {
             try

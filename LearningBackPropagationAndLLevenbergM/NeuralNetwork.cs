@@ -125,7 +125,7 @@ namespace LearningBPandLM
         /// <param name="Dataset">caly zbior danych</param>
         /// <param name="setIndex">indeksy wyznaczajace podzbior</param>
         /// <returns>x% poprawnie sklasyfikowanych przypadkow</returns>
-        public double getAccuracy(ZScore.ZScore Dataset, int[] setIndex)
+        public double getAccuracy(ZScore.ZScoreData Dataset, int[] setIndex)
         {
             double incorrectResults = 0;
 
@@ -158,7 +158,7 @@ namespace LearningBPandLM
         /// <param name="Dataset">zbior</param>
         /// <param name="setIndex">zbior ideksow wyznaczajacy podzbior</param>
         /// <returns>(Sum(desired-actual)^2)</returns>
-        public double calcMSE(ZScore.ZScore Dataset, int[] setIndex)
+        public double calcMSE(ZScore.ZScoreData Dataset, int[] setIndex)
         {
             double mse = 0;
 
@@ -205,8 +205,8 @@ namespace LearningBPandLM
                     if (i != numLayerFrom)
                     {
                         //losowe wagi
-                        //weightList[i][j] = (r.NextDouble() * 2 - 1); // (-1.1)
-                        weightList[i][j] = (r.NextDouble() * 1 - 0.5); // (-0.5,0.5)
+                        weightList[i][j] = (r.NextDouble() * 2 - 1); // (-1.1)
+                        //weightList[i][j] = (r.NextDouble() * 1 - 0.5); // (-0.5,0.5)
                         //weightList[i][j] = 0.1;
                     }
                     else
