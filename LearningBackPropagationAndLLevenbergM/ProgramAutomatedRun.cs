@@ -20,16 +20,15 @@ namespace LearningBPandLM
 
                 AMenu.Show();
             }
-            //automatedRunBP(EnumDataTypes.LetterRecognitionA);
         }
 
         private static void automatedRunBP()
         {
             int hiddenRatioFrom = 2,
-                hiddenRatioTo = 10;
-            double learningRateFrom = 0.0001,
+                hiddenRatioTo = 22;
+            double learningRateFrom = 0.00005,
                 learningRateTo = 0.9;
-            int learningRateMultiplicity = 50;
+            int learningRateMultiplicity = 10;
 
             setOptionsToDefault();
             selectDataForAutomated();
@@ -52,8 +51,8 @@ namespace LearningBPandLM
         private static void automatedRunLM()
         {
             int hiddenRatioFrom = 2,
-                hiddenRatioTo = 10;
-            double coefficientMIFrom = 0.01, 
+                hiddenRatioTo = 22;
+            double coefficientMIFrom = 0.00001, 
                 coefficientMITo = 0.1;
             int coefficientMIMultiplicity = 3;
 

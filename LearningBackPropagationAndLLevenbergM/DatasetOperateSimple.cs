@@ -5,29 +5,27 @@ using System.Linq;
 namespace LearningBPandLM
 {
     /// <summary>
-    /// siec bedzie sie uczyc w kolejnych epokach na kolejnych wycinkach zbioru uczącego
+    /// prosty losowy podzial danych na zbiór treningowy i walidacyjny,
+    /// w każdej epoce algorytm nauczania będzie miał dostęp do całego zbioru uczącego
     /// </summary>
-    class DatasetOperateWindowed : DatasetStructure
+    class DatasetOperateSimple : DatasetStructure
     {
-
         //niedostępny
-        private DatasetOperateWindowed()
+        private DatasetOperateSimple()
         { }
 
         /*
          * Konstruktor glowny
          */
-        public DatasetOperateWindowed(int setLength, int sz)
+        public DatasetOperateSimple(int setLength, int sz)
             : base(setLength, DefaultGeneralizationSetSize, sz)
         {
             actualRange = 0;
-            
-            IncreaseRange();
         }
 
         public override int[] TrainingSet
         {
-            get { return trainingSet.Skip(actualRange).Take(step).ToArray(); }
+            get { return trainingSet.ToArray(); }
         }
 
         /// <summary>
@@ -36,13 +34,7 @@ namespace LearningBPandLM
         /// </summary>
         public override void IncreaseRange()
         {
-            if (actualRange + step >= trainingSet.Count - 1)
-            {
-                MixAgainTrainingData();
-                actualRange = 0;
-            }
-            else
-                actualRange += step;
+            //nic nie rób - pełny zbiór treningowy dostępny
         }
 
         /// <summary>
