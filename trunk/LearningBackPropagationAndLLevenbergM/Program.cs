@@ -20,12 +20,13 @@ namespace LearningBPandLM
 
         //parametry konfiguracyjne
         private static int hiddenNodeRatioPar, sampleSizePar;
-        private static double learningRatePar, desiredAccuracyPar, 
+        private static double learningRatePar, desiredMSEPar, 
             coefficientMIpar, adjustmentFactorVpar;
         private static ulong maxEpochsPar;
+        private static EnumDatasetStructures datasetStructurePar;
         private static SingularMatrixProceeding proceedingWithSingular;
 
-        const string VER = "0.74";
+        const string VER = "0.79";
 
         #endregion
 

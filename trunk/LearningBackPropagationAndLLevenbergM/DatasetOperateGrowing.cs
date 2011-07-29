@@ -5,29 +5,30 @@ using System.Linq;
 namespace LearningBPandLM
 {
     /// <summary>
-    /// siec bedzie sie uczyc w kolejnych epokach na kolejnych wycinkach zbioru uczącego
+    /// siec bedzie sie uczyc w kolejnych epokach na powiekszajacym sie zbiorze uczacym,
+    /// alternatywna metoda do "Growing Dataset" to "Windowed Data set" gdzie sieci
+    /// pokazywane sa kolejne wycinki zbioru uczacego
     /// </summary>
-    class DatasetOperateWindowed : DatasetStructure
+    class DatasetOperateGrowing : DatasetStructure
     {
-
         //niedostępny
-        private DatasetOperateWindowed()
+        private DatasetOperateGrowing()
         { }
 
         /*
          * Konstruktor glowny
          */
-        public DatasetOperateWindowed(int setLength, int sz)
+        public DatasetOperateGrowing(int setLength, int sz)
             : base(setLength, DefaultGeneralizationSetSize, sz)
         {
-            actualRange = 0;
+            actualRange = step;
             
             IncreaseRange();
         }
 
         public override int[] TrainingSet
         {
-            get { return trainingSet.Skip(actualRange).Take(step).ToArray(); }
+            get { return trainingSet.Take(actualRange).ToArray(); }
         }
 
         /// <summary>
@@ -38,8 +39,7 @@ namespace LearningBPandLM
         {
             if (actualRange + step >= trainingSet.Count - 1)
             {
-                MixAgainTrainingData();
-                actualRange = 0;
+                actualRange = trainingSet.Count;
             }
             else
                 actualRange += step;

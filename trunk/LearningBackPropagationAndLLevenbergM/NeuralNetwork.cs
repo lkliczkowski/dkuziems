@@ -50,22 +50,22 @@ namespace LearningBPandLM
         /// <summary>
         /// Wagi input-hidden dla najlepszego generalizationSetMSE
         /// </summary>
-        public double[][] bestWeightInputHidden { get; set; }
+        public double[][] BestWeightInputHidden { get; set; }
         /// <summary>
         /// Wagi hidden-output dla najlepszego generalizationSetMSE
         /// </summary>
-        public double[][] bestWeightHiddenOutput { get; set; }
+        public double[][] BestWeightHiddenOutput { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
-        public double[][] previousWeightsInputHidden { get; set; }
-        public double[][] previousWeightsHiddenOutput { get; set; }
+        private double[][] previousWeightsInputHidden { get; set; }
+        private double[][] previousWeightsHiddenOutput { get; set; }
 
         private double decideOutputRangeA;
         private double decideOutputRangeB;
 
-        ActivationFuncType firstActivationIsSigmoid, secondActivationIsSigmoid;
+        private ActivationFuncType firstActivationIsSigmoid, secondActivationIsSigmoid;
 
         public neuralNetwork(int nInput, int nHidden, int nOutput, ZScore.EnumDataTypes dataType,
             ActivationFuncType firstActivationFunc, ActivationFuncType secondActivationFunc)
@@ -125,7 +125,7 @@ namespace LearningBPandLM
         /// <param name="Dataset">caly zbior danych</param>
         /// <param name="setIndex">indeksy wyznaczajace podzbior</param>
         /// <returns>x% poprawnie sklasyfikowanych przypadkow</returns>
-        public double getAccuracy(ZScore.ZScoreData Dataset, int[] setIndex)
+        public double GetAccuracy(ZScore.ZScoreData Dataset, int[] setIndex)
         {
             double incorrectResults = 0;
 
@@ -133,7 +133,7 @@ namespace LearningBPandLM
             for (int i = 0; i < setIndex.Length; i++)
             {
                 //wyliczamy WY dla kolejnych probek danych
-                feedForward(Dataset.sample(setIndex[i]));
+                FeedForward(Dataset.sample(setIndex[i]));
 
                 //flaga informujaca czy wskazany przypadek zostal dobrze wyliczony przez siec
                 bool correctResult = true;
@@ -158,7 +158,7 @@ namespace LearningBPandLM
         /// <param name="Dataset">zbior</param>
         /// <param name="setIndex">zbior ideksow wyznaczajacy podzbior</param>
         /// <returns>(Sum(desired-actual)^2)</returns>
-        public double calcMSE(ZScore.ZScoreData Dataset, int[] setIndex)
+        public double CalcMSE(ZScore.ZScoreData Dataset, int[] setIndex)
         {
             double mse = 0;
 
@@ -166,7 +166,7 @@ namespace LearningBPandLM
             for (int i = 0; i < setIndex.Length; i++)
             {
                 //wyliczamy WY
-                feedForward(Dataset.sample(setIndex[i]));
+                FeedForward(Dataset.sample(setIndex[i]));
 
                 //wyliczamy Set Mean Squared Error
                 foreach(double actualVal in OutputNeurons)
@@ -180,7 +180,7 @@ namespace LearningBPandLM
         /// <summary>
         /// Inicjalizacja wag
         /// </summary>
-        public void initializeWeights()
+        public void InitializeWeights()
         {
             wInputHidden = initRandomWeights(numInput, numHidden, wInputHidden);
             wHiddenOutput = initRandomWeights(numHidden, numOutput, wHiddenOutput);
@@ -207,7 +207,6 @@ namespace LearningBPandLM
                         //losowe wagi
                         weightList[i][j] = (r.NextDouble() * 2 - 1); // (-1.1)
                         //weightList[i][j] = (r.NextDouble() * 1 - 0.5); // (-0.5,0.5)
-                        //weightList[i][j] = 0.1;
                     }
                     else
                     {
@@ -255,7 +254,7 @@ namespace LearningBPandLM
         /// Faza W PRZÓD
         /// </summary>
         /// <param name="sample">próbka danych</param>
-        public void feedForward(double[] sample)
+        public void FeedForward(double[] sample)
         {
             //przypisuje wartosci na WE (wejsciu)
             for (int i = 0; i < numInput; i++) Inputs[i] = sample[i];

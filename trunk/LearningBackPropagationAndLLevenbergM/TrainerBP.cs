@@ -41,7 +41,7 @@ namespace LearningBPandLM
         /// <summary>
         /// docelowa dokladnosc modelu
         /// </summary>
-        private double desiredAccuracy;
+        private double desiredMSE;
 
         /// <summary>
         /// celnosc modelu dla kazdej z epok dla zbioru trenujacego i testujacego
@@ -52,11 +52,6 @@ namespace LearningBPandLM
         /// suma kwadratow bledu dla zbioru trenujacego i testujacego
         /// </summary>
         private double trainingSetMSE, generalizationSetMSE;
-
-        /// <summary>
-        /// domyślna docelowa wartosc MSE
-        /// </summary>
-        protected const double DefaultDesiredMSE = 0.001;
 
         /// <summary>
         /// struktura sieci neuronowej (sieć MLP (multilayer perceptron networks))
@@ -75,7 +70,28 @@ namespace LearningBPandLM
         /// DatasetIndexes.TrainingSet - int[] dane trenujace (uczace)
         /// DatasetIndexes.GeneralizationSet - int[] dane testujace
         /// </summary>
-        private DatasetOperateWindowed DatasetIndexes;
+        private DatasetStructure DatasetIndexes;
+
+        /// <summary>
+        /// training-set-MSE w poprzedniej epoce
+        /// </summary>
+        private double previousTMSE;
+
+        /// <summary>
+        /// Zlicza ile razy z rzedu nie nastapily zmiany w modelu
+        /// </summary>
+        private int noImprovementInModelTimes;
+
+        /// <summary>
+        /// Maksymalna ilosc razy z rzedu gdy model nie zmienil sie 
+        /// (opierajac sie o dokladnosc DifferenceBetweenMSEs)
+        /// </summary>
+        private readonly int MaxNoImprovementTimes = 10;
+
+        /// <summary>
+        /// dopuszczalna roznica miedzy poprzednim a aktualnym MSE 
+        /// </summary>
+        private readonly double DifferenceBetweenMSEs = 0.0001;
 
         #endregion
 
@@ -120,18 +136,34 @@ namespace LearningBPandLM
         #region konstruktory
 
         public TrainerBP(ZScoreData dataset)
-            : this(dataset, dataset.sample(0).Length - 1, DefaultLearningRate, 1500, 99, 15, false)
+            : this(dataset, EnumDatasetStructures.Growing, dataset.sample(0).Length - 1, 
+            DefaultLearningRate, 1500, 0.001, 3, false)
         { }
 
-        public TrainerBP(ZScoreData dataset, int hiddenNodeRatio, double lr, ulong mE, double desiredAcc, 
-            int sz, bool runAutomated)
+
+        public TrainerBP(ZScoreData dataset, EnumDatasetStructures ds, int hiddenNodeRatio, 
+            double lr, ulong mE, double dMSE, int sz, bool runAutomated)
         {
             this.Dataset = dataset;
 
             ///ostatnie 2 argumenty - false, true dla funkcji aktywacji ktore maja byc tanh(x), true dla sigmoid
             NN = new neuralNetwork(Dataset.sample(0).Length, hiddenNodeRatio,
                 1, dataset.DataType, ActivationFuncType.Tanh, ActivationFuncType.Sigmoid);
-            DatasetIndexes = new DatasetOperateWindowed(Dataset.NormalizedData[0].GetNum(), sz);
+
+            switch(ds)
+            {
+                case EnumDatasetStructures.Growing:
+                    DatasetIndexes = new DatasetOperateGrowing(Dataset.NormalizedData[0].GetNum(), sz);
+                    break;
+                case EnumDatasetStructures.Windowed:
+                    DatasetIndexes = new DatasetOperateWindowed(Dataset.NormalizedData[0].GetNum(), sz);
+                    break;
+                case EnumDatasetStructures.Simple:
+                default:
+                    DatasetIndexes = new DatasetOperateSimple(Dataset.NormalizedData[0].GetNum(), sz);
+                    break;
+            }
+            
 
             maxEpochs = mE;
             learningRate = lr;
@@ -141,9 +173,10 @@ namespace LearningBPandLM
             durationOfEachEpoch = new Hashtable();
             timer = new Stopwatch();
 
-            desiredAccuracy = desiredAcc;
+            desiredMSE = dMSE;
             trainingSetAccuracy = 0;
             generalizationSetAccuracy = 0;
+            noImprovementInModelTimes = 0;
 
             deltaInputHidden = createDeltaList(deltaInputHidden, NN.numInput, NN.numHidden);
             deltaHiddenOutput = createDeltaList(deltaHiddenOutput, NN.numHidden, NN.numOutput);
@@ -151,29 +184,13 @@ namespace LearningBPandLM
             hiddenErrorGradients = createErrorGradientStorage(hiddenErrorGradients, NN.numHidden);
             outputErrorGradients = createErrorGradientStorage(outputErrorGradients, NN.numOutput);
 
-            NN.initializeWeights();
+            NN.InitializeWeights();
             trainingComplete = false;
 
             Program.PrintInfo("Utworzono sieć neuronową");
             networkStats();
         }
         #endregion
-
-        /// <summary>
-        /// utworz nazwy plikow (zwiazane z typem danych)
-        /// </summary>
-        private void createFileNames()
-        {
-            resultsFileName = String.Format("wynik_{0}_BP-{1}-{2}-{3}.txt",
-                Enum.GetName(typeof(EnumDataTypes), (int)Dataset.DataType),
-                learningRate.ToString(), NN.numHidden.ToString(), maxEpochs.ToString());
-            weightsOutputFile = String.Format("weights_{0}_BP-{1}.txt",
-                Enum.GetName(typeof(EnumDataTypes), (int)Dataset.DataType),
-                NN.numHidden.ToString());
-            customWeightsOutputFile = String.Format("customWeights_{0}_BP-{1}.txt",
-                Enum.GetName(typeof(EnumDataTypes), (int)Dataset.DataType),
-                NN.numHidden.ToString());
-        }
 
         /// <summary>
         /// Funkcja nadzorujaca procesem uczenia sieci
@@ -208,13 +225,11 @@ namespace LearningBPandLM
 
             double bestGeneralizationSetMSE = generalizationSetMSE;
 
-            while ((trainingSetAccuracy < desiredAccuracy || generalizationSetAccuracy < desiredAccuracy)
+            while ((trainingSetMSE > desiredMSE || generalizationSetMSE > desiredMSE)
                 && epochCounter < maxEpochs && !trainingComplete)
             {
-
                 //kolejna epoka, zwiekszamy licznik
                 epochCounter++;
-
 
                 timer.Restart();
 
@@ -227,6 +242,9 @@ namespace LearningBPandLM
                 /* zapisujemy stan generalizationSetAccuracy by sprawdzic czy MSE sie zmniejszyl
                  * jezeli tak zapisujemy wagi do NN.bestWeights- */
 
+                //zapisz wartosc MSE w poprzedniej epoce
+                previousTMSE = trainingSetMSE;
+
                 //zapisujemy wyniki do pliku
                 saveResultsToFile(saveResult);
 
@@ -234,25 +252,32 @@ namespace LearningBPandLM
                 if (bestGeneralizationSetMSE > generalizationSetMSE)
                 {
                     bestGeneralizationSetMSE = generalizationSetMSE;
-                    NN.bestWeightInputHidden = NN.wInputHidden;
-                    NN.bestWeightHiddenOutput = NN.wHiddenOutput;
+                    NN.BestWeightInputHidden = NN.wInputHidden;
+                    NN.BestWeightHiddenOutput = NN.wHiddenOutput;
                     //zapis wag do pliku pod warunkiem, ze minelo wiecej niz n-epok
-                    if (epochCounter > 10)
+                    if (epochCounter > 10 && !automatedRun)
                     {
                         NN.SaveWeights(weightsOutputFile);
                     }
+                }
+
+                if (Math.Abs(previousTMSE - trainingSetMSE) < DifferenceBetweenMSEs)
+                {
+                    if (++noImprovementInModelTimes >= MaxNoImprovementTimes)
+                    {
+                        trainingComplete = true;
+                        Console.WriteLine("Brak zmian w modelu (x{0})", noImprovementInModelTimes);
+                    }
+                }
+                else
+                {
+                    noImprovementInModelTimes = 0;
                 }
 
                 //zmieniamy zakres indeksu podzbioru dla zbioru trenujacego
                 DatasetIndexes.IncreaseRange();
 
                 PrintStatus();
-
-                if (epochCounter % 10 == 0)
-                {
-                    //Console.WriteLine("średni czas: {0}", calcMeanDuration(durationOfEachEpoch));
-                    //ShowOptions();
-                }
             }
             saveResult.WriteLine("#ms.average(): {0}", calcMeanDuration(durationOfEachEpoch));
             saveResult.Flush();
@@ -269,7 +294,7 @@ namespace LearningBPandLM
             for (int i = 0; i < trainingSet.Length; i++)
             {
                 //wyliczamy wyjscia i propagujemy wstecz
-                NN.feedForward(Dataset.sample(trainingSet[i]));
+                NN.FeedForward(Dataset.sample(trainingSet[i]));
                 backpropagate(Dataset.target(trainingSet[i]));
             }
 
@@ -360,6 +385,22 @@ namespace LearningBPandLM
         }
 
         /// <summary>
+        /// utworz nazwy plikow (zwiazane z typem danych)
+        /// </summary>
+        private void createFileNames()
+        {
+            resultsFileName = String.Format("wynik_{0}_BP-{1}-{2}-{3}.txt",
+                Enum.GetName(typeof(EnumDataTypes), (int)Dataset.DataType),
+                NN.numHidden.ToString(), learningRate.ToString(), maxEpochs.ToString());
+            weightsOutputFile = String.Format("weights_{0}_BP-{1}.txt",
+                Enum.GetName(typeof(EnumDataTypes), (int)Dataset.DataType),
+                NN.numHidden.ToString());
+            customWeightsOutputFile = String.Format("customWeights_{0}_BP-{1}.txt",
+                Enum.GetName(typeof(EnumDataTypes), (int)Dataset.DataType),
+                NN.numHidden.ToString());
+        }
+
+        /// <summary>
         /// Tworzy tablice dla wskazanego gradientu
         /// </summary>
         /// <param name="errorGradientsList">hiddenErrorGradient lub outputErrorGradient</param>
@@ -419,11 +460,11 @@ namespace LearningBPandLM
         private void saveResultsToFile(TextWriter saveResult)
         {
             //pobieramy celnosc modelu i sume kwadratow bledu uczenia
-            generalizationSetAccuracy = NN.getAccuracy(Dataset, DatasetIndexes.GeneralizationSet);
-            generalizationSetMSE = NN.calcMSE(Dataset, DatasetIndexes.GeneralizationSet);
+            generalizationSetAccuracy = NN.GetAccuracy(Dataset, DatasetIndexes.GeneralizationSet);
+            generalizationSetMSE = NN.CalcMSE(Dataset, DatasetIndexes.GeneralizationSet);
 
-            trainingSetAccuracy = NN.getAccuracy(Dataset, DatasetIndexes.TrainingSet);
-            trainingSetMSE = NN.calcMSE(Dataset, DatasetIndexes.TrainingSet);
+            trainingSetAccuracy = NN.GetAccuracy(Dataset, DatasetIndexes.TrainingSet);
+            trainingSetMSE = NN.CalcMSE(Dataset, DatasetIndexes.TrainingSet);
 
             try
             {
@@ -605,7 +646,7 @@ namespace LearningBPandLM
             Console.WriteLine("Parametry:");
             Console.WriteLine("Współczynnik uczenia:\t\t{0}", learningRate);
             Console.WriteLine("Maksymalna liczba epok:\t\t{0}", maxEpochs);
-            Console.WriteLine("Docelowa dokładność modelu:\t{0}", desiredAccuracy);
+            Console.WriteLine("Docelowy MSE:\t{0}", desiredMSE);
             Console.WriteLine("Wielkość próbki treningowej: {0} \nRozmiar zbioru walidacyjnego: {1}\n",
                 DatasetIndexes.TrainingSet.Length, DatasetIndexes.GeneralizationSet.Length);
         }
@@ -623,8 +664,15 @@ namespace LearningBPandLM
             {
                 total += l;
             }
-
-            return (double)(total / durationOfEachEpoch.Count);
+            try
+            {
+                return (double)(total / durationOfEachEpoch.Count);
+            }
+            catch (DivideByZeroException e)
+            {
+                Debug.WriteLine("O epok? {0}", e.Message);
+                return (double)total;
+            }
         }
     }
 }

@@ -5,6 +5,16 @@ using System.Linq;
 namespace LearningBPandLM
 {
     /// <summary>
+    /// typy zbiorow danych obslugiwanych przez algorytm
+    /// </summary>
+    public enum EnumDatasetStructures
+    {
+        Growing,
+        Windowed,
+        Simple
+    }
+
+    /// <summary>
     /// Klasa przygotowujaca (losowo wybierane) indeksy ze zbioru danych
     /// </summary>
     abstract class DatasetStructure
@@ -19,6 +29,9 @@ namespace LearningBPandLM
         /// </summary>
         protected List<int> generalizationSet;
 
+        protected const int DefaultGeneralizationSetSize = 20,
+            DefaultSampleSize = 20;
+
         /// <summary>
         /// Ustalana w konstruktorze stala wyznaczajaca wielkosc przyrostu zbioru uczacego
         /// </summary>
@@ -27,7 +40,7 @@ namespace LearningBPandLM
         /// <summary>
         /// Stala informujaca nas o ile % zwieksza sie w kolejnej epoce zbior uczacy
         /// </summary>
-        protected readonly int STEP_SAMPLE_SIZE; //1 = 1%
+        protected readonly int StepSampleSize; //1 = 1%
 
         /// <summary>
         /// Zmienna wskazujaca obecny zakres zbioru uczacego dostepnego dla metody nauczania sieci
@@ -42,7 +55,7 @@ namespace LearningBPandLM
         protected DatasetStructure(int setLength, int gPercent, double sz)
         {
 
-            STEP_SAMPLE_SIZE = (int)sz * (setLength - gPercent * setLength / 100) / 100;
+            StepSampleSize = (int)sz * (setLength - gPercent * setLength / 100) / 100;
 
             List<int> indexes = new List<int>();
             for (int i = 0; i < setLength; i++)
@@ -50,7 +63,7 @@ namespace LearningBPandLM
 
             Program.PrintInfo("Tworzenie podzbiorow");
 
-            step = STEP_SAMPLE_SIZE;//((setLength * STEP_SAMPLE_SIZE / 100) < 1) ? 1 : (int)(setLength * STEP_SAMPLE_SIZE / 100);
+            step = StepSampleSize;//((setLength * STEP_SAMPLE_SIZE / 100) < 1) ? 1 : (int)(setLength * STEP_SAMPLE_SIZE / 100);
             //step = 100;
 
             generalizationSet = drawIndexes(gPercent * setLength / 100, ref indexes);
@@ -63,7 +76,7 @@ namespace LearningBPandLM
             Print(String.Format("\b\b\b\tZbiór uczący - zakończono!\t{0} przypadków\t({1:N2}%)", 
                 trainingSet.Count, (100 - gPercent)));
             Print(String.Format("\b\b\b\tWielkosc pojedynczej próbki uczącej:\t{0} ({1}%)",
-                STEP_SAMPLE_SIZE, STEP_SAMPLE_SIZE * 100 / trainingSet.Count));
+                StepSampleSize, StepSampleSize * 100 / trainingSet.Count));
 
         }
 

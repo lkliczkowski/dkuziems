@@ -24,12 +24,13 @@ namespace LearningBPandLM
 
             //parametry konfiguracji
             hiddenNodeRatioPar = 4;
-            sampleSizePar = 15;
-            desiredAccuracyPar = 99;
+            sampleSizePar = 5;
+            desiredMSEPar = 0.01;
             maxEpochsPar = 1500;
             learningRatePar = 0.01;
             coefficientMIpar = 0.01;
             adjustmentFactorVpar = 10;
+            datasetStructurePar = EnumDatasetStructures.Growing;
             proceedingWithSingular = SingularMatrixProceeding.Regularization;
         }
 
@@ -94,7 +95,7 @@ namespace LearningBPandLM
             Console.WriteLine("\nKonfiguracja sieci:{0}", (configured == false) ? "\n[nie konfigurowano - wartości domyślne]" : "");
             Console.WriteLine("Liczba neuronów w war.ukrytej:\t{0}", hiddenNodeRatioPar);
             Console.WriteLine("Maksymalna liczba epok:\t\t{0}", maxEpochsPar);
-            Console.WriteLine("Docelowa dokładność modelu:\t{0}\n", desiredAccuracyPar);
+            Console.WriteLine("Docelowy błąd MSE:\t{0}\n", desiredMSEPar);
         }
 
         private static void setHiddenRatio()
@@ -125,33 +126,90 @@ namespace LearningBPandLM
             Console.WriteLine("Obecna maksymalna ilość epok: {0}\n", maxEpochsPar);
         }
 
-        private static void setAcc()
+        private static void setMSE()
         {
-            double desiredAccuracyDefault = 99;
-            Console.WriteLine("Podaj docelową dokładność (w %) modelu, obecna: {0}%", desiredAccuracyPar);
+            double desiredMSE = 0.01;
+            Console.WriteLine("Podaj docelowy MSE modelu, obecny: {0}", desiredMSEPar);
             try
             {
-                desiredAccuracyPar = Double.Parse(Console.ReadLine());
+                desiredMSEPar = Double.Parse(Console.ReadLine());
             }
             catch
             {
                 Console.WriteLine("Niepoprawna wartość, ustawiona na poprzednią");
             }
-            if (desiredAccuracyPar > 100 || desiredAccuracyPar < 0)
+            if (desiredMSEPar >= 1 || desiredMSEPar <= 0)
             {
-                Console.WriteLine("Niepoprawna wartość, powinna wynosić pomiędzy (0-100)%");
-                Console.WriteLine("ustawiona na domyślną ({0}%)", desiredAccuracyDefault);
-                desiredAccuracyPar = desiredAccuracyDefault;
+                Console.WriteLine("MSE powinno wynosić wartość pomiędzy <0, 1>");
+                Console.WriteLine("ustawiona na domyślną ({0})", desiredMSE);
+                desiredMSEPar = desiredMSE;
             }
-            Console.WriteLine("Obecna dokładność docelowa modelu wynosi: {0}%\n", desiredAccuracyPar);
+            Console.WriteLine("Obecny docelowy MSE: {0}\n", desiredMSEPar);
+        }
+
+        private static void setDatasetStructure()
+        {
+            Console.WriteLine("W jaki sposób algorytm ma pobierać dane z próbki treningowej? (w jaki sposób dane mają być podzielone)");
+            Console.WriteLine("[1]{0} Rosnący zbiór danych (Growing Dataset)",
+                (datasetStructurePar == EnumDatasetStructures.Growing) ? "[Opcja obecna]" : "");
+            Console.WriteLine("[2]{0} Okienkowy zbiór danych (Windowed Dataset) ",
+                (datasetStructurePar == EnumDatasetStructures.Windowed) ? "[Opcja obecna]" : "");
+            Console.WriteLine("[3]{0} Brak podziału (w każdej epoce analizuj całość danych treningowych) ",
+                (datasetStructurePar == EnumDatasetStructures.Simple) ? "[Opcja obecna]" : "");
+
+            try
+            {
+                int opt = Int32.Parse(Console.ReadLine());
+
+                if (Enum.IsDefined(typeof(EnumDatasetStructures), --opt))
+                {
+                    datasetStructurePar = (EnumDatasetStructures)opt;
+                }
+                else
+                {
+                    Console.WriteLine("Niepoprawna wartość");
+                }
+            }
+            catch
+            {
+                Console.WriteLine("Niepoprawna wartość, ustawiona na poprzednią");
+            }
+            Console.WriteLine("Obecnie ustawiono [{0}] {1}", (int)datasetStructurePar + 1,
+                Enum.GetName(typeof(EnumDatasetStructures), datasetStructurePar));
         }
 
         private static void setSampleSize()
         {
-            int sampleSizeDefault = 30;
-            Console.WriteLine("Podaj wielkosc jednorazowej próbki danych (w %), obecna: {0}%", sampleSizePar);
-            Console.WriteLine("(Jednorazowa próbka danych ze zbioru treningowego analizowana w każdej epoce)");
-            Console.WriteLine("Nie mniej niż 1%, nie więcej niż 50%");
+            int sampleSizeDefault;
+            switch (datasetStructurePar)
+            {
+                case EnumDatasetStructures.Growing:
+                    if (!configured) 
+                        sampleSizePar = 3;
+                    sampleSizeDefault = 3;
+                    Console.WriteLine("Ile ma wynosic przyrost próbki danych w każdej kolejnej epoce? obecnie: {0}%", 
+                        sampleSizePar);
+                    getSampleSize(0, 101, sampleSizeDefault);
+                    break;
+                case EnumDatasetStructures.Windowed:
+                    if (!configured) 
+                        sampleSizePar = 15;
+                    sampleSizeDefault = 15;
+                    Console.WriteLine("Podaj wielkosc jednorazowej próbki danych (w %), obecna: {0}%", sampleSizePar);
+                    Console.WriteLine("(Jednorazowa próbka danych ze zbioru treningowego analizowana w każdej epoce)");
+                    getSampleSize(0, 51, sampleSizeDefault);
+                    break;
+                case EnumDatasetStructures.Simple:
+                default:
+                    return;
+            }
+
+            Console.WriteLine("Obecna wielkosc próbki wynosi: {0}%\n", sampleSizePar);
+        }
+
+        private static void getSampleSize(int from, int to, int sampleSizeDefault)
+        {
+            Console.WriteLine("Nie mniej niż {0}%, nie więcej niż {1}%", from + 1, to - 1);
             try
             {
                 sampleSizePar = Int32.Parse(Console.ReadLine());
@@ -160,14 +218,14 @@ namespace LearningBPandLM
             {
                 Console.WriteLine("Niepoprawna wartość, ustawiona na poprzednią");
             }
-            if (sampleSizePar > 51 || sampleSizePar < 0)
+            if (sampleSizePar < from || sampleSizePar > to)
             {
-                Console.WriteLine("Niepoprawna wartość, powinna wynosić pomiędzy (0-100)%");
+                Console.WriteLine("Niepoprawna wartość, powinna wynosić pomiędzy ({0}-{1})%", from, to);
                 Console.WriteLine("ustawiona na domyślną ({0}%)", sampleSizeDefault);
                 sampleSizePar = sampleSizeDefault;
             }
-            Console.WriteLine("Obecna wielkosc próbki wynosi: {0}%\n", sampleSizePar);
         }
+
         #endregion
 
         #region podmenu Backprop
@@ -250,7 +308,8 @@ namespace LearningBPandLM
             setHiddenRatio();
             BPsetLearningRate();
             setMaxEpoch();
-            setAcc();
+            setMSE();
+            setDatasetStructure();
             setSampleSize();
             configured = true;
         }
@@ -274,9 +333,9 @@ namespace LearningBPandLM
         private static void BPCreateNN()
         {
             if (configured)
-                networkTrainerBP = new TrainerBP(dataset, hiddenNodeRatioPar,
-                    learningRatePar, maxEpochsPar, desiredAccuracyPar, 
-                    sampleSizePar, runAutomated);
+                networkTrainerBP = new TrainerBP(dataset, datasetStructurePar,
+                    hiddenNodeRatioPar, learningRatePar, maxEpochsPar, 
+                    desiredMSEPar, sampleSizePar, runAutomated);
             else
                 networkTrainerBP = new TrainerBP(dataset);
 
@@ -378,7 +437,8 @@ namespace LearningBPandLM
             LMsetMi();
             LMsetV();
             setMaxEpoch();
-            setAcc();
+            setMSE();
+            setDatasetStructure();
             setSampleSize();
             LMsetSingularMatrixProceeding();
             LMsetUseGenSet();
@@ -417,14 +477,14 @@ namespace LearningBPandLM
         private static void LMsetSingularMatrixProceeding()
         {
             Console.WriteLine("W jaki sposób ma odbywać się postępowanie w przypadku macierzy osobliwych?");
-            Console.WriteLine("1) Regularyzacja macierzy {0}\n",
-                (proceedingWithSingular == SingularMatrixProceeding.Regularization) ? "(Opcja obecna)" : "");
-            Console.WriteLine("2) Rozkład według wartości osobliwych SVD {0}\n",
-                (proceedingWithSingular == SingularMatrixProceeding.SVD) ? "(Opcja obecna)" : "");
-            Console.WriteLine("3) Uogólniona macierz odwrotna \"pseudoinwersja\" {0}\n",
-                (proceedingWithSingular == SingularMatrixProceeding.PINV) ? "(Opcja obecna)" : "");
-            Console.WriteLine("4) Brak {0}\n",
-                (proceedingWithSingular == SingularMatrixProceeding.None) ? "(Opcja obecna)" : "");
+            Console.WriteLine("[1]{0} Regularyzacja macierzy ",
+                (proceedingWithSingular == SingularMatrixProceeding.Regularization) ? "[Opcja obecna]" : "");
+            Console.WriteLine("[2]{0} Rozkład według wartości osobliwych SVD",
+                (proceedingWithSingular == SingularMatrixProceeding.SVD) ? "[Opcja obecna]" : "");
+            Console.WriteLine("[3]{0} Uogólniona macierz odwrotna \"pseudoinwersja\"",
+                (proceedingWithSingular == SingularMatrixProceeding.PINV) ? "[Opcja obecna]" : "");
+            Console.WriteLine("[4]{0} Brak \n",
+                (proceedingWithSingular == SingularMatrixProceeding.None) ? "[Opcja obecna]" : "");
             try
             {
                 int opt = Int32.Parse(Console.ReadLine());
@@ -442,7 +502,7 @@ namespace LearningBPandLM
             {
                 Console.WriteLine("Niepoprawna wartość, ustawiona wartość poprzednią");
             }
-            Console.WriteLine("Obecna ustawiono: {0}\n", Enum.GetName(typeof(SingularMatrixProceeding),
+            Console.WriteLine("Obecnie ustawiono: {0}\n", Enum.GetName(typeof(SingularMatrixProceeding),
                 proceedingWithSingular));
         }
 
@@ -481,9 +541,10 @@ namespace LearningBPandLM
         private static void LMCreateNN()
         {
             if (configured)
-                networkTrainerLM = new TrainerLMImproved(dataset, hiddenNodeRatioPar, maxEpochsPar,
-                    desiredAccuracyPar, coefficientMIpar, adjustmentFactorVpar, sampleSizePar,
-                    proceedingWithSingular, LMuseGenSetToo, runAutomated);
+                networkTrainerLM = new TrainerLMImproved(dataset, datasetStructurePar,
+                    hiddenNodeRatioPar, maxEpochsPar, desiredMSEPar, coefficientMIpar, 
+                    adjustmentFactorVpar, sampleSizePar, proceedingWithSingular, 
+                    LMuseGenSetToo, runAutomated);
             else
                 networkTrainerLM = new TrainerLMImproved(dataset);
 
@@ -494,11 +555,11 @@ namespace LearningBPandLM
         {
             if (networkTrainerLM.TrainNetwork())
             {
-                Console.WriteLine("Zakończono trenowanie sieci neuronowej!");
+                Console.WriteLine("\nZakończono trenowanie sieci neuronowej!");
             }
             else
             {
-                Console.WriteLine("Zakończono trenowanie sieci neuronowej! (Niepowodzenie)");
+                Console.WriteLine("\nZakończono trenowanie sieci neuronowej! (Niepowodzenie)");
             }
             readyToTrain = false;
         }

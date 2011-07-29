@@ -105,18 +105,13 @@ namespace LearningBPandLM
         /// Dataset.target(i) - i-ta wartosc docelowa (WY) dla i-tej probki
         /// </summary>
         private ZScore.ZScoreData Dataset;
+
         /// <summary>
         /// Zbior indeksow wydzielajacych zbiory danych
         /// DatasetIndexes.TrainingSet - int[] dane trenujace (uczace)
         /// DatasetIndexes.GeneralizationSet - int[] dane testujace
         /// </summary>
-        private DatasetOperateWindowed DatasetIndexes;
-
-        /// <summary>
-        /// docelowa dokladnosc modelu
-        /// </summary>
-        private double desiredAccuracy;
-        //TODO - desiredAcc
+        private DatasetStructure DatasetIndexes;
 
         /// <summary>
         /// celnosc modelu dla kazdej z epok dla zbioru trenujacego
@@ -139,6 +134,11 @@ namespace LearningBPandLM
         /// Wartosci MSE uzyskane w poprzednich epokach
         /// </summary>
         private double previousTrainingSetMSE, previousGeneralizationSetMSE;
+
+        /// <summary>
+        /// docelowa dokladnosc modelu
+        /// </summary>
+        private double desiredMSE;
 
         /// <summary>
         /// Okresla sposob postepowania z odwracaniem macierzy osobliwych
@@ -180,9 +180,9 @@ namespace LearningBPandLM
         private bool trainingComplete;
 
         /// <summary>
-        /// Zawiera wyliczenia dlugosci czasowych poszczegolnych epok
+        /// Zawiera wyliczenia dlugosci czasowych poszczegolnych epok, wyliczenia cykli zegara na epokę
         /// </summary>
-        private Hashtable durationOfEachEpoch;
+        private Hashtable durationOfEachEpoch, durationInElapsedTicks;
         /// <summary>
         /// Uzywany do mierzenia probek czasowych
         /// </summary>
@@ -198,27 +198,42 @@ namespace LearningBPandLM
         #region konstruktory
 
         public TrainerLMImproved(ZScore.ZScoreData dataset)
-            : this(dataset, (dataset.sample(0).Length > 40) ?
+            : this(dataset, EnumDatasetStructures.Growing, 
+            (dataset.sample(0).Length > 40) ?
             (dataset.sample(0).Length / 4 - 1) :
             dataset.sample(0).Length / 2 - 1,
-            1500, 99, 0.001, VDefault, 15,
+            1500, 99, 0.001, VDefault, 25,
             DefaultProceedingWithSingularMatrix, 
             false, false)
         { }
 
-        public TrainerLMImproved(ZScore.ZScoreData dataset, int hiddenNodeRatio, ulong mE, double dAcc, 
-            double cMi, double aFV, int sz, SingularMatrixProceeding smp, bool uGen, bool runAutomated)
+        public TrainerLMImproved(ZScore.ZScoreData dataset, EnumDatasetStructures ds, int hiddenNodeRatio, 
+            ulong mE, double dMSE, double cMi, double aFV, int sz, SingularMatrixProceeding smp, bool uGen, 
+            bool runAutomated)
         {
 
             Dataset = dataset;
-            DatasetIndexes = new DatasetOperateWindowed(Dataset.NormalizedData[0].GetNum(), sz);
+            switch (ds)
+            {
+                case EnumDatasetStructures.Growing:
+                    DatasetIndexes = new DatasetOperateGrowing(Dataset.NormalizedData[0].GetNum(), sz);
+                    break;
+                case EnumDatasetStructures.Windowed:
+                    DatasetIndexes = new DatasetOperateWindowed(Dataset.NormalizedData[0].GetNum(), sz);
+                    break;
+                case EnumDatasetStructures.Simple:
+                default:
+                    DatasetIndexes = new DatasetOperateSimple(Dataset.NormalizedData[0].GetNum(), sz);
+                    break;
+            }
+
 
             NN = new neuralNetwork(Dataset.sample(0).Length, hiddenNodeRatio, 1, Dataset.DataType, 
                 ActivationFuncType.Sigmoid, ActivationFuncType.Sigmoid);
 
             trainingSetMSE = generalizationSetMSE = double.MaxValue;
             maxEpochs = mE;
-            desiredAccuracy = dAcc;
+            desiredMSE = dMSE;
             coefficientMI = defaultMi = cMi;
             adjustmentFactorV = aFV;
             ProceedingWithSingularMatrix = smp;
@@ -227,6 +242,7 @@ namespace LearningBPandLM
 
             createFileNames();
             durationOfEachEpoch = new Hashtable();
+            durationInElapsedTicks = new Hashtable();
             timer = new Stopwatch();
 
             N = (NN.numInput + 1) * NN.numHidden
@@ -238,7 +254,7 @@ namespace LearningBPandLM
             submatrixQ = initArray(submatrixQ, N, N);
             initializeForNewEpoch();
 
-            NN.initializeWeights();
+            NN.InitializeWeights();
 
             NN.KeepWeightsToPrevious();
 
@@ -271,8 +287,8 @@ namespace LearningBPandLM
             //naglowki w pliku z wynikami
             saveResult.WriteLine("#LMtraining: default μ = {0}, V = {1}, NN: {2}(+1):{3}(+1):{4}",
                 defaultMi, adjustmentFactorV, NN.numInput, NN.numHidden, NN.numOutput);
-            saveResult.WriteLine("#{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t",
-                "epoch", "tMSE", "tAcc", "gMSE", "gAcc", "ms");
+            saveResult.WriteLine("#{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}",
+                "epoch", "tMSE", "tAcc", "gMSE", "gAcc", "ms", "ticks");
             saveResult.Flush();
 
             saveResultsToFile(saveResult);
@@ -290,16 +306,20 @@ namespace LearningBPandLM
 
             while (epochCounter < maxEpochs && !trainingComplete)
             {
+                //kolejna epoka, zwiekszamy licznik
+                epochCounter++;
+
                 timer.Restart();
 
                 // pojedyncza epoka
                 if (runTrainingEpoch(DatasetIndexes.TrainingSet))
                 {
                     timer.Stop();
-                    durationOfEachEpoch.Add(epochCounter + 1, timer.ElapsedMilliseconds);
+                    
+                    durationOfEachEpoch.Add(epochCounter, timer.ElapsedMilliseconds);
+                    durationInElapsedTicks.Add(epochCounter, timer.ElapsedTicks);
 
-                    //kolejna epoka, zwiekszamy licznik
-                    epochCounter++;
+
 
                     previousTrainingSetMSE = trainingSetMSE;
 
@@ -310,10 +330,10 @@ namespace LearningBPandLM
                     if (bestGeneralizationSetMSE > generalizationSetMSE)
                     {
                         bestGeneralizationSetMSE = generalizationSetMSE;
-                        NN.bestWeightInputHidden = NN.wInputHidden;
-                        NN.bestWeightHiddenOutput = NN.wHiddenOutput;
+                        NN.BestWeightInputHidden = NN.wInputHidden;
+                        NN.BestWeightHiddenOutput = NN.wHiddenOutput;
                         //zapis wag do pliku pod warunkiem, ze minelo wiecej niz n-epok
-                        if (epochCounter > 0)
+                        if (epochCounter > 0 && !automatedRun)
                         {
                             NN.SaveWeights(weightsOutputFile);
                         }
@@ -328,22 +348,20 @@ namespace LearningBPandLM
                 else
                 {
                     timer.Stop();
-                    durationOfEachEpoch.Add(epochCounter + 1, timer.ElapsedMilliseconds);
 
+                    durationOfEachEpoch.Add(epochCounter, timer.ElapsedMilliseconds);
+                    durationInElapsedTicks.Add(epochCounter, timer.ElapsedTicks);
                     NN.RestoreWeightsWithPrevious();
-                    Debug.WriteLine(">> Wagi przywrócone (tMSE: {0})", NN.calcMSE(Dataset, DatasetIndexes.TrainingSet));
+                    Debug.WriteLine(">> Wagi przywrócone (tMSE: {0})", NN.CalcMSE(Dataset, DatasetIndexes.TrainingSet));
 
                     saveResult.WriteLine("#ended");
 
-                    for (++epochCounter; epochCounter <= maxEpochs; ++epochCounter)
-                    {
-                        fillResults(saveResult);
-                    }
                     trainingComplete = true;
                 }
 
             }
-            saveResult.WriteLine("#ms.average(): {0}", calcMeanDuration(durationOfEachEpoch));
+            saveResult.WriteLine("#ms.average():\t {0} \n#ticks.average():\t {1}", 
+                calcMeanDuration(durationOfEachEpoch), calcMeanDuration(durationInElapsedTicks));
             saveResult.Flush();
             saveResult.Close();
             return true;
@@ -371,7 +389,7 @@ namespace LearningBPandLM
                 for (int i = 0; i < trainingSet.Length; i++)
                 {
                     //wyliczamy wyjscia i propagujemy wstecz
-                    NN.feedForward(Dataset.sample(trainingSet[i]));
+                    NN.FeedForward(Dataset.sample(trainingSet[i]));
 
                     //faza wstecz
                     backward(Dataset.target(trainingSet[i]), i);
@@ -402,7 +420,7 @@ namespace LearningBPandLM
 
                         //zachowujemy stan wag
                         NN.KeepWeightsToPrevious();
-                        Debug.WriteLine(">> Wagi zapisane (tMSE: {0})", NN.calcMSE(Dataset, DatasetIndexes.TrainingSet));
+                        Debug.WriteLine(">> Wagi zapisane (tMSE: {0})", NN.CalcMSE(Dataset, DatasetIndexes.TrainingSet));
 
                         previousTrainingSetMSE = trainingSetMSE;
                         previousGeneralizationSetMSE = generalizationSetMSE;
@@ -433,8 +451,8 @@ namespace LearningBPandLM
                                 + "zmiany wag cofnięte, zmiana wartości współczynnika μ:");
                             miMsgShown = true;
                         }
-                        Console.Write("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
-                            + "\b\b\b\b\b\b{0}", coefficientMI);
+                        Console.Write("\b\b\b\b\b\b\b\b\b\b          "
+                            + "\b\b\b\b\b\b\b\b\b\b{0}", coefficientMI);
 
                         DatasetIndexes.IncreaseRange();
                         Debug.WriteLine(">> SampleChangedToNext errDecFail ({0})", DatasetIndexes.TrainingSet.Length);
@@ -464,19 +482,20 @@ namespace LearningBPandLM
                             + "zmiany wag cofnięte, zmiana wartości współczynnika μ:");
                         miMsgShown = true;
                     }
-                    Console.Write("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
-                        + "\b\b\b\b\b\b{0}", coefficientMI);
+                    Console.Write("\b\b\b\b\b\b\b\b\b\b          "
+                        + "\b\b\b\b\b\b\b\b\b\b{0}", coefficientMI);
 
                     DatasetIndexes.IncreaseRange();
                     Debug.WriteLine(">> SampleChangedToNext mInvFail ({0})", DatasetIndexes.TrainingSet.Length);
                 }
             }
 
+
             if (coefficientMI > MaxMiCoefficient || coefficientMI < MinMiCoefficient)
             {
                 NN.RestoreWeightsWithPrevious();
                 recalcMSE();
-                Debug.WriteLine(">> Wagi przywrócone (tMSE): {0})", NN.calcMSE(Dataset, DatasetIndexes.TrainingSet));
+                Debug.WriteLine(">> Wagi przywrócone (tMSE): {0})", NN.CalcMSE(Dataset, DatasetIndexes.TrainingSet));
                 Console.WriteLine("\nMin/Max wartość η osiągnięta! ({0})", coefficientMI);
                 return false;
             }
@@ -718,14 +737,14 @@ namespace LearningBPandLM
 
         private void recalcMSE()
         {
-            trainingSetMSE = NN.calcMSE(Dataset, DatasetIndexes.TrainingSet);
-            generalizationSetMSE = NN.calcMSE(Dataset, DatasetIndexes.GeneralizationSet);
+            trainingSetMSE = NN.CalcMSE(Dataset, DatasetIndexes.TrainingSet);
+            generalizationSetMSE = NN.CalcMSE(Dataset, DatasetIndexes.GeneralizationSet);
         }
 
         private void recalcAcc()
         {
-            trainingSetAccuracy = NN.getAccuracy(Dataset, DatasetIndexes.TrainingSet);
-            generalizationSetAccuracy = NN.getAccuracy(Dataset, DatasetIndexes.GeneralizationSet);
+            trainingSetAccuracy = NN.GetAccuracy(Dataset, DatasetIndexes.TrainingSet);
+            generalizationSetAccuracy = NN.GetAccuracy(Dataset, DatasetIndexes.GeneralizationSet);
         }
 
         /// <summary>
@@ -740,31 +759,10 @@ namespace LearningBPandLM
 
             try
             {
-                string line = String.Format("{0}\t{1:N4}\t{2:N2}\t{3:N4}\t{4:N2}\t{5}",
+                string line = String.Format("{0}\t{1:N4}\t{2:N2}\t{3:N4}\t{4:N2}\t{5}\t{6}",
                     epochCounter, trainingSetMSE, trainingSetAccuracy, generalizationSetMSE,
-                    generalizationSetAccuracy, durationOfEachEpoch[epochCounter]);
-                line = line.Replace(",", ".");
-                saveResult.WriteLine(line);
-
-                saveResult.Flush();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Nieudany zapis do pliku wyników:\n{0}", e.Message);
-            }
-        }
-
-        /// <summary>
-        /// Zapis pomiarow do pliku bez wyliczania MSE i Acc
-        /// </summary>
-        /// <param name="saveResult">uchwyt do pliku z wynikami</param>
-        private void fillResults(TextWriter saveResult)
-        {
-            try
-            {
-                string line = String.Format("{0}\t{1:N4}\t{2:N2}\t{3:N4}\t{4:N2}\t{5}",
-                    epochCounter, previousTrainingSetMSE, trainingSetAccuracy, previousGeneralizationSetMSE,
-                    generalizationSetAccuracy, durationOfEachEpoch[epochCounter]);
+                    generalizationSetAccuracy, durationOfEachEpoch[epochCounter], 
+                    durationInElapsedTicks[epochCounter]);
                 line = line.Replace(",", ".");
                 saveResult.WriteLine(line);
 
@@ -805,7 +803,7 @@ namespace LearningBPandLM
             Console.WriteLine("Współczynnik przystosowania V:\t\t{0}", adjustmentFactorV);
             Console.WriteLine("Wielkość Macierzy Hessego: {0}x{0}", N);
             Console.WriteLine("Maksymalna liczba epok:\t\t{0}", maxEpochs);
-            Console.WriteLine("Docelowa dokładność modelu:\t{0}%\n", desiredAccuracy);
+            Console.WriteLine("Docelowy MSE:\t{0}%\n", desiredMSE);
             Console.WriteLine("Wielkość próbki treningowej: {0}, \nRozmiar zbioru walidacyjnego: {1}",
                 DatasetIndexes.TrainingSet.Length, DatasetIndexes.GeneralizationSet.Length);
             Console.WriteLine("Postępowanie w przypadku macierzy osobliwych: {0}", 
@@ -1051,7 +1049,7 @@ namespace LearningBPandLM
             }
             catch (DivideByZeroException e)
             {
-                Debug.WriteLine("Not a single epoch? {0}", e.Message);
+                Debug.WriteLine("O epok? {0}", e.Message);
                 return (double)total;
             }
         }
