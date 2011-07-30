@@ -23,6 +23,7 @@ namespace LearningBPandLM
                 = readyToTrain = configured = LMuseGenSetToo = runAutomated = false;
 
             //parametry konfiguracji
+            holdoutPercentagePar = 20;
             hiddenNodeRatioPar = 4;
             sampleSizePar = 5;
             desiredMSEPar = 0.01;
@@ -146,6 +147,29 @@ namespace LearningBPandLM
             }
             Console.WriteLine("Obecny docelowy MSE: {0}\n", desiredMSEPar);
         }
+
+        private static void setHoldout()
+        {
+            int previousHoldout = holdoutPercentagePar;
+            Console.WriteLine("Ile (w %) danych ma być zbiorem walidacyjnym, obecnie: {0}%", holdoutPercentagePar);
+            try
+            {
+                holdoutPercentagePar = Int32.Parse(Console.ReadLine());
+            }
+            catch
+            {
+                Console.WriteLine("Niepoprawna wartość, ustawiona na poprzednią");
+            }
+            if (holdoutPercentagePar > 101 || holdoutPercentagePar < 0)
+            {
+                Console.WriteLine("Niepoprawna wartość, powinna wynosić pomiędzy (0-100)%");
+                Console.WriteLine("ustawiona na wartość poprzednią ({0}%)", previousHoldout);
+                holdoutPercentagePar = previousHoldout;
+            }
+            Console.WriteLine("Obecny podział danych to:\n {0}% - walidacyjny\n{1}% - treningowy\n",
+                holdoutPercentagePar, 100 - holdoutPercentagePar);
+        }
+
 
         private static void setDatasetStructure()
         {
@@ -309,6 +333,7 @@ namespace LearningBPandLM
             BPsetLearningRate();
             setMaxEpoch();
             setMSE();
+            setHoldout();
             setDatasetStructure();
             setSampleSize();
             configured = true;
@@ -334,8 +359,8 @@ namespace LearningBPandLM
         {
             if (configured)
                 networkTrainerBP = new TrainerBP(dataset, datasetStructurePar,
-                    hiddenNodeRatioPar, learningRatePar, maxEpochsPar, 
-                    desiredMSEPar, sampleSizePar, runAutomated);
+                    holdoutPercentagePar, hiddenNodeRatioPar, learningRatePar, 
+                    maxEpochsPar, desiredMSEPar, sampleSizePar, runAutomated);
             else
                 networkTrainerBP = new TrainerBP(dataset);
 
@@ -438,6 +463,7 @@ namespace LearningBPandLM
             LMsetV();
             setMaxEpoch();
             setMSE();
+            setHoldout();
             setDatasetStructure();
             setSampleSize();
             LMsetSingularMatrixProceeding();
@@ -541,10 +567,9 @@ namespace LearningBPandLM
         private static void LMCreateNN()
         {
             if (configured)
-                networkTrainerLM = new TrainerLMImproved(dataset, datasetStructurePar,
-                    hiddenNodeRatioPar, maxEpochsPar, desiredMSEPar, coefficientMIpar, 
-                    adjustmentFactorVpar, sampleSizePar, proceedingWithSingular, 
-                    LMuseGenSetToo, runAutomated);
+                networkTrainerLM = new TrainerLMImproved(dataset, datasetStructurePar, holdoutPercentagePar,
+                    hiddenNodeRatioPar, maxEpochsPar, desiredMSEPar, coefficientMIpar, adjustmentFactorVpar, 
+                    sampleSizePar, proceedingWithSingular, LMuseGenSetToo, runAutomated);
             else
                 networkTrainerLM = new TrainerLMImproved(dataset);
 

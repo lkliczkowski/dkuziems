@@ -118,9 +118,9 @@ namespace LearningBPandLM
         private const double DefaultLearningRate = 0.1;
 
         /// <summary>
-        /// Zawiera wyliczenia dlugosci czasowych poszczegolnych epok
+        /// Zawiera wyliczenia dlugosci czasowych poszczegolnych epok, wyliczenia cykli zegara na epokę
         /// </summary>
-        private Hashtable durationOfEachEpoch;
+        private Hashtable durationOfEachEpoch, durationInElapsedTicks;
         /// <summary>
         /// Uzywany do mierzenia probek czasowych
         /// </summary>
@@ -136,12 +136,12 @@ namespace LearningBPandLM
         #region konstruktory
 
         public TrainerBP(ZScoreData dataset)
-            : this(dataset, EnumDatasetStructures.Growing, dataset.sample(0).Length - 1, 
-            DefaultLearningRate, 1500, 0.001, 3, false)
+            : this(dataset, EnumDatasetStructures.Growing, DatasetStructure.DefaultGeneralizationSetSize,
+            (int)(4 * Math.Sqrt(dataset.sample(0).Length)), DefaultLearningRate, 1500, 0.001, 3, false)
         { }
 
 
-        public TrainerBP(ZScoreData dataset, EnumDatasetStructures ds, int hiddenNodeRatio, 
+        public TrainerBP(ZScoreData dataset, EnumDatasetStructures ds, int holdout, int hiddenNodeRatio, 
             double lr, ulong mE, double dMSE, int sz, bool runAutomated)
         {
             this.Dataset = dataset;
@@ -153,14 +153,14 @@ namespace LearningBPandLM
             switch(ds)
             {
                 case EnumDatasetStructures.Growing:
-                    DatasetIndexes = new DatasetOperateGrowing(Dataset.NormalizedData[0].GetNum(), sz);
+                    DatasetIndexes = new DatasetOperateGrowing(Dataset.NormalizedData[0].GetNum(), holdout, sz);
                     break;
                 case EnumDatasetStructures.Windowed:
-                    DatasetIndexes = new DatasetOperateWindowed(Dataset.NormalizedData[0].GetNum(), sz);
+                    DatasetIndexes = new DatasetOperateWindowed(Dataset.NormalizedData[0].GetNum(), holdout, sz);
                     break;
                 case EnumDatasetStructures.Simple:
                 default:
-                    DatasetIndexes = new DatasetOperateSimple(Dataset.NormalizedData[0].GetNum(), sz);
+                    DatasetIndexes = new DatasetOperateSimple(Dataset.NormalizedData[0].GetNum(), holdout, sz);
                     break;
             }
             
@@ -169,7 +169,7 @@ namespace LearningBPandLM
             learningRate = lr;
             automatedRun = runAutomated;
 
-            createFileNames();
+            createFileNames(holdout);
             durationOfEachEpoch = new Hashtable();
             timer = new Stopwatch();
 
@@ -238,6 +238,7 @@ namespace LearningBPandLM
 
                 timer.Stop();
                 durationOfEachEpoch.Add(epochCounter, timer.ElapsedMilliseconds);
+                durationInElapsedTicks.Add(epochCounter, timer.ElapsedTicks);
 
                 /* zapisujemy stan generalizationSetAccuracy by sprawdzic czy MSE sie zmniejszyl
                  * jezeli tak zapisujemy wagi do NN.bestWeights- */
@@ -279,7 +280,10 @@ namespace LearningBPandLM
 
                 PrintStatus();
             }
-            saveResult.WriteLine("#ms.average(): {0}", calcMeanDuration(durationOfEachEpoch));
+            saveResult.WriteLine("#ms.average():\t{0}\tlast:\t{1}",
+                calcMeanDuration(durationOfEachEpoch), durationOfEachEpoch[epochCounter]);
+            saveResult.WriteLine("#ticks.average():\t{0}\tlast:\t{1}",
+                calcMeanDuration(durationInElapsedTicks), durationInElapsedTicks[epochCounter]);
             saveResult.Flush();
             saveResult.Close();
         }
@@ -387,10 +391,10 @@ namespace LearningBPandLM
         /// <summary>
         /// utworz nazwy plikow (zwiazane z typem danych)
         /// </summary>
-        private void createFileNames()
+        private void createFileNames(int holdout)
         {
-            resultsFileName = String.Format("wynik_{0}_BP-{1}-{2}-{3}.txt",
-                Enum.GetName(typeof(EnumDataTypes), (int)Dataset.DataType),
+            resultsFileName = String.Format("wynik_{0}_BP-g{1}-{2}-{3}-{4}.txt",
+                Enum.GetName(typeof(EnumDataTypes), (int)Dataset.DataType), holdout.ToString(), 
                 NN.numHidden.ToString(), learningRate.ToString(), maxEpochs.ToString());
             weightsOutputFile = String.Format("weights_{0}_BP-{1}.txt",
                 Enum.GetName(typeof(EnumDataTypes), (int)Dataset.DataType),

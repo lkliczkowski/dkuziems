@@ -11,15 +11,11 @@ namespace LearningBPandLM
     /// </summary>
     class DatasetOperateGrowing : DatasetStructure
     {
-        //niedostępny
-        private DatasetOperateGrowing()
-        { }
-
         /*
          * Konstruktor glowny
          */
-        public DatasetOperateGrowing(int setLength, int sz)
-            : base(setLength, DefaultGeneralizationSetSize, sz)
+        public DatasetOperateGrowing(int setLength, int holdout, int sz)
+            : base(setLength, holdout, sz)
         {
             actualRange = step;
             

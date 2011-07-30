@@ -29,8 +29,7 @@ namespace LearningBPandLM
         /// </summary>
         protected List<int> generalizationSet;
 
-        protected const int DefaultGeneralizationSetSize = 20,
-            DefaultSampleSize = 20;
+        public const int DefaultGeneralizationSetSize = 20;
 
         /// <summary>
         /// Ustalana w konstruktorze stala wyznaczajaca wielkosc przyrostu zbioru uczacego
@@ -47,14 +46,13 @@ namespace LearningBPandLM
         /// </summary>
         protected int actualRange;
 
-        protected DatasetStructure() { }
+        private DatasetStructure() { }
 
         protected DatasetStructure(int setLength, int gPercent)
             :this (setLength, gPercent, 1)
         { }
         protected DatasetStructure(int setLength, int gPercent, double sz)
         {
-
             StepSampleSize = (int)sz * (setLength - gPercent * setLength / 100) / 100;
 
             List<int> indexes = new List<int>();
@@ -63,14 +61,11 @@ namespace LearningBPandLM
 
             Program.PrintInfo("Tworzenie podzbiorow");
 
-            step = StepSampleSize;//((setLength * STEP_SAMPLE_SIZE / 100) < 1) ? 1 : (int)(setLength * STEP_SAMPLE_SIZE / 100);
-            //step = 100;
+            step = StepSampleSize;
 
             generalizationSet = drawIndexes(gPercent * setLength / 100, ref indexes);
             Print(String.Format("\b\b\b\tZbiór walidacyjny - zakończono!\t{0} przypadków\t({1:N2}%)", 
                 generalizationSet.Count, gPercent));
-
-            
 
             trainingSet = indexes;
             Print(String.Format("\b\b\b\tZbiór uczący - zakończono!\t{0} przypadków\t({1:N2}%)", 
@@ -101,7 +96,6 @@ namespace LearningBPandLM
         protected virtual List<int> drawIndexes(int howMany, ref List<int> fromSet)
         {
             List<int> newIndexSet = new List<int>();
-            //Random r = new Random();
             int tmp = 0;
 
             while (howMany != 0)
