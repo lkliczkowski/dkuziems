@@ -22,6 +22,18 @@ namespace LearningBPandLM
             }
         }
 
+        private static void setTest1()
+        {
+            holdoutPercentagePar = 80;
+            datasetStructurePar = EnumDatasetStructures.Simple;
+        }
+
+        private static void setTest2()
+        {
+            holdoutPercentagePar = 30;
+            datasetStructurePar = EnumDatasetStructures.Growing;
+        }
+
         private static void automatedRunBP()
         {
             int hiddenRatioFrom = 2,
@@ -31,6 +43,7 @@ namespace LearningBPandLM
             int learningRateMultiplicity = 10;
 
             setOptionsToDefault();
+            setTest1();
             selectDataForAutomated();
             prepareData();
             configured = runAutomated = true;
@@ -61,7 +74,7 @@ namespace LearningBPandLM
                 adjustmentFactorVMultiplicity = 2;
             
             setOptionsToDefault();
-            sampleSizePar = 30;
+            setTest1();
             selectDataForAutomated();
             prepareData();
             configured = runAutomated = true;
@@ -82,7 +95,6 @@ namespace LearningBPandLM
                     }
                 }
             }
-
         }
 
         private static void selectDataForAutomated()

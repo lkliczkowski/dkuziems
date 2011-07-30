@@ -10,15 +10,11 @@ namespace LearningBPandLM
     /// </summary>
     class DatasetOperateSimple : DatasetStructure
     {
-        //niedostępny
-        private DatasetOperateSimple()
-        { }
-
         /*
          * Konstruktor glowny
          */
-        public DatasetOperateSimple(int setLength, int sz)
-            : base(setLength, DefaultGeneralizationSetSize, sz)
+        public DatasetOperateSimple(int setLength, int holdout, int sz)
+            : base(setLength, holdout, sz)
         {
             actualRange = 0;
         }
@@ -35,35 +31,6 @@ namespace LearningBPandLM
         public override void IncreaseRange()
         {
             //nic nie rób - pełny zbiór treningowy dostępny
-        }
-
-        /// <summary>
-        /// Metoda losujaca dostepne indeksy ze zbioru
-        /// </summary>
-        /// <param name="howMany">Jak wiele indeksow ma wziac</param>
-        /// <param name="fromSet"></param>
-        /// <returns></returns>
-        protected override List<int> drawIndexes(int howMany, ref List<int> fromSet)
-        {
-            List<int> newIndexSet = new List<int>();
-            Random r = new Random();
-            int tmp = 0;
-
-            while (howMany != 0)
-            {
-                //if (fromSet.Count == 0)
-                //    return newIndexSet;
-
-                tmp = r.Next(fromSet.Last());
-                if (fromSet.Contains(tmp))
-                {
-                    newIndexSet.Add(tmp);
-                    fromSet.Remove(tmp);
-                    howMany--;
-                }
-            }
-
-            return newIndexSet;
         }
 
     }

@@ -19,7 +19,7 @@ namespace LearningBPandLM
             LMuseGenSetToo, runAutomated;
 
         //parametry konfiguracyjne
-        private static int hiddenNodeRatioPar, sampleSizePar;
+        private static int holdoutPercentagePar, hiddenNodeRatioPar, sampleSizePar;
         private static double learningRatePar, desiredMSEPar, 
             coefficientMIpar, adjustmentFactorVpar;
         private static ulong maxEpochsPar;

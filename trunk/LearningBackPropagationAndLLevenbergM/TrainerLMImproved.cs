@@ -198,16 +198,12 @@ namespace LearningBPandLM
         #region konstruktory
 
         public TrainerLMImproved(ZScore.ZScoreData dataset)
-            : this(dataset, EnumDatasetStructures.Growing, 
-            (dataset.sample(0).Length > 40) ?
-            (dataset.sample(0).Length / 4 - 1) :
-            dataset.sample(0).Length / 2 - 1,
-            1500, 99, 0.001, VDefault, 25,
-            DefaultProceedingWithSingularMatrix, 
-            false, false)
+            : this(dataset, EnumDatasetStructures.Growing, DatasetStructure.DefaultGeneralizationSetSize,
+            (int)(4 * Math.Sqrt(dataset.sample(0).Length)), 1500, 99, 0.001, VDefault, 25,
+            DefaultProceedingWithSingularMatrix, false, false)
         { }
 
-        public TrainerLMImproved(ZScore.ZScoreData dataset, EnumDatasetStructures ds, int hiddenNodeRatio, 
+        public TrainerLMImproved(ZScore.ZScoreData dataset, EnumDatasetStructures ds, int holdout, int hiddenNodeRatio, 
             ulong mE, double dMSE, double cMi, double aFV, int sz, SingularMatrixProceeding smp, bool uGen, 
             bool runAutomated)
         {
@@ -216,14 +212,14 @@ namespace LearningBPandLM
             switch (ds)
             {
                 case EnumDatasetStructures.Growing:
-                    DatasetIndexes = new DatasetOperateGrowing(Dataset.NormalizedData[0].GetNum(), sz);
+                    DatasetIndexes = new DatasetOperateGrowing(Dataset.NormalizedData[0].GetNum(), holdout, sz);
                     break;
                 case EnumDatasetStructures.Windowed:
-                    DatasetIndexes = new DatasetOperateWindowed(Dataset.NormalizedData[0].GetNum(), sz);
+                    DatasetIndexes = new DatasetOperateWindowed(Dataset.NormalizedData[0].GetNum(), holdout, sz);
                     break;
                 case EnumDatasetStructures.Simple:
                 default:
-                    DatasetIndexes = new DatasetOperateSimple(Dataset.NormalizedData[0].GetNum(), sz);
+                    DatasetIndexes = new DatasetOperateSimple(Dataset.NormalizedData[0].GetNum(), holdout, sz);
                     break;
             }
 
@@ -240,7 +236,7 @@ namespace LearningBPandLM
             useGen = uGen;
             automatedRun = runAutomated;
 
-            createFileNames();
+            createFileNames(holdout);
             durationOfEachEpoch = new Hashtable();
             durationInElapsedTicks = new Hashtable();
             timer = new Stopwatch();
@@ -319,8 +315,6 @@ namespace LearningBPandLM
                     durationOfEachEpoch.Add(epochCounter, timer.ElapsedMilliseconds);
                     durationInElapsedTicks.Add(epochCounter, timer.ElapsedTicks);
 
-
-
                     previousTrainingSetMSE = trainingSetMSE;
 
                     //zapisujemy wyniki do pliku
@@ -360,8 +354,10 @@ namespace LearningBPandLM
                 }
 
             }
-            saveResult.WriteLine("#ms.average():\t {0} \n#ticks.average():\t {1}", 
-                calcMeanDuration(durationOfEachEpoch), calcMeanDuration(durationInElapsedTicks));
+            saveResult.WriteLine("#ms.average():\t{0}\tlast:\t{1}", 
+                calcMeanDuration(durationOfEachEpoch), durationOfEachEpoch[epochCounter]);
+            saveResult.WriteLine("#ticks.average():\t{0}\tlast:\t{1}", 
+                calcMeanDuration(durationInElapsedTicks), durationInElapsedTicks[epochCounter]);
             saveResult.Flush();
             saveResult.Close();
             return true;
@@ -383,7 +379,7 @@ namespace LearningBPandLM
             while (!epochComplete)
             {
                 if (coefficientMI > MaxMiCoefficient || coefficientMI < MinMiCoefficient)
-                    epochComplete = true;
+                    trainingComplete = true;
 
                 Debug.WriteLine(">> feedforward, backward");
                 for (int i = 0; i < trainingSet.Length; i++)
@@ -461,7 +457,6 @@ namespace LearningBPandLM
                 else
                 {
                     Debug.WriteLine(">>>> if (updateWeights()) (false)");
-
 
                     //odrzucamy nowe wagi
                     NN.RestoreWeightsWithPrevious();
@@ -777,11 +772,11 @@ namespace LearningBPandLM
         /// <summary>
         /// utworz nazwy plikow (zwiazane z typem danych)
         /// </summary>
-        private void createFileNames()
+        private void createFileNames(int holdout)
         {
 
-            resultsFileName = String.Format("wynik_{0}_LM-{1}-{2}-{3}-{4}-{5}.txt",
-                Enum.GetName(typeof(ZScore.EnumDataTypes), (int)Dataset.DataType),
+            resultsFileName = String.Format("wynik_{0}_LM-g{1}-{2}-{3}-{4}-{5}-{6}.txt",
+                Enum.GetName(typeof(ZScore.EnumDataTypes), (int)Dataset.DataType), holdout.ToString(),
                 NN.numHidden.ToString(), coefficientMI.ToString(), adjustmentFactorV.ToString(),
                 Enum.GetName(typeof(SingularMatrixProceeding), ProceedingWithSingularMatrix),
                 useGen ? "T" : "F");

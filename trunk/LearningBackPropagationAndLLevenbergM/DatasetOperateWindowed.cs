@@ -9,16 +9,11 @@ namespace LearningBPandLM
     /// </summary>
     class DatasetOperateWindowed : DatasetStructure
     {
-
-        //niedostępny
-        private DatasetOperateWindowed()
-        { }
-
         /*
          * Konstruktor glowny
          */
-        public DatasetOperateWindowed(int setLength, int sz)
-            : base(setLength, DefaultGeneralizationSetSize, sz)
+        public DatasetOperateWindowed(int setLength, int holdout, int sz)
+            : base(setLength, holdout, sz)
         {
             actualRange = 0;
             
