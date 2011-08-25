@@ -22,35 +22,64 @@ namespace LearningBPandLM
             }
         }
 
-        private static void setTest1()
+        private static void setTest90()
         {
-            holdoutPercentagePar = 80;
+            holdoutPercentagePar = 90;
             datasetStructurePar = EnumDatasetStructures.Simple;
         }
 
-        private static void setTest2()
+        private static void setTest99()
         {
-            holdoutPercentagePar = 30;
-            datasetStructurePar = EnumDatasetStructures.Growing;
+            holdoutPercentagePar = 99;
+            datasetStructurePar = EnumDatasetStructures.Simple;
         }
 
+        private static void setTest95()
+        {
+            holdoutPercentagePar = 95;
+            datasetStructurePar = EnumDatasetStructures.Simple;
+        }
+
+        private static void setTest70()
+        {
+            holdoutPercentagePar = 70;
+            datasetStructurePar = EnumDatasetStructures.Simple;
+        }
+
+        private static void setTest97()
+        {
+            holdoutPercentagePar = 97;
+            datasetStructurePar = EnumDatasetStructures.Simple;
+        }
+
+        private static void setTestMIoSVD()
+        {
+            holdoutPercentagePar = 70;
+            proceedingWithSingular = SingularMatrixProceeding.SVD;
+        }
+
+        private static void setTestMIoPINV()
+        {
+            holdoutPercentagePar = 70;
+            proceedingWithSingular = SingularMatrixProceeding.PINV;
+        }
         private static void automatedRunBP()
         {
-            int hiddenRatioFrom = 2,
-                hiddenRatioTo = 22;
-            double learningRateFrom = 0.00005,
+            int hiddenNumberFrom = 2,
+                hiddenNumberTo = 33;
+            double learningRateFrom = 0.005,
                 learningRateTo = 0.9;
-            int learningRateMultiplicity = 10;
+            int learningRateMultiplicity = 3;
 
             setOptionsToDefault();
-            setTest1();
+            setTest95();
             selectDataForAutomated();
             prepareData();
             configured = runAutomated = true;
 
-            for (int n = hiddenRatioFrom; n < hiddenRatioTo; n++)
+            for (int n = hiddenNumberFrom; n < hiddenNumberTo; n++)
             {
-                hiddenNodeRatioPar = n;
+                hiddenNumberPar = n;
 
                 for (double l = learningRateFrom; l < learningRateTo; l *= learningRateMultiplicity)
                 {
@@ -63,36 +92,48 @@ namespace LearningBPandLM
 
         private static void automatedRunLM()
         {
-            int hiddenRatioFrom = 2,
-                hiddenRatioTo = 22;
-            double coefficientMIFrom = 0.00001, 
-                coefficientMITo = 0.1;
-            int coefficientMIMultiplicity = 3;
+            int hiddenNumberFrom = 2,
+                hiddenNumberTo = 21,
+                hiddenHitUp = 13;
+            double coefficientMIFrom = 0.0001,
+                coefficientMITo = 100.01,
+                afterNormalHitMI = 1;
+            int coefficientMIMultiplicity = 100;
 
             int adjustmentFactorVFrom = 5,
-                adjustmentFactorVTo = 11,
+                adjustmentFactorVTo = 16,
+                afterNormalHitV = 10,
                 adjustmentFactorVMultiplicity = 2;
-            
+
             setOptionsToDefault();
-            setTest1();
+            setTest99();
             selectDataForAutomated();
             prepareData();
             configured = runAutomated = true;
 
-            for (int n = hiddenRatioFrom; n < hiddenRatioTo; n++)
+            for (int n = hiddenNumberFrom; n < hiddenNumberTo; n++)
             {
-                hiddenNodeRatioPar = n;
-
-                for (double m = coefficientMIFrom; m < coefficientMITo; m *= coefficientMIMultiplicity)
+                hiddenNumberPar = n;
+                if (hiddenNumberPar < hiddenHitUp)
                 {
-                    coefficientMIpar = m;
-
-                    for (int v = adjustmentFactorVFrom; v < adjustmentFactorVTo; v *= adjustmentFactorVMultiplicity)
+                    for (double m = coefficientMIFrom; m < coefficientMITo; m *= coefficientMIMultiplicity)
                     {
-                        adjustmentFactorVpar = v;
-                        LMCreateNN();
-                        LMStart();
+                        coefficientMIpar = m;
+
+                        for (int v = adjustmentFactorVFrom; v < adjustmentFactorVTo; v *= adjustmentFactorVMultiplicity)
+                        {
+                            adjustmentFactorVpar = v;
+                            LMCreateNN();
+                            LMStart();
+                        }
                     }
+                }
+                else
+                {
+                    coefficientMIpar = afterNormalHitMI;
+                    adjustmentFactorVpar = afterNormalHitV;
+                    LMCreateNN();
+                    LMStart();
                 }
             }
         }
@@ -101,12 +142,14 @@ namespace LearningBPandLM
         {
             while (!readyToZScore)
             {
+                PrintLongLine();
                 Console.WriteLine("Wybierz zestaw danych");
                 Menu selectData = new Menu();
                 selectData.Add("[wybor danych] Ustaw Opcje dla HeartDisease", SetToHeartDisease);
                 selectData.Add("[wybor danych] Ustaw Opcje dla GermanCreditData", SetToGermanCreditData);
-                selectData.Add("[wybor danych] Ustaw Opcje dla LetterRecognition", SetToLetterRecognition);
                 selectData.Add("[wybor danych] Ustaw Opcje dla CreditRisk", SetToCreditRisk);
+                selectData.Add("[wybor danych] Ustaw Opcje dla LetterRecognition", SetToLetterRecognition);
+                selectData.Add("Pokaż ogólne opcje", AShowActualConfig);
 
                 selectData.Show();
             }
@@ -115,6 +158,18 @@ namespace LearningBPandLM
         private static void AEnd()
         {
             AMenuFlag = true;
+        }
+
+        private static void AShowActualConfig()
+        {
+            PrintLongLine();
+            Console.WriteLine("holdout: {0}", holdoutPercentagePar);
+            Console.WriteLine("datasetStructures: {0}", 
+                Enum.GetName(typeof(EnumDatasetStructures), datasetStructurePar));
+
+            Console.WriteLine("\nLM Only: SingularMatrixProceeding: {0}",
+                Enum.GetName(typeof(SingularMatrixProceeding), proceedingWithSingular));
+            PrintLongLine();
         }
     }
 }

@@ -456,7 +456,7 @@ namespace ZScore
                     break;
 
                 case EnumDataTypes.LetterRecognitionA:
-                    len = tabTypes.Length;
+                    len = tabTypes.Length + 1;
                     break;
                 default:
                     break;

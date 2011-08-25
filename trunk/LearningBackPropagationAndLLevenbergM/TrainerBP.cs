@@ -147,8 +147,8 @@ namespace LearningBPandLM
             this.Dataset = dataset;
 
             ///ostatnie 2 argumenty - false, true dla funkcji aktywacji ktore maja byc tanh(x), true dla sigmoid
-            NN = new neuralNetwork(Dataset.sample(0).Length, hiddenNodeRatio,
-                1, dataset.DataType, ActivationFuncType.Tanh, ActivationFuncType.Sigmoid);
+            NN = new neuralNetwork(Dataset.sample(0).Length, hiddenNodeRatio, Dataset.target(0).Length, 
+                dataset.DataType, ActivationFuncType.Tanh, ActivationFuncType.Sigmoid);
 
             switch(ds)
             {
@@ -171,6 +171,7 @@ namespace LearningBPandLM
 
             createFileNames(holdout);
             durationOfEachEpoch = new Hashtable();
+            durationInElapsedTicks = new Hashtable();
             timer = new Stopwatch();
 
             desiredMSE = dMSE;
@@ -277,7 +278,7 @@ namespace LearningBPandLM
 
                 //zmieniamy zakres indeksu podzbioru dla zbioru trenujacego
                 DatasetIndexes.IncreaseRange();
-
+                if(epochCounter % 10 == 0)
                 PrintStatus();
             }
             saveResult.WriteLine("#ms.average():\t{0}\tlast:\t{1}",
@@ -311,13 +312,13 @@ namespace LearningBPandLM
         /// Faza WSTECZ
         /// </summary>
         /// <param name="desiredOutputs">wartosc WY</param>
-        private void backpropagate(double desiredOutputs)
+        private void backpropagate(double[] desiredOutputs)
         {
             //dla k-tej jednostki wyjsciowej
             for (int k = 0; k < NN.numOutput; k++)
             {
                 //gradient (kierunke spadku) dla wyjscia y_k*(1-y_k)*(d_k - y_k)
-                outputErrorGradients[k] = getOutputErrorGradient(desiredOutputs, NN.OutputNeurons[k]);
+                outputErrorGradients[k] = getOutputErrorGradient(desiredOutputs[k], NN.OutputNeurons[k]);
 
                 //z j-tym neuronem warstwy ukrytej
                 for (int j = 0; j <= NN.numHidden; j++)

@@ -203,8 +203,8 @@ namespace LearningBPandLM
             DefaultProceedingWithSingularMatrix, false, false)
         { }
 
-        public TrainerLMImproved(ZScore.ZScoreData dataset, EnumDatasetStructures ds, int holdout, int hiddenNodeRatio, 
-            ulong mE, double dMSE, double cMi, double aFV, int sz, SingularMatrixProceeding smp, bool uGen, 
+        public TrainerLMImproved(ZScore.ZScoreData dataset, EnumDatasetStructures ds, int holdout, int hiddenNodeRatio,
+            ulong mE, double dMSE, double cMi, double aFV, int sz, SingularMatrixProceeding smp, bool uGen,
             bool runAutomated)
         {
 
@@ -224,8 +224,8 @@ namespace LearningBPandLM
             }
 
 
-            NN = new neuralNetwork(Dataset.sample(0).Length, hiddenNodeRatio, 1, Dataset.DataType, 
-                ActivationFuncType.Sigmoid, ActivationFuncType.Sigmoid);
+            NN = new neuralNetwork(Dataset.sample(0).Length, hiddenNodeRatio, Dataset.target(0).Length,
+                Dataset.DataType, ActivationFuncType.Sigmoid, ActivationFuncType.Sigmoid);
 
             trainingSetMSE = generalizationSetMSE = double.MaxValue;
             maxEpochs = mE;
@@ -311,7 +311,7 @@ namespace LearningBPandLM
                 if (runTrainingEpoch(DatasetIndexes.TrainingSet))
                 {
                     timer.Stop();
-                    
+
                     durationOfEachEpoch.Add(epochCounter, timer.ElapsedMilliseconds);
                     durationInElapsedTicks.Add(epochCounter, timer.ElapsedTicks);
 
@@ -354,9 +354,9 @@ namespace LearningBPandLM
                 }
 
             }
-            saveResult.WriteLine("#ms.average():\t{0}\tlast:\t{1}", 
+            saveResult.WriteLine("#ms.average():\t{0}\tlast:\t{1}",
                 calcMeanDuration(durationOfEachEpoch), durationOfEachEpoch[epochCounter]);
-            saveResult.WriteLine("#ticks.average():\t{0}\tlast:\t{1}", 
+            saveResult.WriteLine("#ticks.average():\t{0}\tlast:\t{1}",
                 calcMeanDuration(durationInElapsedTicks), durationInElapsedTicks[epochCounter]);
             saveResult.Flush();
             saveResult.Close();
@@ -457,19 +457,6 @@ namespace LearningBPandLM
                 else
                 {
                     Debug.WriteLine(">>>> if (updateWeights()) (false)");
-
-                    //odrzucamy nowe wagi
-                    NN.RestoreWeightsWithPrevious();
-                    recalcMSE();
-                    Debug.WriteLine(">> Wagi przywrócone (tMSE: {0})", trainingSetMSE);
-
-                    if (coefficientMI > MaxMiCoefficient || coefficientMI < MinMiCoefficient)
-                        return false;
-
-                    //powtarzamy iteracje epochComplete == false
-                    //zwiekszamy /mi
-                    incMi();
-
                     if (!miMsgShown)
                     {
                         Console.WriteLine("\nNieudana zmiana wag"
@@ -477,11 +464,7 @@ namespace LearningBPandLM
                             + "zmiany wag cofnięte, zmiana wartości współczynnika μ:");
                         miMsgShown = true;
                     }
-                    Console.Write("\b\b\b\b\b\b\b\b\b\b          "
-                        + "\b\b\b\b\b\b\b\b\b\b{0}", coefficientMI);
-
-                    DatasetIndexes.IncreaseRange();
-                    Debug.WriteLine(">> SampleChangedToNext mInvFail ({0})", DatasetIndexes.TrainingSet.Length);
+                    return false;
                 }
             }
 
@@ -502,64 +485,67 @@ namespace LearningBPandLM
         /// </summary>
         /// <param name="desiredOutputs"></param>
         /// <param name="sampleNum"></param>
-        private void backward(double desiredOutputs, int sampleNum)
+        private void backward(double[] desiredOutputs, int sampleNum)
         {
-            //odliczamy aktualny blad sieci dla wyjscia dla aktualnej probki
-            error = desiredOutputs - NN.OutputNeurons[0];
-
-            //lista pochodnych dla funkcji bledu oraz sum wazonych 
-            //D(e_ij)/D(net_ij)
-            double[] s = new double[NN.numHidden + NN.numOutput];
-            s[s.Length - 1] = derivativeOfNetsSigmoid(NN.OutputNets[0]);
-            for (int i = s.Length - 2; i >= 0; --i)
+            for (int m = 0; m < NN.numOutput; m++)
             {
-                s[i] = derivativeOfNetsSigmoid(NN.HiddenNets[i]) * NN.wHiddenOutput[i][0] * (-s.Last());
-            }
+                //odliczamy aktualny blad sieci dla wyjscia dla aktualnej probki
+                error = desiredOutputs[m] - NN.OutputNeurons[m];
 
-            //obliczamy wektor j
-            int wIndex = 0;
-            for (int i = 0; i < NN.numHidden; i++)
-                for (int k = 0; k < NN.numInput + 1; k++)
+                //lista pochodnych dla funkcji bledu oraz sum wazonych 
+                //D(e_ij)/D(net_ij)
+                double[] s = new double[NN.numHidden + NN.numOutput];
+                s[NN.numHidden + m] = derivativeOfNetsSigmoid(NN.OutputNets[m]);
+                for (int i = s.Length - (NN.numOutput + 1); i >= 0; --i)
                 {
-                    vectorJ[wIndex] = s[i] * NN.Inputs[k];
-                    wIndex++;
+                    s[i] = derivativeOfNetsSigmoid(NN.HiddenNets[i]) * NN.wHiddenOutput[i][0] * (-s[NN.numHidden + m]);
                 }
 
-            for (int i = 0; i < NN.numOutput; i++)
+                //obliczamy wektor j
+                int wIndex = 0;
+                for (int i = 0; i < NN.numHidden; i++)
+                    for (int k = 0; k < NN.numInput + 1; k++)
+                    {
+                        vectorJ[wIndex] = s[i] * NN.Inputs[k];
+                        wIndex++;
+                    }
+
+
                 for (int k = 0; k < NN.numHidden + 1; k++)
                 {
-                    vectorJ[wIndex] = s.Last() * NN.HiddenNeurons[k];
+                    vectorJ[wIndex] = s[NN.numHidden + m] * NN.HiddenNeurons[k];
                     wIndex++;
                 }
 
-            //obliczamy podmacierz q
-            for (int n = 0; n < N; n++)
-            {
-                for (int m = n; m < N; m++)
+                //obliczamy podmacierz q
+                for (int n = 0; n < N; n++)
                 {
-                    submatrixQ[n][m] = vectorJ[m] * vectorJ[n];
+                    for (int k = n; k < N; k++)
+                    {
+                        submatrixQ[n][k] = vectorJ[k] * vectorJ[n];
+                    }
                 }
-            }
 
-            //obliczamy podwektor ETA
-            for (int i = 0; i < N; i++)
-            {
-                subvectorETA[i] = vectorJ[i] * error;
-            }
-
-            //Q = Q + q
-            for (int n = 0; n < N; n++)
-            {
-                for (int m = 0; m < N; m++)
+                //obliczamy podwektor ETA
+                for (int i = 0; i < N; i++)
                 {
-                    matrixQ[n][m] = matrixQ[n][m] + submatrixQ[n][m];
+                    subvectorETA[i] = vectorJ[i] * error;
                 }
-            }
 
-            //g = g + eta
-            for (int i = 0; i < N; i++)
-            {
-                gradientVectorG[i] = gradientVectorG[i] + subvectorETA[i];
+                //Q = Q + q
+                for (int n = 0; n < N; n++)
+                {
+                    for (int k = 0; k < N; k++)
+                    {
+                        matrixQ[n][k] = matrixQ[n][k] + submatrixQ[n][k];
+                    }
+                }
+
+                //g = g + eta
+                for (int i = 0; i < N; i++)
+                {
+                    gradientVectorG[i] = gradientVectorG[i] + subvectorETA[i];
+                }
             }
         }
 
@@ -756,7 +742,7 @@ namespace LearningBPandLM
             {
                 string line = String.Format("{0}\t{1:N4}\t{2:N2}\t{3:N4}\t{4:N2}\t{5}\t{6}",
                     epochCounter, trainingSetMSE, trainingSetAccuracy, generalizationSetMSE,
-                    generalizationSetAccuracy, durationOfEachEpoch[epochCounter], 
+                    generalizationSetAccuracy, durationOfEachEpoch[epochCounter],
                     durationInElapsedTicks[epochCounter]);
                 line = line.Replace(",", ".");
                 saveResult.WriteLine(line);
@@ -798,10 +784,10 @@ namespace LearningBPandLM
             Console.WriteLine("Współczynnik przystosowania V:\t\t{0}", adjustmentFactorV);
             Console.WriteLine("Wielkość Macierzy Hessego: {0}x{0}", N);
             Console.WriteLine("Maksymalna liczba epok:\t\t{0}", maxEpochs);
-            Console.WriteLine("Docelowy MSE:\t{0}%\n", desiredMSE);
+            Console.WriteLine("Docelowy MSE:\t{0}\n", desiredMSE);
             Console.WriteLine("Wielkość próbki treningowej: {0}, \nRozmiar zbioru walidacyjnego: {1}",
                 DatasetIndexes.TrainingSet.Length, DatasetIndexes.GeneralizationSet.Length);
-            Console.WriteLine("Postępowanie w przypadku macierzy osobliwych: {0}", 
+            Console.WriteLine("Postępowanie w przypadku macierzy osobliwych: {0}",
                 Enum.GetName(typeof(SingularMatrixProceeding), ProceedingWithSingularMatrix));
             Console.WriteLine("Korzysta ze wiedzy o aktualnym błędzie na zbiorze walidacyjnym? {0}\n",
                 useGen ? "Prawda" : "Fałsz");

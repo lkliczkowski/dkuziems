@@ -14,7 +14,7 @@ namespace LearningBPandLM
          * Konstruktor glowny
          */
         public DatasetOperateSimple(int setLength, int holdout, int sz)
-            : base(setLength, holdout, sz)
+            : base(setLength, holdout, sz, false)
         {
             actualRange = 0;
         }

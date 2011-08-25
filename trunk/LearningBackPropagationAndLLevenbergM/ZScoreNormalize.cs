@@ -359,36 +359,6 @@ namespace ZScore
                     }
                     break;
                 #endregion
-                #region letterRecognitionA
-
-                case EnumDataTypes.LetterRecognitionA:
-                    for (int i = 0; i < tabType.Length; i++)
-                    {
-                        switch (tabType[i])
-                        {
-                            case 1:
-                                double mean = discretized[i].ColumnToArray().Average();
-                                double sigma = stdDevContinuous(discretized[i].ColumnToArray());
-
-                                foreach (double cell in discretized[i].ColumnToArray())
-                                {
-                                    normalized[normalized_index].AddData(zScoreContinuous(cell, mean, sigma));
-                                    //normalized[normalized_index].AddData(cell); //oryginalna wartość
-                                }
-
-                                normalized_index++;
-                                break;
-                            case 0:
-                                foreach (double cell in discretized[i].ColumnToArray())
-                                {
-                                    normalized[normalized_index].AddData(cell);
-                                }
-                                normalized_index++;
-                                break;
-                        }
-                    }
-                    break;
-                #endregion
                 #region creditRisk
                 case EnumDataTypes.CreditRisk:
                     Print("ZScore.Normalize", "case EnumDataTypes.CreditRisk");
@@ -588,6 +558,38 @@ namespace ZScore
                                 normalized_index += Enum.GetValues(typeof(EnumJob)).Length - 1;
                                 break;
 
+                        }
+                    }
+                    break;
+                #endregion
+                #region letterRecognitionA
+
+                case EnumDataTypes.LetterRecognitionA:
+                    for (int i = 0; i < tabType.Length; i++)
+                    {
+                        switch (tabType[i])
+                        {
+                            case 1:
+                                double mean = discretized[i].ColumnToArray().Average();
+                                double sigma = stdDevContinuous(discretized[i].ColumnToArray());
+
+                                foreach (double cell in discretized[i].ColumnToArray())
+                                {
+                                    normalized[normalized_index].AddData(zScoreContinuous(cell, mean, sigma));
+                                    //normalized[normalized_index].AddData(cell); //oryginalna wartość
+                                }
+
+                                normalized_index++;
+                                break;
+                            case 0:
+                                foreach (double cell in discretized[i].ColumnToArray())
+                                {
+                                    //normalized[normalized_index].AddData(cell);
+                                    normalized[normalized_index].AddData((cell == 1 ? 1 : 0));
+                                    normalized[normalized_index + 1].AddData((cell == 1 ? 0 : 1));
+                                }
+                                normalized_index++;
+                                break;
                         }
                     }
                     break;

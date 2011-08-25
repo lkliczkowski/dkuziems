@@ -87,17 +87,17 @@ namespace LearningBPandLM
 
             outputNets = new double[numOutput];
 
-	        wInputHidden = new double[numInput + 1][];
-	        for ( int i=0; i <= numInput; i++ ) 
-	        {
-		        wInputHidden[i] = new double[numHidden];
-	        }
+            wInputHidden = new double[numInput + 1][];
+            for (int i = 0; i <= numInput; i++)
+            {
+                wInputHidden[i] = new double[numHidden];
+            }
 
             wHiddenOutput = new double[numHidden + 1][];
-	        for ( int i=0; i <= numHidden; i++ ) 
-	        {
-		        wHiddenOutput[i] = new double[numOutput];			
-	        }
+            for (int i = 0; i <= numHidden; i++)
+            {
+                wHiddenOutput[i] = new double[numOutput];
+            }
 
             //zakresy klasyfikacji, sluza tylko do okreslania Accuracy, nie wplywaja na MSE
             switch (dataType)
@@ -138,12 +138,11 @@ namespace LearningBPandLM
                 //flaga informujaca czy wskazany przypadek zostal dobrze wyliczony przez siec
                 bool correctResult = true;
 
-                foreach(double actualVal in OutputNeurons)
+                if (!(decideOutput() == Dataset.target(setIndex[i])[0]))
                 {
-                    if (decideOutput(actualVal) != Dataset.target(setIndex[i])) 
-                        correctResult = false;
-                    //Console.WriteLine("{0:N2} vs {1:N2}", actualVal, Dataset.target(setIndex[i])); 
+                    correctResult = false;
                 }
+
                 //jezeli niepoprawnie sklasyfikowany zwieksz blad
                 if (!correctResult) incorrectResults++;
             }
@@ -169,8 +168,12 @@ namespace LearningBPandLM
                 FeedForward(Dataset.sample(setIndex[i]));
 
                 //wyliczamy Set Mean Squared Error
-                foreach(double actualVal in OutputNeurons)
-                    mse += Math.Pow((actualVal - Dataset.target(setIndex[i])), 2);
+                for (int k = 0; k < numOutput; k++)
+                {
+                    double[] d = Dataset.target(setIndex[i]);
+                        double a = OutputNeurons[k];
+                    mse += Math.Pow(d[k] - a, 2);
+                }
             }
 
             //procentowa wartosc bledu
@@ -241,12 +244,21 @@ namespace LearningBPandLM
         /// <summary>
         /// Decyduje jakiemu wynikowi przypisac wartosc
         /// </summary>
-        /// <param name="x">wyliczona wartosc</param>
-        /// <returns>wartosc wynikowa (0/1 lub -1 gdy poza zakresem)</returns>
-        public int decideOutput(double x)
+        /// <returns>wartosc wynikowa (0/1)</returns>
+        public int decideOutput()
         {
-            if (x < decideOutputRangeA) return 0;
-            else if (x >= decideOutputRangeB) return 1;
+            if (numOutput == 2)
+            {
+                int predictedVal;
+                if (OutputNeurons[0] > OutputNeurons[1])
+                    predictedVal = 1;
+                else
+                    predictedVal = 0;
+
+                return predictedVal;
+            }
+            else if (OutputNeurons[0] < decideOutputRangeA) return 0;
+            else if (OutputNeurons[0] >= decideOutputRangeB) return 1;
             else return -1;
         }
 
@@ -263,15 +275,15 @@ namespace LearningBPandLM
             //hiddenNeurons = calculateOfOutputs(numInput, numHidden, inputNeurons, hiddenNeurons, wInputHidden, ref hiddenNets, true);
 
             //dla ukrytej
-            HiddenNeurons = calculateOfOutputs(numInput, numHidden, Inputs, HiddenNeurons, wInputHidden, 
+            HiddenNeurons = calculateOfOutputs(numInput, numHidden, Inputs, HiddenNeurons, wInputHidden,
                 ref hiddenNets, firstActivationIsSigmoid);
 
             //wyliczamy wartosci na WY
-            OutputNeurons = calculateOfOutputs(numHidden, numOutput, HiddenNeurons, OutputNeurons, wHiddenOutput, 
+            OutputNeurons = calculateOfOutputs(numHidden, numOutput, HiddenNeurons, OutputNeurons, wHiddenOutput,
                 ref outputNets, secondActivationIsSigmoid);
 
         }
-        
+
         /// <summary>
         /// Wylicza wartosci w sieci dla wskazanej tablicy danych i wybranych warstw
         /// </summary>
@@ -292,12 +304,12 @@ namespace LearningBPandLM
                 neuronsCurrentLayer[j] = 0;
 
                 //get weighted sum of pattern and bias neuron
-                for (int i = 0; i <= nLayerFrom; i++) 
+                for (int i = 0; i <= nLayerFrom; i++)
                     neuronsCurrentLayer[j] += neuronsLayerFrom[i] * wWithinLayers[i][j];
 
                 currNets[j] = neuronsCurrentLayer[j];
 
-                switch(useSigmoid)
+                switch (useSigmoid)
                 {
                     case ActivationFuncType.Sigmoid:
                         neuronsCurrentLayer[j] = activationFunctionSigmoid(neuronsCurrentLayer[j]);
@@ -327,7 +339,6 @@ namespace LearningBPandLM
 
         public void PrintWeights()
         {
-            
             Console.WriteLine("weights input(+bias):hidden ({0}:{1})", numInput + 1, numHidden);
             foreach (double[] dd in wInputHidden)
             {
@@ -337,6 +348,7 @@ namespace LearningBPandLM
                 }
                 Console.WriteLine();
             }
+
             Console.WriteLine();
             Console.WriteLine("weights hidden(+bias):output ({0}:{1})", numHidden + 1, numOutput);
             foreach (double[] dd in wHiddenOutput)
@@ -346,7 +358,6 @@ namespace LearningBPandLM
                     Console.WriteLine("{0}", d);
                 }
                 Console.WriteLine();
-
             }
         }
 
