@@ -114,8 +114,8 @@ namespace ZScore
                 case EnumDataTypes.HeartDisease:
                 case EnumDataTypes.GermanCreditData:
                 case EnumDataTypes.CreditRisk:
-                    l = 2; break;
                 case EnumDataTypes.LetterRecognitionA:
+                    l = 2; break;
                 default:
                     l = 1; break;
             }
@@ -134,7 +134,7 @@ namespace ZScore
         /// </summary>
         /// <param name="f">index w danych</param>
         /// <returns>wartosc "desired output"</returns>
-        public double target(int f)
+        public double[] target(int f)
         {
             int l;
             switch (DataType)
@@ -142,13 +142,20 @@ namespace ZScore
                 case EnumDataTypes.HeartDisease:
                 case EnumDataTypes.GermanCreditData:
                 case EnumDataTypes.CreditRisk:
-                    l = 2; break;
                 case EnumDataTypes.LetterRecognitionA:
+                    l = 1; break;   //ile OutputNeurons
+                    //l = 2; break; //0/1(-2,-1)
                 default:
                     l = 1; break;
             }
 
-            return normalizedData[normalizedData.Length - l].GetByIndex(f);
+            double[] t = new double[l];
+            for (int i = 0; i < l; i++)
+            {
+                t[i] = normalizedData[normalizedData.Length - 2 + i].GetByIndex(f);
+            }
+
+            return t;
         }
     }
 }

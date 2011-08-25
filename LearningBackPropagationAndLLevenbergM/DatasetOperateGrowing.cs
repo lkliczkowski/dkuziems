@@ -15,7 +15,7 @@ namespace LearningBPandLM
          * Konstruktor glowny
          */
         public DatasetOperateGrowing(int setLength, int holdout, int sz)
-            : base(setLength, holdout, sz)
+            : base(setLength, holdout, sz, false)
         {
             actualRange = step;
             

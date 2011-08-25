@@ -24,7 +24,7 @@ namespace LearningBPandLM
 
             //parametry konfiguracji
             holdoutPercentagePar = 20;
-            hiddenNodeRatioPar = 4;
+            hiddenNumberPar = 4;
             sampleSizePar = 5;
             desiredMSEPar = 0.01;
             maxEpochsPar = 1500;
@@ -78,7 +78,7 @@ namespace LearningBPandLM
             if (dataset.NormalizeRun())
             {
                 Console.WriteLine("Standaryzacja Z-Score zakończona z powodzeniem!");
-                hiddenNodeRatioPar = (dataset.sample(0).Length - 1) / 4 + 1;
+                hiddenNumberPar = (dataset.sample(0).Length - 1) / 4 + 1;
                 readyToCreateNN = true;
             }
             else
@@ -94,23 +94,23 @@ namespace LearningBPandLM
                 (inputFile == "") ? "brak" : inputFile, Enum.GetName(typeof(EnumDataTypes), dataType));
 
             Console.WriteLine("\nKonfiguracja sieci:{0}", (configured == false) ? "\n[nie konfigurowano - wartości domyślne]" : "");
-            Console.WriteLine("Liczba neuronów w war.ukrytej:\t{0}", hiddenNodeRatioPar);
+            Console.WriteLine("Liczba neuronów w war.ukrytej:\t{0}", hiddenNumberPar);
             Console.WriteLine("Maksymalna liczba epok:\t\t{0}", maxEpochsPar);
             Console.WriteLine("Docelowy błąd MSE:\t{0}\n", desiredMSEPar);
         }
 
         private static void setHiddenRatio()
         {
-            Console.WriteLine("Podaj liczbę neuronów w warstwie ukrytej, obecna: {0}", hiddenNodeRatioPar);
+            Console.WriteLine("Podaj liczbę neuronów w warstwie ukrytej, obecna: {0}", hiddenNumberPar);
             try
             {
-                hiddenNodeRatioPar = Int32.Parse(Console.ReadLine());
+                hiddenNumberPar = Int32.Parse(Console.ReadLine());
             }
             catch
             {
                 Console.WriteLine("Niepoprawna wartość, ustawiona wartość poprzednia.");
             }
-            Console.WriteLine("Obecna liczba neuronów wynosi: {0}\n", hiddenNodeRatioPar);
+            Console.WriteLine("Obecna liczba neuronów wynosi: {0}\n", hiddenNumberPar);
         }
 
         private static void setMaxEpoch()
@@ -263,8 +263,8 @@ namespace LearningBPandLM
                 BPmenu.Add("Wystartuj sieć dla domyślnego zestawu danych i konfiguracji", BPquickStart);
                 BPmenu.Add("[wybor danych] Ustaw Opcje dla HeartDisease", SetToHeartDisease);
                 BPmenu.Add("[wybor danych] Ustaw Opcje dla GermanCreditData", SetToGermanCreditData);
-                BPmenu.Add("[wybor danych] Ustaw Opcje dla LetterRecognition", SetToLetterRecognition);
                 BPmenu.Add("[wybor danych] Ustaw Opcje dla CreditRisk", SetToCreditRisk);
+                BPmenu.Add("[wybor danych] Ustaw Opcje dla LetterRecognition", SetToLetterRecognition);
                 BPmenu.Add("Wyświetl konfigurację", ShowConfig);
                 BPmenu.Add("Powrót do menu głównego", BPEnd);
 
@@ -359,7 +359,7 @@ namespace LearningBPandLM
         {
             if (configured)
                 networkTrainerBP = new TrainerBP(dataset, datasetStructurePar,
-                    holdoutPercentagePar, hiddenNodeRatioPar, learningRatePar, 
+                    holdoutPercentagePar, hiddenNumberPar, learningRatePar, 
                     maxEpochsPar, desiredMSEPar, sampleSizePar, runAutomated);
             else
                 networkTrainerBP = new TrainerBP(dataset);
@@ -392,8 +392,8 @@ namespace LearningBPandLM
                 LMmenu.Add("Wystartuj sieć dla domyślnego zestawu danych i konfiguracji", LMquickStart);
                 LMmenu.Add("[wybor danych] Ustaw Opcje dla HeartDisease", SetToHeartDisease);
                 LMmenu.Add("[wybor danych] Ustaw Opcje dla GermanCreditData", SetToGermanCreditData);
-                LMmenu.Add("[wybor danych] Ustaw Opcje dla LetterRecognition", SetToLetterRecognition);
                 LMmenu.Add("[wybor danych] Ustaw Opcje dla CreditRisk", SetToCreditRisk);
+                LMmenu.Add("[wybor danych] Ustaw Opcje dla LetterRecognition", SetToLetterRecognition);
                 LMmenu.Add("Wyświetl konfigurację", ShowConfig);
                 LMmenu.Add("Powrót do menu głównego", LMEnd);
 
@@ -568,7 +568,7 @@ namespace LearningBPandLM
         {
             if (configured)
                 networkTrainerLM = new TrainerLMImproved(dataset, datasetStructurePar, holdoutPercentagePar,
-                    hiddenNodeRatioPar, maxEpochsPar, desiredMSEPar, coefficientMIpar, adjustmentFactorVpar, 
+                    hiddenNumberPar, maxEpochsPar, desiredMSEPar, coefficientMIpar, adjustmentFactorVpar, 
                     sampleSizePar, proceedingWithSingular, LMuseGenSetToo, runAutomated);
             else
                 networkTrainerLM = new TrainerLMImproved(dataset);

@@ -7,7 +7,7 @@ namespace LearningBPandLM
     {
         #region parametry programu
 
-        private static string inputFile, outputFile;
+        private static string inputFile, outputFile = "data.txt";
         private static ZScoreData dataset;
         private static EnumDataTypes dataType;
         private static TrainerLMImproved networkTrainerLM;
@@ -19,7 +19,7 @@ namespace LearningBPandLM
             LMuseGenSetToo, runAutomated;
 
         //parametry konfiguracyjne
-        private static int holdoutPercentagePar, hiddenNodeRatioPar, sampleSizePar;
+        private static int holdoutPercentagePar, hiddenNumberPar, sampleSizePar;
         private static double learningRatePar, desiredMSEPar, 
             coefficientMIpar, adjustmentFactorVpar;
         private static ulong maxEpochsPar;

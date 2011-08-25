@@ -48,10 +48,10 @@ namespace LearningBPandLM
 
         private DatasetStructure() { }
 
-        protected DatasetStructure(int setLength, int gPercent)
-            :this (setLength, gPercent, 1)
-        { }
-        protected DatasetStructure(int setLength, int gPercent, double sz)
+        //protected DatasetStructure(int setLength, int gPercent)
+        //    :this (setLength, gPercent, 1, true)
+        //{ }
+        protected DatasetStructure(int setLength, int gPercent, double sz, bool showSampleSize)
         {
             StepSampleSize = (int)sz * (setLength - gPercent * setLength / 100) / 100;
 
@@ -63,13 +63,15 @@ namespace LearningBPandLM
 
             step = StepSampleSize;
 
-            generalizationSet = drawIndexes(gPercent * setLength / 100, ref indexes);
-            Print(String.Format("\b\b\b\tZbiór walidacyjny - zakończono!\t{0} przypadków\t({1:N2}%)", 
+            trainingSet = drawIndexes(((100 - gPercent) * setLength) / 100, ref indexes);
+            Print(String.Format("\b\b\b\tZbiór uczący - zakończono!\t{0} przypadków\t({1:N2}%)",
+                trainingSet.Count, (100 - gPercent)));
+
+            generalizationSet = indexes;
+            Print(String.Format("\b\b\b\tZbiór walidacyjny - zakończono!\t{0} przypadków\t({1:N2}%)",
                 generalizationSet.Count, gPercent));
 
-            trainingSet = indexes;
-            Print(String.Format("\b\b\b\tZbiór uczący - zakończono!\t{0} przypadków\t({1:N2}%)", 
-                trainingSet.Count, (100 - gPercent)));
+            if(showSampleSize)
             Print(String.Format("\b\b\b\tWielkosc pojedynczej próbki uczącej:\t{0} ({1}%)",
                 StepSampleSize, StepSampleSize * 100 / trainingSet.Count));
 
