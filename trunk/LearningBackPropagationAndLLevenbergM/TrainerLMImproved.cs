@@ -170,11 +170,6 @@ namespace LearningBPandLM
         private string weightsOutputFile, customWeightsOutputFile;
 
         /// <summary>
-        /// Przyrost - dla metody skonczonych roznic
-        /// </summary>
-        private double h = 0.00000000001;//Double.Epsilon - gdzies gubi precyzje w trakcie obliczen!
-
-        /// <summary>
         /// flaga czy kontynuowac nauczanie
         /// </summary>
         private bool trainingComplete;
@@ -199,8 +194,7 @@ namespace LearningBPandLM
 
         public TrainerLMImproved(ZScore.ZScoreData dataset)
             : this(dataset, EnumDatasetStructures.Growing, DatasetStructure.DefaultGeneralizationSetSize,
-            (int)(4 * Math.Sqrt(dataset.sample(0).Length)), 1500, 99, 0.001, VDefault, 25,
-            DefaultProceedingWithSingularMatrix, false, false)
+            1, 1500, 99, 0.001, VDefault, 25, DefaultProceedingWithSingularMatrix, false, false)
         { }
 
         public TrainerLMImproved(ZScore.ZScoreData dataset, EnumDatasetStructures ds, int holdout, int hiddenNodeRatio,
@@ -209,23 +203,28 @@ namespace LearningBPandLM
         {
 
             Dataset = dataset;
+            string setSplitTypeNameForFile;
             switch (ds)
             {
                 case EnumDatasetStructures.Growing:
                     DatasetIndexes = new DatasetOperateGrowing(Dataset.NormalizedData[0].GetNum(), holdout, sz);
+                    setSplitTypeNameForFile = "G";
                     break;
                 case EnumDatasetStructures.Windowed:
                     DatasetIndexes = new DatasetOperateWindowed(Dataset.NormalizedData[0].GetNum(), holdout, sz);
+                    setSplitTypeNameForFile = "W";
                     break;
                 case EnumDatasetStructures.Simple:
                 default:
                     DatasetIndexes = new DatasetOperateSimple(Dataset.NormalizedData[0].GetNum(), holdout, sz);
+                    setSplitTypeNameForFile = "S";
                     break;
             }
 
 
-            NN = new neuralNetwork(Dataset.sample(0).Length, hiddenNodeRatio, Dataset.target(0).Length,
-                Dataset.DataType, ActivationFuncType.Sigmoid, ActivationFuncType.Sigmoid);
+            NN = new neuralNetwork(Dataset.sample(0).Length, 
+                (int)(hiddenNodeRatio * Math.Sqrt(dataset.sample(0).Length * dataset.target(0).Length)), 
+                Dataset.target(0).Length, Dataset.DataType, ActivationFuncType.Sigmoid, ActivationFuncType.Sigmoid);
 
             trainingSetMSE = generalizationSetMSE = double.MaxValue;
             maxEpochs = mE;
@@ -236,13 +235,17 @@ namespace LearningBPandLM
             useGen = uGen;
             automatedRun = runAutomated;
 
-            createFileNames(holdout);
+            createFileNames(holdout, setSplitTypeNameForFile);
             durationOfEachEpoch = new Hashtable();
             durationInElapsedTicks = new Hashtable();
             timer = new Stopwatch();
 
-            N = (NN.numInput + 1) * NN.numHidden
-                + (NN.numHidden + 1) * NN.numOutput; //liczba wag = N
+            if (!NN.IsLogistic)
+                N = (NN.numInput + 1) * NN.numHidden
+                    + (NN.numHidden + 1) * NN.numOutput; //liczba wag = N
+            else
+                N = (NN.numInput + 1) * NN.numOutput; //liczba wag = N
+
             vectorJ = new double[N];
             subvectorETA = new double[N];
             //error = new double[numTrainingPatternsInSingleEpoch];
@@ -295,10 +298,6 @@ namespace LearningBPandLM
 
             previousTrainingSetMSE = trainingSetMSE;
             previousGeneralizationSetMSE = generalizationSetMSE;
-
-            //TODO usunac potem - test only
-            if (epochCounter == 0 && trainingSetMSE < 0.35)
-                ShowOptions();
 
             while (epochCounter < maxEpochs && !trainingComplete)
             {
@@ -360,6 +359,8 @@ namespace LearningBPandLM
                 calcMeanDuration(durationInElapsedTicks), durationInElapsedTicks[epochCounter]);
             saveResult.Flush();
             saveResult.Close();
+            Console.WriteLine();
+            ShowOptions();
             return true;
         }
 
@@ -409,6 +410,11 @@ namespace LearningBPandLM
                     if (previousTrainingSetMSE > trainingSetMSE || ((previousGeneralizationSetMSE > generalizationSetMSE) && useGen))
                     {
                         Debug.WriteLine(">> true");
+                        if (!(previousTrainingSetMSE > trainingSetMSE) && ((previousGeneralizationSetMSE > generalizationSetMSE) && useGen))
+                        {
+                            incMi();
+                            Console.WriteLine("Zmiana wag za zgodą GenSet!");
+                        }
 
                         Console.WriteLine("\nWagi zostały zmienione dla μ: {0}", coefficientMI);
                         //zmniejszamy /mi
@@ -487,35 +493,49 @@ namespace LearningBPandLM
         /// <param name="sampleNum"></param>
         private void backward(double[] desiredOutputs, int sampleNum)
         {
+            double[] s = new double[NN.numHidden + NN.numOutput];
             for (int m = 0; m < NN.numOutput; m++)
             {
                 //odliczamy aktualny blad sieci dla wyjscia dla aktualnej probki
                 error = desiredOutputs[m] - NN.OutputNeurons[m];
 
                 //lista pochodnych dla funkcji bledu oraz sum wazonych 
-                //D(e_ij)/D(net_ij)
-                double[] s = new double[NN.numHidden + NN.numOutput];
-                s[NN.numHidden + m] = derivativeOfNetsSigmoid(NN.OutputNets[m]);
-                for (int i = s.Length - (NN.numOutput + 1); i >= 0; --i)
+                //D(e_ij)/D(net_ij) 
+                s[NN.numHidden + m] = -NN.DerivativeOfOutput(NN.OutputNets[m]);
+                for (int h = NN.numHidden - 1; h > 0; h--)
                 {
-                    s[i] = derivativeOfNetsSigmoid(NN.HiddenNets[i]) * NN.wHiddenOutput[i][0] * (-s[NN.numHidden + m]);
+                    s[h] = -NN.DerivativeOfHidden(NN.HiddenNets[h]) *
+                        NN.wHiddenOutput[h][m] * NN.DerivativeOfOutput(NN.OutputNets[m]);
                 }
 
                 //obliczamy wektor j
                 int wIndex = 0;
-                for (int i = 0; i < NN.numHidden; i++)
-                    for (int k = 0; k < NN.numInput + 1; k++)
+                if (!NN.IsLogistic)
+                {
+                    for (int i = 0; i < NN.numHidden; i++)
+                        for (int k = 0; k < NN.numInput + 1; k++)
+                        {
+                            vectorJ[wIndex] = s[i] * NN.Inputs[k];
+                            wIndex++;
+                        }
+
+                    for (int k = 0; k < NN.numHidden + 1; k++)
                     {
-                        vectorJ[wIndex] = s[i] * NN.Inputs[k];
+                        vectorJ[wIndex] = s[NN.numHidden + m] * NN.HiddenNeurons[k];
                         wIndex++;
                     }
-
-
-                for (int k = 0; k < NN.numHidden + 1; k++)
-                {
-                    vectorJ[wIndex] = s[NN.numHidden + m] * NN.HiddenNeurons[k];
-                    wIndex++;
                 }
+                else
+                {
+                    for (int k = 0; k < NN.numInput + 1; k++)
+                    {
+                        vectorJ[wIndex] = s[m] * NN.Inputs[k];
+                        wIndex++;
+                    }
+                }
+
+
+
 
                 //obliczamy podmacierz q
                 for (int n = 0; n < N; n++)
@@ -685,21 +705,35 @@ namespace LearningBPandLM
             }
 
             int c = 0;
-            for (int i = 0; i < NN.numInput + 1; i++)
+            if (!NN.IsLogistic)
             {
-                for (int j = 0; j < NN.numHidden; j++)
+                for (int i = 0; i < NN.numInput + 1; i++)
                 {
-                    NN.wInputHidden[i][j] -= deltaWeights[c];
-                    c++;
+                    for (int j = 0; j < NN.numHidden; j++)
+                    {
+                        NN.wInputHidden[i][j] -= deltaWeights[c];
+                        c++;
+                    }
+                }
+
+                for (int i = 0; i < NN.numHidden + 1; i++)
+                {
+                    for (int j = 0; j < NN.numOutput; j++)
+                    {
+                        NN.wHiddenOutput[i][j] -= deltaWeights[c];
+                        c++;
+                    }
                 }
             }
-
-            for (int i = 0; i < NN.numHidden + 1; i++)
+            else
             {
-                for (int j = 0; j < NN.numOutput; j++)
+                for (int i = 0; i < NN.numInput + 1; i++)
                 {
-                    NN.wHiddenOutput[i][j] -= deltaWeights[c];
-                    c++;
+                    for (int j = 0; j < NN.numOutput; j++)
+                    {
+                        NN.wInputHidden[i][j] -= deltaWeights[c];
+                        c++;
+                    }
                 }
             }
 
@@ -758,14 +792,13 @@ namespace LearningBPandLM
         /// <summary>
         /// utworz nazwy plikow (zwiazane z typem danych)
         /// </summary>
-        private void createFileNames(int holdout)
+        private void createFileNames(int holdout, string setSplitType)
         {
-
-            resultsFileName = String.Format("wynik_{0}_LM-g{1}-{2}-{3}-{4}-{5}-{6}.txt",
+            resultsFileName = String.Format("wynik_{0}_LM-{7}g{1}-{2}-{3}-{4}-{5}-{6}.txt",
                 Enum.GetName(typeof(ZScore.EnumDataTypes), (int)Dataset.DataType), holdout.ToString(),
                 NN.numHidden.ToString(), coefficientMI.ToString(), adjustmentFactorV.ToString(),
                 Enum.GetName(typeof(SingularMatrixProceeding), ProceedingWithSingularMatrix),
-                useGen ? "T" : "F");
+                useGen ? "T" : "F", setSplitType);
             weightsOutputFile = String.Format("weights_{0}_LM-{1}.txt",
                 Enum.GetName(typeof(ZScore.EnumDataTypes), (int)Dataset.DataType),
                 NN.numHidden.ToString());
@@ -814,26 +847,7 @@ namespace LearningBPandLM
             deltaWeights = new double[N];
         }
 
-        /// <summary>
-        /// Pochodna z funkcji bledu e, metoda skonczonych roznic
-        /// </summary>
-        /// <param name="netIJ">suma wazona wejsc i wag</param>
-        /// <returns>wartosc pochodnej w punkcie netIJ</returns>
-        private double derivativeOfNetsTanh(double netIJ)
-        {
-            return -((activationFunctionTanh(netIJ + h) - activationFunctionTanh(netIJ)) / h);
-        }
 
-        /// <summary>
-        /// Pochodna z funkcji bledu e, metoda skonczonych roznic
-        /// </summary>
-        /// <param name="netIJ">suma wazona wejsc i wag</param>
-        /// <returns>wartosc pochodnej w punkcie netIJ</returns>
-        private double derivativeOfNetsSigmoid(double netIJ)
-        {
-            return -((activationFunctionSigmoid(netIJ + h) - activationFunctionSigmoid(netIJ)) / h);
-
-        }
 
         /// <summary>
         /// Funkcja aktywacji sigmoidalna unipolarna

@@ -65,7 +65,14 @@ namespace LearningBPandLM
         private double decideOutputRangeA;
         private double decideOutputRangeB;
 
-        private ActivationFuncType firstActivationIsSigmoid, secondActivationIsSigmoid;
+        private ActivationFuncType activationHidden, activationOutput;
+
+        /// <summary>
+        /// Przyrost - dla metody skonczonych roznic
+        /// </summary>
+        private double h = 0.0000001;//Double.Epsilon - gdzies gubi precyzje w trakcie obliczen!
+
+        public bool IsLogistic;
 
         public neuralNetwork(int nInput, int nHidden, int nOutput, ZScore.EnumDataTypes dataType,
             ActivationFuncType firstActivationFunc, ActivationFuncType secondActivationFunc)
@@ -74,31 +81,53 @@ namespace LearningBPandLM
             numHidden = nHidden;
             numOutput = nOutput;
 
+            if (numHidden == 0)
+                IsLogistic = true;
+            else
+                IsLogistic = false;
+
             Inputs = new double[numInput + 1];
             Inputs[numInput] = BIAS;
 
-            HiddenNeurons = new double[numHidden + 1];
-            HiddenNeurons[numHidden] = BIAS;
+            if (!IsLogistic)
+            {
+                HiddenNeurons = new double[numHidden + 1];
+                HiddenNeurons[numHidden] = BIAS;
+            }
+
             OutputNeurons = new double[numOutput];
 
-            //net_ij
-            hiddenNets = new double[numHidden + 1];
-            hiddenNets[numHidden] = BIAS;
+            if (!IsLogistic)
+            {
+                //net_ij
+                hiddenNets = new double[numHidden + 1];
+                hiddenNets[numHidden] = BIAS;
+            }
 
             outputNets = new double[numOutput];
 
-            wInputHidden = new double[numInput + 1][];
-            for (int i = 0; i <= numInput; i++)
+            if (!IsLogistic)
             {
-                wInputHidden[i] = new double[numHidden];
-            }
+                wInputHidden = new double[numInput + 1][];
+                for (int i = 0; i <= numInput; i++)
+                {
+                    wInputHidden[i] = new double[numHidden];
+                }
 
-            wHiddenOutput = new double[numHidden + 1][];
-            for (int i = 0; i <= numHidden; i++)
+                wHiddenOutput = new double[numHidden + 1][];
+                for (int i = 0; i <= numHidden; i++)
+                {
+                    wHiddenOutput[i] = new double[numOutput];
+                }
+            }
+            else
             {
-                wHiddenOutput[i] = new double[numOutput];
+                wInputHidden = new double[numInput + 1][];
+                for (int i = 0; i <= numInput; i++)
+                {
+                    wInputHidden[i] = new double[numOutput];
+                }
             }
-
             //zakresy klasyfikacji, sluza tylko do okreslania Accuracy, nie wplywaja na MSE
             switch (dataType)
             {
@@ -115,8 +144,8 @@ namespace LearningBPandLM
                     break;
             }
 
-            firstActivationIsSigmoid = firstActivationFunc;
-            secondActivationIsSigmoid = secondActivationFunc;
+            activationHidden = firstActivationFunc;
+            activationOutput = secondActivationFunc;
         }
 
         /// <summary>
@@ -170,9 +199,7 @@ namespace LearningBPandLM
                 //wyliczamy Set Mean Squared Error
                 for (int k = 0; k < numOutput; k++)
                 {
-                    double[] d = Dataset.target(setIndex[i]);
-                        double a = OutputNeurons[k];
-                    mse += Math.Pow(d[k] - a, 2);
+                    mse += Math.Pow(Dataset.target(setIndex[i])[k] - OutputNeurons[k], 2);
                 }
             }
 
@@ -185,8 +212,15 @@ namespace LearningBPandLM
         /// </summary>
         public void InitializeWeights()
         {
-            wInputHidden = initRandomWeights(numInput, numHidden, wInputHidden);
-            wHiddenOutput = initRandomWeights(numHidden, numOutput, wHiddenOutput);
+            if (!IsLogistic)
+            {
+                wInputHidden = initRandomWeights(numInput, numHidden, wInputHidden);
+                wHiddenOutput = initRandomWeights(numHidden, numOutput, wHiddenOutput);
+            }
+            else
+            {
+                wInputHidden = initRandomWeights(numInput, numHidden, wInputHidden);
+            }
         }
 
         /// <summary>
@@ -271,17 +305,21 @@ namespace LearningBPandLM
             //przypisuje wartosci na WE (wejsciu)
             for (int i = 0; i < numInput; i++) Inputs[i] = sample[i];
 
-            //obliczamy wartosci w hiddenLayer
-            //hiddenNeurons = calculateOfOutputs(numInput, numHidden, inputNeurons, hiddenNeurons, wInputHidden, ref hiddenNets, true);
+            if (!IsLogistic)
+            {
+                //dla ukrytej
+                HiddenNeurons = calculateOfOutputs(numInput, numHidden, Inputs, HiddenNeurons, wInputHidden,
+                    ref hiddenNets, activationHidden);
 
-            //dla ukrytej
-            HiddenNeurons = calculateOfOutputs(numInput, numHidden, Inputs, HiddenNeurons, wInputHidden,
-                ref hiddenNets, firstActivationIsSigmoid);
-
-            //wyliczamy wartosci na WY
-            OutputNeurons = calculateOfOutputs(numHidden, numOutput, HiddenNeurons, OutputNeurons, wHiddenOutput,
-                ref outputNets, secondActivationIsSigmoid);
-
+                //wyliczamy wartosci na WY
+                OutputNeurons = calculateOfOutputs(numHidden, numOutput, HiddenNeurons, OutputNeurons, wHiddenOutput,
+                    ref outputNets, activationOutput);
+            }
+            else
+            {
+                OutputNeurons = calculateOfOutputs(numInput, numOutput, Inputs, OutputNeurons, wInputHidden,
+                   ref outputNets, activationOutput);
+            }
         }
 
         /// <summary>
@@ -325,16 +363,79 @@ namespace LearningBPandLM
             return neuronsCurrentLayer;
         }
 
+        public double DerivativeOfOutput(double netIJ)
+        {
+            switch (activationOutput)
+            {
+                case ActivationFuncType.Sigmoid:
+                    return derivativeOfNetsSigmoid(netIJ);
+                case ActivationFuncType.Tanh:
+                    return derivativeOfNetsTanh(netIJ);
+                case ActivationFuncType.Linear:
+                default:
+                    return netIJ;
+            }
+        }
+
+        public double DerivativeOfHidden(double netIJ)
+        {
+            switch (activationHidden)
+            {
+                case ActivationFuncType.Sigmoid:
+                    return derivativeOfNetsSigmoid(netIJ);
+                case ActivationFuncType.Tanh:
+                    return derivativeOfNetsTanh(netIJ);
+                case ActivationFuncType.Linear:
+                default:
+                    return netIJ;
+            }
+        }
+
+        /// <summary>
+        /// Pochodna z funkcji bledu e, metoda skonczonych roznic
+        /// </summary>
+        /// <param name="netIJ">suma wazona wejsc i wag</param>
+        /// <returns>wartosc pochodnej w punkcie netIJ</returns>
+        private double derivativeOfNetsTanh(double netIJ)
+        {
+            return (activationFunctionTanh(netIJ + h) - activationFunctionTanh(netIJ)) / h;
+        }
+
+        /// <summary>
+        /// Pochodna z funkcji bledu e, metoda skonczonych roznic
+        /// </summary>
+        /// <param name="netIJ">suma wazona wejsc i wag</param>
+        /// <returns>wartosc pochodnej w punkcie netIJ</returns>
+        private double derivativeOfNetsSigmoid(double netIJ)
+        {
+            return (activationFunctionSigmoid(netIJ + h) - activationFunctionSigmoid(netIJ)) / h;
+
+        }
+
         public void KeepWeightsToPrevious()
         {
-            previousWeightsInputHidden = wInputHidden;
-            previousWeightsHiddenOutput = wHiddenOutput;
+            if (!IsLogistic)
+            {
+                previousWeightsInputHidden = wInputHidden;
+                previousWeightsHiddenOutput = wHiddenOutput;
+            }
+            else
+            {
+                previousWeightsInputHidden = wInputHidden;
+            }
         }
 
         public void RestoreWeightsWithPrevious()
         {
-            wInputHidden = previousWeightsInputHidden;
-            wHiddenOutput = previousWeightsHiddenOutput;
+            if (!IsLogistic)
+            {
+                wInputHidden = previousWeightsInputHidden;
+                wHiddenOutput = previousWeightsHiddenOutput;
+            }
+            else
+            {
+                wInputHidden = previousWeightsInputHidden;
+            }
         }
 
         public void PrintWeights()
@@ -406,27 +507,28 @@ namespace LearningBPandLM
                             }
                         }
 
-                        while (hiddenOutput)
-                        {
-                            line = readFile.ReadLine();
-                            if (line == null)
+                        if (!IsLogistic)
+                            while (hiddenOutput)
                             {
-                                hiddenOutput = false;
-                                inputHidden = false;
-                                Console.WriteLine("Wczytywanie wag zakończone sukcesem!");
+                                line = readFile.ReadLine();
+                                if (line == null)
+                                {
+                                    hiddenOutput = false;
+                                    inputHidden = false;
+                                    Console.WriteLine("Wczytywanie wag zakończone sukcesem!");
+                                }
+                                else if (line.Equals(""))
+                                {
+                                    i++;
+                                    j = 0;
+                                }
+                                else
+                                {
+                                    double d = Double.Parse(line);
+                                    wHiddenOutput[i][j] = d;
+                                    j++;
+                                }
                             }
-                            else if (line.Equals(""))
-                            {
-                                i++;
-                                j = 0;
-                            }
-                            else
-                            {
-                                double d = Double.Parse(line);
-                                wHiddenOutput[i][j] = d;
-                                j++;
-                            }
-                        }
                     }
                     readFile.Close();
                 }
@@ -457,15 +559,16 @@ namespace LearningBPandLM
             }
             saveWeights.WriteLine();
             saveWeights.WriteLine("weights hidden(+bias):output ({0}:{1})", numHidden + 1, numOutput);
-            foreach (double[] dd in wHiddenOutput)
-            {
-                foreach (double d in dd)
+            if (!IsLogistic)
+                foreach (double[] dd in wHiddenOutput)
                 {
-                    saveWeights.WriteLine("{0}", d);
+                    foreach (double d in dd)
+                    {
+                        saveWeights.WriteLine("{0}", d);
+                    }
+                    saveWeights.WriteLine();
+                    saveWeights.Flush();
                 }
-                saveWeights.WriteLine();
-                saveWeights.Flush();
-            }
             saveWeights.Close();
             Console.WriteLine("Zapisano wagi!");
         }

@@ -53,7 +53,8 @@ namespace LearningBPandLM
         //{ }
         protected DatasetStructure(int setLength, int gPercent, double sz, bool showSampleSize)
         {
-            StepSampleSize = (int)sz * (setLength - gPercent * setLength / 100) / 100;
+            StepSampleSize = ((int)sz * (setLength - gPercent * setLength / 100) / 100 == 0) && (setLength > 0) ?
+                1 : (int)sz * (setLength - gPercent * setLength / 100) / 100;
 
             List<int> indexes = new List<int>();
             for (int i = 0; i < setLength; i++)

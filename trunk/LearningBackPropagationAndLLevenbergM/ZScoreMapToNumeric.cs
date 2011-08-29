@@ -4,12 +4,12 @@ namespace ZScore
 {
     partial class ZScoreData
     {
-        public static Column<double>[] Discretize(Column<string>[] rawData,
+        public static Column<double>[] MapToNumeric(Column<string>[] rawData,
             EnumDataTypes switchType,int[] columnType)
         {
-            Column<double>[] discretizedData = new Column<double>[columnType.Length];
+            Column<double>[] numericData = new Column<double>[columnType.Length];
             for (int i = 0; i < columnType.Length; i++)
-                discretizedData[i] = new Column<double>();
+                numericData[i] = new Column<double>();
 
             switch (switchType)
             {
@@ -34,7 +34,7 @@ namespace ZScore
                                         Console.WriteLine(rawData[i].Get(j));
                                         val = -1;
                                     }
-                                    discretizedData[i].AddData(val);
+                                    numericData[i].AddData(val);
                                     break;
 
                                 case (int)EnumHeartDisease.LowMediumHigh:
@@ -49,7 +49,7 @@ namespace ZScore
                                         failParseInfo("lmhOption", i, j);
                                         lmhOption = EnumLowMediumHigh.unknown;
                                     }
-                                    discretizedData[i].AddData(((int)lmhOption));
+                                    numericData[i].AddData(((int)lmhOption));
                                     break;
 
                                 case (int)EnumHeartDisease.AbsentPresent:
@@ -64,7 +64,7 @@ namespace ZScore
                                         failParseInfo("apOption", i);
                                         apOption = EnumAbsentPresent.unknown;
                                     }
-                                    discretizedData[i].AddData(((int)apOption)); //byte type 0/1/miss
+                                    numericData[i].AddData(((int)apOption)); //byte type 0/1/miss
                                     break;
 
                                 case (int)EnumHeartDisease.Obesity:
@@ -79,7 +79,7 @@ namespace ZScore
                                         failParseInfo("obeOption", i, j);
                                         obeOption = EnumObesity.unknown;
                                     }
-                                    discretizedData[i].AddData(((int)obeOption));
+                                    numericData[i].AddData(((int)obeOption));
                                     break;
 
                                 case (int)EnumHeartDisease.AgeRange:
@@ -94,12 +94,12 @@ namespace ZScore
                                         failParseInfo("arOption", i, j);
                                         arOption = EnumAgeRange.unknown;
                                     }
-                                    discretizedData[i].AddData(((int)arOption));
+                                    numericData[i].AddData(((int)arOption));
                                     break;
 
                                 default:
                                     Print("Unrecognized", "HeartDisease[switch by columnType]");
-                                    discretizedData[i].AddData(-1);
+                                    numericData[i].AddData(-1);
                                     break;
                             }
                         }
@@ -128,7 +128,7 @@ namespace ZScore
                                         Console.WriteLine(rawData[i].Get(j));
                                         val = -1;
                                     }
-                                    discretizedData[i].AddData(val);
+                                    numericData[i].AddData(val);
                                     break;
 
                                 case (int)EnumGermanCreditData.A1:
@@ -143,7 +143,7 @@ namespace ZScore
                                         failParseInfo("a1", i, j);
                                         a1 = EnumA1.unknown;
                                     }
-                                    discretizedData[i].AddData(((int)a1));
+                                    numericData[i].AddData(((int)a1));
                                     break;
 
                                 case (int)EnumGermanCreditData.A3:
@@ -158,7 +158,7 @@ namespace ZScore
                                         failParseInfo("a3", i, j);
                                         a3 = EnumA3.unknown;
                                     }
-                                    discretizedData[i].AddData(((int)a3));
+                                    numericData[i].AddData(((int)a3));
                                     break;
 
                                 case (int)EnumGermanCreditData.A4:
@@ -173,7 +173,7 @@ namespace ZScore
                                         failParseInfo("a4", i, j);
                                         a4 = EnumA4.unknown;
                                     }
-                                    discretizedData[i].AddData(((int)a4));
+                                    numericData[i].AddData(((int)a4));
                                     break;
 
                                 case (int)EnumGermanCreditData.A6:
@@ -188,7 +188,7 @@ namespace ZScore
                                         failParseInfo("a6", i, j);
                                         a6 = EnumA6.unknown;
                                     }
-                                    discretizedData[i].AddData(((int)a6));
+                                    numericData[i].AddData(((int)a6));
                                     break;
 
                                 case (int)EnumGermanCreditData.A7:
@@ -203,7 +203,7 @@ namespace ZScore
                                         failParseInfo("a7", i, j);
                                         a7 = EnumA7.unknown;
                                     }
-                                    discretizedData[i].AddData(((int)a7));
+                                    numericData[i].AddData(((int)a7));
                                     break;
 
                                 case (int)EnumGermanCreditData.A9:
@@ -218,7 +218,7 @@ namespace ZScore
                                         failParseInfo("a9", i, j);
                                         a9 = EnumA9.unknown;
                                     }
-                                    discretizedData[i].AddData(((int)a9));
+                                    numericData[i].AddData(((int)a9));
                                     break;
 
                                 case (int)EnumGermanCreditData.A10:
@@ -233,7 +233,7 @@ namespace ZScore
                                         failParseInfo("a10", i, j);
                                         a10 = EnumA10.unknown;
                                     }
-                                    discretizedData[i].AddData(((int)a10));
+                                    numericData[i].AddData(((int)a10));
                                     break;
 
                                 case (int)EnumGermanCreditData.A12:
@@ -248,7 +248,7 @@ namespace ZScore
                                         failParseInfo("a12", i, j);
                                         a12 = EnumA12.unknown;
                                     }
-                                    discretizedData[i].AddData(((int)a12));
+                                    numericData[i].AddData(((int)a12));
                                     break;
 
                                 case (int)EnumGermanCreditData.A14:
@@ -263,7 +263,7 @@ namespace ZScore
                                         failParseInfo("a14", i, j);
                                         a14 = EnumA14.unknown;
                                     }
-                                    discretizedData[i].AddData(((int)a14));
+                                    numericData[i].AddData(((int)a14));
                                     break;
 
                                 case (int)EnumGermanCreditData.A15:
@@ -278,7 +278,7 @@ namespace ZScore
                                         failParseInfo("a15", i, j);
                                         a15 = EnumA15.unknown;
                                     }
-                                    discretizedData[i].AddData(((int)a15));
+                                    numericData[i].AddData(((int)a15));
                                     break;
 
                                 case (int)EnumGermanCreditData.A17:
@@ -293,7 +293,7 @@ namespace ZScore
                                         failParseInfo("a17", i, j);
                                         a17 = EnumA17.unknown;
                                     }
-                                    discretizedData[i].AddData(((int)a17));
+                                    numericData[i].AddData(((int)a17));
                                     break;
 
                                 case (int)EnumGermanCreditData.A19:
@@ -308,7 +308,7 @@ namespace ZScore
                                         failParseInfo("a19", i, j);
                                         a19 = EnumA19.unknown;
                                     }
-                                    discretizedData[i].AddData(((int)a19));
+                                    numericData[i].AddData(((int)a19));
                                     break;
 
                                 case (int)EnumGermanCreditData.A20:
@@ -323,12 +323,12 @@ namespace ZScore
                                         failParseInfo("a20", i, j);
                                         a20 = EnumA20.unknown;
                                     }
-                                    discretizedData[i].AddData(((int)a20));
+                                    numericData[i].AddData(((int)a20));
                                     break;
 
                                 default:
                                     Print("Unrecognized", "HeartDisease[switch by columnType]");
-                                    discretizedData[i].AddData(-1);
+                                    numericData[i].AddData(-1);
                                     break;
                             }
                         }
@@ -356,7 +356,7 @@ namespace ZScore
                                         Console.WriteLine(rawData[i].Get(j));
                                         val = -1;
                                     }
-                                    discretizedData[i].AddData(val);
+                                    numericData[i].AddData(val);
                                     break;
                                 case 0:
                                     double ZeroOrOneOption;
@@ -369,11 +369,11 @@ namespace ZScore
                                         failParseInfo("ZeroOrOneOption", i);
                                         ZeroOrOneOption = -1;
                                     }
-                                    discretizedData[i].AddData(ZeroOrOneOption); //byte type 0/1/miss
+                                    numericData[i].AddData(ZeroOrOneOption); //byte type 0/1/miss
                                     break;
                                 default:
                                     Print("Default", "LetterRecognitionA[switch by columnType]");
-                                    discretizedData[i].AddData(-1);
+                                    numericData[i].AddData(-1);
                                     break;
                             }
                         }
@@ -401,7 +401,7 @@ namespace ZScore
                                         failParseInfo("checkAcc", i, j);
                                         checkAcc = EnumCheckingAcct.unknown;
                                     }
-                                    discretizedData[i].AddData(((int)checkAcc));
+                                    numericData[i].AddData(((int)checkAcc));
                                     break;
 
                                 case (int)EnumCreditRisk.CreditHist:
@@ -416,7 +416,7 @@ namespace ZScore
                                         failParseInfo("creditHist", i, j);
                                         creditHist = EnumCreditHist.unknown;
                                     }
-                                    discretizedData[i].AddData(((int)creditHist));
+                                    numericData[i].AddData(((int)creditHist));
                                     break;
 
                                 case (int)EnumCreditRisk.Purpose:
@@ -431,7 +431,7 @@ namespace ZScore
                                         failParseInfo("purpose", i, j);
                                         purpose = EnumPurpose.unknown;
                                     }
-                                    discretizedData[i].AddData(((int)purpose));
+                                    numericData[i].AddData(((int)purpose));
                                     break;
 
                                 case (int)EnumCreditRisk.SavingsAcct:
@@ -446,7 +446,7 @@ namespace ZScore
                                         failParseInfo("savingAcc", i, j);
                                         savingAcc = EnumSavingsAcct.unknown;
                                     }
-                                    discretizedData[i].AddData(((int)savingAcc));
+                                    numericData[i].AddData(((int)savingAcc));
                                     break;
 
                                 case (int)EnumCreditRisk.Employment:
@@ -461,7 +461,7 @@ namespace ZScore
                                         failParseInfo("employ", i, j);
                                         employ = EnumEmployment.unknown;
                                     }
-                                    discretizedData[i].AddData(((int)employ));
+                                    numericData[i].AddData(((int)employ));
                                     break;
 
                                 case (int)EnumCreditRisk.Gender:
@@ -476,7 +476,7 @@ namespace ZScore
                                         failParseInfo("gender", i, j);
                                         gender = EnumGender.unknown;
                                     }
-                                    discretizedData[i].AddData(((int)gender));
+                                    numericData[i].AddData(((int)gender));
                                     break;
 
                                 case (int)EnumCreditRisk.PersonalStatus:
@@ -491,7 +491,7 @@ namespace ZScore
                                         failParseInfo("pStatus", i, j);
                                         pStatus = EnumPersonalStatus.unknown;
                                     }
-                                    discretizedData[i].AddData(((int)pStatus));
+                                    numericData[i].AddData(((int)pStatus));
                                     break;
 
                                 case (int)EnumCreditRisk.Housing:
@@ -506,7 +506,7 @@ namespace ZScore
                                         failParseInfo("housing", i, j);
                                         housing = EnumHousing.unknown;
                                     }
-                                    discretizedData[i].AddData(((int)housing));
+                                    numericData[i].AddData(((int)housing));
                                     break;
 
                                 case (int)EnumCreditRisk.Job:
@@ -522,7 +522,7 @@ namespace ZScore
                                         Print(rawData[i].Get(j));
                                         job = EnumJob.unknown;
                                     }
-                                    discretizedData[i].AddData(((int)job));
+                                    numericData[i].AddData(((int)job));
                                     break;
 
                                 case (int)EnumCreditRisk.Telephone:
@@ -538,7 +538,7 @@ namespace ZScore
                                         failParseInfo("yesno", i, j);
                                         yesno = EnumYesNo.unknown;
                                     }
-                                    discretizedData[i].AddData(((int)yesno));
+                                    numericData[i].AddData(((int)yesno));
                                     break;
 
                                 case (int)EnumCreditRisk.MonthsAcct:
@@ -555,7 +555,7 @@ namespace ZScore
                                         Console.WriteLine(rawData[i].Get(j));
                                         val = -1;
                                     }
-                                    discretizedData[i].AddData(val);
+                                    numericData[i].AddData(val);
                                     break;
 
                                 case (int)EnumCreditRisk.CreditStanding:
@@ -570,12 +570,12 @@ namespace ZScore
                                         failParseInfo("arOption", i, j);
                                         goodbad = EnumGoodBad.unknown;
                                     }
-                                    discretizedData[i].AddData(((int)goodbad));
+                                    numericData[i].AddData(((int)goodbad));
                                     break;
 
                                 default:
                                     Print("Default", "LetterRecognitionA[switch by columnType]");
-                                    discretizedData[i].AddData(-1);
+                                    numericData[i].AddData(-1);
                                     break;
                             }
                         }
@@ -586,7 +586,7 @@ namespace ZScore
                     break;
             }
 
-            return discretizedData;
+            return numericData;
         }
 
         private static void failParseInfo(string where)

@@ -22,16 +22,16 @@ namespace LearningBPandLM
             endFlag = BPendFlag = LMendFlag = AMenuFlag = readyToZScore = readyToCreateNN
                 = readyToTrain = configured = LMuseGenSetToo = runAutomated = false;
 
-            //parametry konfiguracji
-            holdoutPercentagePar = 20;
-            hiddenNumberPar = 4;
-            sampleSizePar = 5;
+            //parametry konfiguracji            
+            hiddenRatioPar = 2;
             desiredMSEPar = 0.01;
-            maxEpochsPar = 1500;
+            maxEpochsPar = 1000;
             learningRatePar = 0.01;
             coefficientMIpar = 0.01;
             adjustmentFactorVpar = 10;
+            holdoutPercentagePar = 20;
             datasetStructurePar = EnumDatasetStructures.Growing;
+            sampleSizePar = 2;
             proceedingWithSingular = SingularMatrixProceeding.Regularization;
         }
 
@@ -78,7 +78,6 @@ namespace LearningBPandLM
             if (dataset.NormalizeRun())
             {
                 Console.WriteLine("Standaryzacja Z-Score zakończona z powodzeniem!");
-                hiddenNumberPar = (dataset.sample(0).Length - 1) / 4 + 1;
                 readyToCreateNN = true;
             }
             else
@@ -94,23 +93,26 @@ namespace LearningBPandLM
                 (inputFile == "") ? "brak" : inputFile, Enum.GetName(typeof(EnumDataTypes), dataType));
 
             Console.WriteLine("\nKonfiguracja sieci:{0}", (configured == false) ? "\n[nie konfigurowano - wartości domyślne]" : "");
-            Console.WriteLine("Liczba neuronów w war.ukrytej:\t{0}", hiddenNumberPar);
+            Console.WriteLine("Współczynnik liczby neuronów w war.ukrytej:\t{0}", hiddenRatioPar);
             Console.WriteLine("Maksymalna liczba epok:\t\t{0}", maxEpochsPar);
             Console.WriteLine("Docelowy błąd MSE:\t{0}\n", desiredMSEPar);
         }
 
         private static void setHiddenRatio()
         {
-            Console.WriteLine("Podaj liczbę neuronów w warstwie ukrytej, obecna: {0}", hiddenNumberPar);
+            Console.WriteLine("Podaj wpolczynnik liczbę neuronów w warstwie ukrytej, obecna: {0}", hiddenRatioPar);
+            Console.WriteLine("Liczba neuronów zostanie odliczona wg: \n[wspolczynnik]*sqrt([liczba wejść]*[liczba wyjść])");
             try
             {
-                hiddenNumberPar = Int32.Parse(Console.ReadLine());
+                hiddenRatioPar = Int32.Parse(Console.ReadLine());
             }
             catch
             {
                 Console.WriteLine("Niepoprawna wartość, ustawiona wartość poprzednia.");
             }
-            Console.WriteLine("Obecna liczba neuronów wynosi: {0}\n", hiddenNumberPar);
+            Console.WriteLine("Obecna wspolczynnik liczby neuronów wynosi: {0}.", hiddenRatioPar);
+            Console.WriteLine("Utworzona sieć będzie mieć [{0}] neuronów w warstwie ukrytej.\n\n",
+                (int)(hiddenRatioPar * Math.Sqrt(dataset.sample(0).Length * dataset.target(0).Length)));
         }
 
         private static void setMaxEpoch()
@@ -208,15 +210,15 @@ namespace LearningBPandLM
             switch (datasetStructurePar)
             {
                 case EnumDatasetStructures.Growing:
-                    if (!configured) 
+                    if (!configured)
                         sampleSizePar = 3;
                     sampleSizeDefault = 3;
-                    Console.WriteLine("Ile ma wynosic przyrost próbki danych w każdej kolejnej epoce? obecnie: {0}%", 
+                    Console.WriteLine("Ile ma wynosic przyrost próbki danych w każdej kolejnej epoce? obecnie: {0}%",
                         sampleSizePar);
                     getSampleSize(0, 101, sampleSizeDefault);
                     break;
                 case EnumDatasetStructures.Windowed:
-                    if (!configured) 
+                    if (!configured)
                         sampleSizePar = 15;
                     sampleSizeDefault = 15;
                     Console.WriteLine("Podaj wielkosc jednorazowej próbki danych (w %), obecna: {0}%", sampleSizePar);
@@ -359,7 +361,7 @@ namespace LearningBPandLM
         {
             if (configured)
                 networkTrainerBP = new TrainerBP(dataset, datasetStructurePar,
-                    holdoutPercentagePar, hiddenNumberPar, learningRatePar, 
+                    holdoutPercentagePar, hiddenRatioPar, learningRatePar,
                     maxEpochsPar, desiredMSEPar, sampleSizePar, runAutomated);
             else
                 networkTrainerBP = new TrainerBP(dataset);
@@ -568,7 +570,7 @@ namespace LearningBPandLM
         {
             if (configured)
                 networkTrainerLM = new TrainerLMImproved(dataset, datasetStructurePar, holdoutPercentagePar,
-                    hiddenNumberPar, maxEpochsPar, desiredMSEPar, coefficientMIpar, adjustmentFactorVpar, 
+                    hiddenRatioPar, maxEpochsPar, desiredMSEPar, coefficientMIpar, adjustmentFactorVpar,
                     sampleSizePar, proceedingWithSingular, LMuseGenSetToo, runAutomated);
             else
                 networkTrainerLM = new TrainerLMImproved(dataset);
