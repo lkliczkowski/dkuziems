@@ -22,66 +22,123 @@ namespace LearningBPandLM
             }
         }
 
-        private static void setTest90()
+        private static void setTestS90()
         {
             holdoutPercentagePar = 90;
             datasetStructurePar = EnumDatasetStructures.Simple;
         }
 
-        private static void setTest99()
+        /*private static void setTestW95()
+        {
+            holdoutPercentagePar = 95;
+            sampleSizePar = 5;
+            datasetStructurePar = EnumDatasetStructures.Windowed;
+        }
+        */
+        private static void setTestW80S3()
+        {
+            holdoutPercentagePar = 80;
+            sampleSizePar = 3;
+            datasetStructurePar = EnumDatasetStructures.Windowed;
+        }
+
+        private static void setTestW80S20()
+        {
+            holdoutPercentagePar = 80;
+            sampleSizePar = 20;
+            datasetStructurePar = EnumDatasetStructures.Windowed;
+        }
+
+        private static void setTestW50S20()
+        {
+            holdoutPercentagePar = 50;
+            sampleSizePar = 20;
+            datasetStructurePar = EnumDatasetStructures.Windowed;
+        }
+
+        private static void setTestW95S3()
+        {
+            holdoutPercentagePar = 95;
+            sampleSizePar = 3;
+            datasetStructurePar = EnumDatasetStructures.Windowed;
+        }
+
+        private static void setTestS99()
         {
             holdoutPercentagePar = 99;
             datasetStructurePar = EnumDatasetStructures.Simple;
         }
 
-        private static void setTest95()
+        private static void setTestS95()
         {
             holdoutPercentagePar = 95;
             datasetStructurePar = EnumDatasetStructures.Simple;
         }
 
-        private static void setTest70()
+        private static void setTestS70()
         {
             holdoutPercentagePar = 70;
             datasetStructurePar = EnumDatasetStructures.Simple;
         }
 
-        private static void setTest97()
+        private static void setTestS97()
         {
             holdoutPercentagePar = 97;
             datasetStructurePar = EnumDatasetStructures.Simple;
         }
 
-        private static void setTestMIoSVD()
+        private static void setTestMIoSVDW80()
         {
-            holdoutPercentagePar = 70;
+            holdoutPercentagePar = 80;
+            sampleSizePar = 20;
+            datasetStructurePar = EnumDatasetStructures.Windowed;
             proceedingWithSingular = SingularMatrixProceeding.SVD;
         }
 
-        private static void setTestMIoPINV()
+        private static void setTestMIoSVDW50()
         {
-            holdoutPercentagePar = 70;
+            holdoutPercentagePar = 50;
+            sampleSizePar = 20;
+            datasetStructurePar = EnumDatasetStructures.Windowed;
+            proceedingWithSingular = SingularMatrixProceeding.SVD;
+        }
+
+        private static void setTestMIoPINVW80()
+        {
+            holdoutPercentagePar = 80;
+            sampleSizePar = 20;
+            datasetStructurePar = EnumDatasetStructures.Windowed;
             proceedingWithSingular = SingularMatrixProceeding.PINV;
         }
+
+        private static void setTestMIoPINVW50()
+        {
+            holdoutPercentagePar = 50;
+            sampleSizePar = 20;
+            datasetStructurePar = EnumDatasetStructures.Windowed;
+            proceedingWithSingular = SingularMatrixProceeding.PINV;
+        }
+
         private static void automatedRunBP()
         {
-            int hiddenNumberFrom = 2,
-                hiddenNumberTo = 33;
-            double learningRateFrom = 0.005,
-                learningRateTo = 0.9;
-            int learningRateMultiplicity = 3;
+            int hiddenRatioFrom = 0,//2,
+                hiddenRatioTo = 6;//33;
+            double[] learningRateTest =
+                new double[] { 0.001, 0.0025, 0.005, 0.0075,
+                    0.01, 0.025, 0.05, 0.075,
+                    0.1, 0.25, 0.5, 0.75};
 
             setOptionsToDefault();
-            setTest95();
+            setTestW80S20();
             selectDataForAutomated();
             prepareData();
             configured = runAutomated = true;
 
-            for (int n = hiddenNumberFrom; n < hiddenNumberTo; n++)
+            for (int n = hiddenRatioFrom; n < hiddenRatioTo; n++)
             {
-                hiddenNumberPar = n;
+                hiddenRatioPar = n;
 
-                for (double l = learningRateFrom; l < learningRateTo; l *= learningRateMultiplicity)
+                foreach (double l in learningRateTest)
                 {
                     learningRatePar = l;
                     BPCreateNN();
@@ -92,48 +149,31 @@ namespace LearningBPandLM
 
         private static void automatedRunLM()
         {
-            int hiddenNumberFrom = 2,
-                hiddenNumberTo = 21,
-                hiddenHitUp = 13;
-            double coefficientMIFrom = 0.0001,
-                coefficientMITo = 100.01,
-                afterNormalHitMI = 1;
-            int coefficientMIMultiplicity = 100;
+            int hiddenRatioFrom = 0,//2,
+                hiddenRatioTo = 4;//21;
+            double[] coefficientMITest = new double[] { 0.001, 0.01, 0.1, 10, 100 };
 
-            int adjustmentFactorVFrom = 5,
-                adjustmentFactorVTo = 16,
-                afterNormalHitV = 10,
-                adjustmentFactorVMultiplicity = 2;
+            int[] adjustmentFactorVTableTest = new int[] { 2, 5, 8, 10, 20 };
 
             setOptionsToDefault();
-            setTest99();
             selectDataForAutomated();
             prepareData();
             configured = runAutomated = true;
+            setTestW80S20();
 
-            for (int n = hiddenNumberFrom; n < hiddenNumberTo; n++)
+            for (int n = hiddenRatioFrom; n < hiddenRatioTo; n++)
             {
-                hiddenNumberPar = n;
-                if (hiddenNumberPar < hiddenHitUp)
+                hiddenRatioPar = n;
+                foreach (double m in coefficientMITest)
                 {
-                    for (double m = coefficientMIFrom; m < coefficientMITo; m *= coefficientMIMultiplicity)
-                    {
-                        coefficientMIpar = m;
+                    coefficientMIpar = m;
 
-                        for (int v = adjustmentFactorVFrom; v < adjustmentFactorVTo; v *= adjustmentFactorVMultiplicity)
-                        {
-                            adjustmentFactorVpar = v;
-                            LMCreateNN();
-                            LMStart();
-                        }
+                    foreach (int v in adjustmentFactorVTableTest)
+                    {
+                        adjustmentFactorVpar = v;
+                        LMCreateNN();
+                        LMStart();
                     }
-                }
-                else
-                {
-                    coefficientMIpar = afterNormalHitMI;
-                    adjustmentFactorVpar = afterNormalHitV;
-                    LMCreateNN();
-                    LMStart();
                 }
             }
         }
@@ -164,7 +204,7 @@ namespace LearningBPandLM
         {
             PrintLongLine();
             Console.WriteLine("holdout: {0}", holdoutPercentagePar);
-            Console.WriteLine("datasetStructures: {0}", 
+            Console.WriteLine("datasetStructures: {0}",
                 Enum.GetName(typeof(EnumDatasetStructures), datasetStructurePar));
 
             Console.WriteLine("\nLM Only: SingularMatrixProceeding: {0}",

@@ -73,14 +73,14 @@ namespace ZScore
                 Print(String.Format("DataSetSize:ColumnNumber\t{0}:{1}", rawData[0].GetNum(), rawData.Length));
 
 
-                Column<double>[] discretizedData = Discretize
+                Column<double>[] numericData = MapToNumeric
                     (rawData, DataType, columnType);
 
                 //PrintList(discretizedData);
 
                 normalizedData = new Column<double>
                     [GetNormalizeLength(columnType, DataType)];
-                normalize(ref normalizedData, discretizedData, DataType, columnType);
+                normalize(ref normalizedData, numericData, DataType, columnType);
 
                 Print(String.Format("ZScore on " + DATAFILE), "zakończona!");
 

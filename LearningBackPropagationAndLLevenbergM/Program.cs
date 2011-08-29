@@ -19,14 +19,14 @@ namespace LearningBPandLM
             LMuseGenSetToo, runAutomated;
 
         //parametry konfiguracyjne
-        private static int holdoutPercentagePar, hiddenNumberPar, sampleSizePar;
+        private static int holdoutPercentagePar, hiddenRatioPar, sampleSizePar;
         private static double learningRatePar, desiredMSEPar, 
             coefficientMIpar, adjustmentFactorVpar;
         private static ulong maxEpochsPar;
         private static EnumDatasetStructures datasetStructurePar;
         private static SingularMatrixProceeding proceedingWithSingular;
 
-        const string VER = "0.79";
+        const string VER = "0.87";
 
         #endregion
 

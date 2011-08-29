@@ -124,7 +124,7 @@ namespace LearningBPandLM
         /// <summary>
         /// Uzywany do mierzenia probek czasowych
         /// </summary>
-        private Stopwatch timer;
+        private Stopwatch timerE, timerA;
 
         /// <summary>
         /// Flaga czy uruchomienie programu ma przebiec automatycznie czy manualnie
@@ -137,53 +137,70 @@ namespace LearningBPandLM
 
         public TrainerBP(ZScoreData dataset)
             : this(dataset, EnumDatasetStructures.Growing, DatasetStructure.DefaultGeneralizationSetSize,
-            (int)(4 * Math.Sqrt(dataset.sample(0).Length)), DefaultLearningRate, 1500, 0.001, 3, false)
+            2, DefaultLearningRate, 1500, 0.001, 2, false)
         { }
 
 
-        public TrainerBP(ZScoreData dataset, EnumDatasetStructures ds, int holdout, int hiddenNodeRatio, 
+        public TrainerBP(ZScoreData dataset, EnumDatasetStructures ds, int holdout, int hiddenNodeRatio,
             double lr, ulong mE, double dMSE, int sz, bool runAutomated)
         {
             this.Dataset = dataset;
 
             ///ostatnie 2 argumenty - false, true dla funkcji aktywacji ktore maja byc tanh(x), true dla sigmoid
-            NN = new neuralNetwork(Dataset.sample(0).Length, hiddenNodeRatio, Dataset.target(0).Length, 
-                dataset.DataType, ActivationFuncType.Tanh, ActivationFuncType.Sigmoid);
+            NN = new neuralNetwork(Dataset.sample(0).Length, 
+                (int)(hiddenNodeRatio * Math.Sqrt(dataset.sample(0).Length * dataset.target(0).Length)), 
+                Dataset.target(0).Length, dataset.DataType, ActivationFuncType.Tanh, ActivationFuncType.Sigmoid);
 
-            switch(ds)
+            string setSplitTypeNameForFile;
+            switch (ds)
             {
                 case EnumDatasetStructures.Growing:
                     DatasetIndexes = new DatasetOperateGrowing(Dataset.NormalizedData[0].GetNum(), holdout, sz);
+                    setSplitTypeNameForFile = "G";
                     break;
                 case EnumDatasetStructures.Windowed:
                     DatasetIndexes = new DatasetOperateWindowed(Dataset.NormalizedData[0].GetNum(), holdout, sz);
+                    setSplitTypeNameForFile = "W";
                     break;
                 case EnumDatasetStructures.Simple:
                 default:
                     DatasetIndexes = new DatasetOperateSimple(Dataset.NormalizedData[0].GetNum(), holdout, sz);
+                    setSplitTypeNameForFile = "S";
                     break;
             }
-            
+
 
             maxEpochs = mE;
             learningRate = lr;
             automatedRun = runAutomated;
 
-            createFileNames(holdout);
+            createFileNames(holdout, setSplitTypeNameForFile);
             durationOfEachEpoch = new Hashtable();
             durationInElapsedTicks = new Hashtable();
-            timer = new Stopwatch();
+            timerE = new Stopwatch();
+            timerA = new Stopwatch();
 
             desiredMSE = dMSE;
             trainingSetAccuracy = 0;
             generalizationSetAccuracy = 0;
             noImprovementInModelTimes = 0;
 
-            deltaInputHidden = createDeltaList(deltaInputHidden, NN.numInput, NN.numHidden);
-            deltaHiddenOutput = createDeltaList(deltaHiddenOutput, NN.numHidden, NN.numOutput);
 
-            hiddenErrorGradients = createErrorGradientStorage(hiddenErrorGradients, NN.numHidden);
-            outputErrorGradients = createErrorGradientStorage(outputErrorGradients, NN.numOutput);
+
+            if (!NN.IsLogistic)
+            {
+                deltaInputHidden = createDeltaList(deltaInputHidden, NN.numInput, NN.numHidden);
+                deltaHiddenOutput = createDeltaList(deltaHiddenOutput, NN.numHidden, NN.numOutput);
+
+                hiddenErrorGradients = createErrorGradientStorage(hiddenErrorGradients, NN.numHidden);
+                outputErrorGradients = createErrorGradientStorage(outputErrorGradients, NN.numOutput);
+            }
+            else
+            {
+                deltaInputHidden = createDeltaList(deltaInputHidden, NN.numInput, NN.numOutput);
+
+                outputErrorGradients = createErrorGradientStorage(outputErrorGradients, NN.numOutput);
+            }
 
             NN.InitializeWeights();
             trainingComplete = false;
@@ -198,6 +215,14 @@ namespace LearningBPandLM
         /// </summary>
         public void TrainNetwork()
         {
+            if (DatasetIndexes.TrainingSet.Length == 0)
+            {
+                Console.WriteLine("Za mała próbka treningowa dla obecnie ustawionej konfiguracji!\n" +
+                    "Spróbuj zmienić rodzaj podziałów na zbiory (Windowed->Growing->Simple) lub"
+                    + "zwiększ wielkość % pojedynczej próbki - obecnie: 0\n");
+                return;
+            }
+
             //uchwyt do pliku w ktorym zapisujemy wyniki
             TextWriter saveResult = new StreamWriter(resultsFileName);
 
@@ -223,6 +248,7 @@ namespace LearningBPandLM
             saveResultsToFile(saveResult);
 
             PrintStatus();
+            timerA.Reset();
 
             double bestGeneralizationSetMSE = generalizationSetMSE;
 
@@ -232,14 +258,16 @@ namespace LearningBPandLM
                 //kolejna epoka, zwiekszamy licznik
                 epochCounter++;
 
-                timer.Restart();
-
+                timerE.Restart();
+                timerA.Start();
                 //pojedyncza epoka
                 runTrainingEpoch(DatasetIndexes.TrainingSet);
 
-                timer.Stop();
-                durationOfEachEpoch.Add(epochCounter, timer.ElapsedMilliseconds);
-                durationInElapsedTicks.Add(epochCounter, timer.ElapsedTicks);
+                timerE.Stop();
+                timerA.Stop();
+
+                durationOfEachEpoch.Add(epochCounter, timerE.ElapsedMilliseconds);
+                durationInElapsedTicks.Add(epochCounter, timerE.ElapsedTicks);
 
                 /* zapisujemy stan generalizationSetAccuracy by sprawdzic czy MSE sie zmniejszyl
                  * jezeli tak zapisujemy wagi do NN.bestWeights- */
@@ -278,9 +306,10 @@ namespace LearningBPandLM
 
                 //zmieniamy zakres indeksu podzbioru dla zbioru trenujacego
                 DatasetIndexes.IncreaseRange();
-                if(epochCounter % 10 == 0)
-                PrintStatus();
+                if (epochCounter % 10 == 0)
+                    PrintStatus();
             }
+            saveResult.WriteLine("#ms.total_SpPdlaBP():\t{0}", timerA.ElapsedMilliseconds);
             saveResult.WriteLine("#ms.average():\t{0}\tlast:\t{1}",
                 calcMeanDuration(durationOfEachEpoch), durationOfEachEpoch[epochCounter]);
             saveResult.WriteLine("#ticks.average():\t{0}\tlast:\t{1}",
@@ -314,31 +343,56 @@ namespace LearningBPandLM
         /// <param name="desiredOutputs">wartosc WY</param>
         private void backpropagate(double[] desiredOutputs)
         {
-            //dla k-tej jednostki wyjsciowej
-            for (int k = 0; k < NN.numOutput; k++)
+            if (!NN.IsLogistic)
             {
-                //gradient (kierunke spadku) dla wyjscia y_k*(1-y_k)*(d_k - y_k)
-                outputErrorGradients[k] = getOutputErrorGradient(desiredOutputs[k], NN.OutputNeurons[k]);
-
-                //z j-tym neuronem warstwy ukrytej
-                for (int j = 0; j <= NN.numHidden; j++)
+                //dla k-tej jednostki wyjsciowej
+                for (int m = 0; m < NN.numOutput; m++)
                 {
-                    //zmiana(przysrost) wagi z reguly delta
-                    deltaHiddenOutput[j][k] += learningRate * NN.HiddenNeurons[j] * outputErrorGradients[k];
+                    //gradient (kierunke spadku) dla wyjscia y_k*(1-y_k)*(d_k - y_k)
+                    //outputErrorGradients[k] = getOutputErrorGradient(desiredOutputs[k], NN.OutputNeurons[k]);
+                    outputErrorGradients[m] = (desiredOutputs[m] - NN.OutputNeurons[m]) 
+                        * NN.DerivativeOfOutput(NN.OutputNets[m]);
+
+                    //z j-tym neuronem warstwy ukrytej
+                    for (int j = 0; j <= NN.numHidden; j++)
+                    {
+                        //zmiana(przysrost) wagi z reguly delta
+                        deltaHiddenOutput[j][m] += learningRate * NN.HiddenNeurons[j] * outputErrorGradients[m];
+                    }
+
+                    //dla j-tego neuronu warstwy ukrytej
+                    for (int h = 0; h < NN.numHidden; h++)
+                    {
+                        //gradient dla warstwy ukrytej:
+                        //y_j*(1-y_j)*Suma(w_jk*delta(j)) //gdzie delta(j) jest gradientem warstwy WY
+                        //hiddenErrorGradients[j] = getHiddenErrorGradient(j);
+                        hiddenErrorGradients[h] = outputErrorGradients[m] * 
+                            NN.wHiddenOutput[h][m] * NN.DerivativeOfHidden(NN.HiddenNets[h]);
+
+                        //z i-tym neuronem warstwy WE
+                        for (int n = 0; n <= NN.numInput; n++)
+                        {
+                            deltaInputHidden[n][h] += learningRate * NN.Inputs[n] * hiddenErrorGradients[h];
+                        }
+                    }
                 }
+
+
             }
-
-            //dla j-tego neuronu warstwy ukrytej
-            for (int j = 0; j < NN.numHidden; j++)
+            else
             {
-                //gradient dla warstwy ukrytej:
-                //y_j*(1-y_j)*Suma(w_jk*delta(j)) //gdzie delta(j) jest gradientem warstwy WY
-                hiddenErrorGradients[j] = getHiddenErrorGradient(j);
-
-                //z i-tym neuronem warstwy WE
-                for (int i = 0; i <= NN.numInput; i++)
+                //dla k-tej jednostki wyjsciowej
+                for (int k = 0; k < NN.numOutput; k++)
                 {
-                    deltaInputHidden[i][j] += learningRate * NN.Inputs[i] * hiddenErrorGradients[j];
+                    //gradient (kierunke spadku) dla wyjscia y_k*(1-y_k)*(d_k - y_k)
+                    outputErrorGradients[k] = getOutputErrorGradient(desiredOutputs[k], NN.OutputNeurons[k]);
+
+                    //z j-tym neuronem warstwy wejsciowej
+                    for (int j = 0; j <= NN.numInput; j++)
+                    {
+                        //zmiana(przysrost) wagi z reguly delta
+                        deltaInputHidden[j][k] += learningRate * NN.Inputs[j] * outputErrorGradients[k];
+                    }
                 }
             }
         }
@@ -348,8 +402,15 @@ namespace LearningBPandLM
         /// </summary>
         private void updateWeights()
         {
-            NN.wInputHidden = updateWeights(NN.wInputHidden, ref deltaInputHidden, NN.numInput, NN.numHidden);
-            NN.wHiddenOutput = updateWeights(NN.wHiddenOutput, ref deltaHiddenOutput, NN.numHidden, NN.numOutput);
+            if (!NN.IsLogistic)
+            {
+                NN.wInputHidden = updateWeights(NN.wInputHidden, ref deltaInputHidden, NN.numInput, NN.numHidden);
+                NN.wHiddenOutput = updateWeights(NN.wHiddenOutput, ref deltaHiddenOutput, NN.numHidden, NN.numOutput);
+            }
+            else
+            {
+                NN.wInputHidden = updateWeights(NN.wInputHidden, ref deltaInputHidden, NN.numInput, NN.numOutput);
+            }
         }
 
         /// <summary>
@@ -392,11 +453,11 @@ namespace LearningBPandLM
         /// <summary>
         /// utworz nazwy plikow (zwiazane z typem danych)
         /// </summary>
-        private void createFileNames(int holdout)
+        private void createFileNames(int holdout, string setSplitType)
         {
-            resultsFileName = String.Format("wynik_{0}_BP-g{1}-{2}-{3}-{4}.txt",
-                Enum.GetName(typeof(EnumDataTypes), (int)Dataset.DataType), holdout.ToString(), 
-                NN.numHidden.ToString(), learningRate.ToString(), maxEpochs.ToString());
+            resultsFileName = String.Format("wynik_{0}_BP-{5}g{1}-{2}-{3}-{4}.txt",
+                Enum.GetName(typeof(EnumDataTypes), (int)Dataset.DataType), holdout.ToString(),
+                NN.numHidden.ToString(), learningRate.ToString(), maxEpochs.ToString(), setSplitType);
             weightsOutputFile = String.Format("weights_{0}_BP-{1}.txt",
                 Enum.GetName(typeof(EnumDataTypes), (int)Dataset.DataType),
                 NN.numHidden.ToString());
