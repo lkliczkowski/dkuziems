@@ -131,25 +131,26 @@ namespace LearningBPandLM
         /// </summary>
         private bool automatedRun = false;
 
+        private bool msgShownWeightsSaved = false;
+
         #endregion
 
         #region konstruktory
 
         public TrainerBP(ZScoreData dataset)
             : this(dataset, EnumDatasetStructures.Growing, DatasetStructure.DefaultGeneralizationSetSize,
-            2, DefaultLearningRate, 1500, 0.001, 2, false)
+            4, DefaultLearningRate, 1500, 0.001, 2, false)
         { }
 
 
-        public TrainerBP(ZScoreData dataset, EnumDatasetStructures ds, int holdout, int hiddenNodeRatio,
+        public TrainerBP(ZScoreData dataset, EnumDatasetStructures ds, int holdout, int hiddenNum,
             double lr, ulong mE, double dMSE, int sz, bool runAutomated)
         {
             this.Dataset = dataset;
 
             ///ostatnie 2 argumenty - false, true dla funkcji aktywacji ktore maja byc tanh(x), true dla sigmoid
-            NN = new neuralNetwork(Dataset.sample(0).Length, 
-                (int)(hiddenNodeRatio * Math.Sqrt(dataset.sample(0).Length * dataset.target(0).Length)), 
-                Dataset.target(0).Length, dataset.DataType, ActivationFuncType.Tanh, ActivationFuncType.Sigmoid);
+            NN = new neuralNetwork(Dataset.sample(0).Length, hiddenNum, Dataset.target(0).Length, 
+                dataset.DataType, ActivationFuncType.Tanh, ActivationFuncType.Sigmoid);
 
             string setSplitTypeNameForFile;
             switch (ds)
@@ -161,6 +162,10 @@ namespace LearningBPandLM
                 case EnumDatasetStructures.Windowed:
                     DatasetIndexes = new DatasetOperateWindowed(Dataset.NormalizedData[0].GetNum(), holdout, sz);
                     setSplitTypeNameForFile = "W";
+                    break;
+                case EnumDatasetStructures.WindowedNoRandom:
+                    DatasetIndexes = new DatasetOperateWindowedNoRandom(Dataset.NormalizedData[0].GetNum(), holdout, sz);
+                    setSplitTypeNameForFile = "V";
                     break;
                 case EnumDatasetStructures.Simple:
                 default:
@@ -287,7 +292,8 @@ namespace LearningBPandLM
                     //zapis wag do pliku pod warunkiem, ze minelo wiecej niz n-epok
                     if (epochCounter > 10 && !automatedRun)
                     {
-                        NN.SaveWeights(weightsOutputFile);
+                        NN.SaveWeights(weightsOutputFile, msgShownWeightsSaved);
+                        msgShownWeightsSaved = true;
                     }
                 }
 
@@ -307,7 +313,10 @@ namespace LearningBPandLM
                 //zmieniamy zakres indeksu podzbioru dla zbioru trenujacego
                 DatasetIndexes.IncreaseRange();
                 if (epochCounter % 10 == 0)
+                {
                     PrintStatus();
+                    msgShownWeightsSaved = false;
+                }
             }
             saveResult.WriteLine("#ms.total_SpPdlaBP():\t{0}", timerA.ElapsedMilliseconds);
             saveResult.WriteLine("#ms.average():\t{0}\tlast:\t{1}",
@@ -350,14 +359,77 @@ namespace LearningBPandLM
                 {
                     //gradient (kierunke spadku) dla wyjscia y_k*(1-y_k)*(d_k - y_k)
                     //outputErrorGradients[k] = getOutputErrorGradient(desiredOutputs[k], NN.OutputNeurons[k]);
-                    outputErrorGradients[m] = (desiredOutputs[m] - NN.OutputNeurons[m]) 
-                        * NN.DerivativeOfOutput(NN.OutputNets[m]);
+                    outputErrorGradients[m] = (desiredOutputs[m] - NN.OutputNeurons[m]);
+                
 
                     //z j-tym neuronem warstwy ukrytej
                     for (int j = 0; j <= NN.numHidden; j++)
                     {
                         //zmiana(przysrost) wagi z reguly delta
-                        deltaHiddenOutput[j][m] += learningRate * NN.HiddenNeurons[j] * outputErrorGradients[m];
+                        deltaHiddenOutput[j][m] += learningRate * NN.HiddenNeurons[j] * outputErrorGradients[m] 
+                            * NN.DerivativeOfOutput(NN.OutputNets[m]);
+                    }
+                }
+
+                
+                    //dla j-tego neuronu warstwy ukrytej
+                    for (int h = 0; h < NN.numHidden; h++)
+                    {
+                        //gradient dla warstwy ukrytej:
+                        //y_j*(1-y_j)*Suma(w_jk*delta(j)) //gdzie delta(j) jest gradientem warstwy WY
+                        hiddenErrorGradients[h] = 0;
+                        for (int m = 0; m < NN.numOutput; m++)
+                        {
+                            hiddenErrorGradients[h] += outputErrorGradients[m] * NN.wHiddenOutput[h][m];
+                        }
+
+                        //z i-tym neuronem warstwy WE
+                        for (int n = 0; n <= NN.numInput; n++)
+                        {
+                            deltaInputHidden[n][h] += learningRate * NN.Inputs[n] * hiddenErrorGradients[h]
+                                * NN.DerivativeOfHidden(NN.HiddenNets[h]);
+                        }
+                    }
+                
+
+
+            }
+            else
+            {
+                //dla k-tej jednostki wyjsciowej
+                for (int k = 0; k < NN.numOutput; k++)
+                {
+                    //gradient (kierunke spadku) dla wyjscia y_k*(1-y_k)*(d_k - y_k)
+                    outputErrorGradients[k] = (desiredOutputs[k] - NN.OutputNeurons[k]);
+
+                    //z j-tym neuronem warstwy wejsciowej
+                    for (int j = 0; j <= NN.numInput; j++)
+                    {
+                        //zmiana(przysrost) wagi z reguly delta
+                        deltaInputHidden[j][k] += learningRate * NN.Inputs[j] * outputErrorGradients[k];
+                    }
+                }
+            }
+        }
+
+        private void backpropagateO(double[] desiredOutputs)
+        {
+            if (!NN.IsLogistic)
+            {
+                //dla k-tej jednostki wyjsciowej
+                for (int m = 0; m < NN.numOutput; m++)
+                {
+                    //gradient (kierunke spadku) dla wyjscia y_k*(1-y_k)*(d_k - y_k)
+                    //outputErrorGradients[k] = getOutputErrorGradient(desiredOutputs[k], NN.OutputNeurons[k]);
+                    outputErrorGradients[m] = (desiredOutputs[m] - NN.OutputNeurons[m]);
+
+
+                    //z j-tym neuronem warstwy ukrytej
+                    for (int j = 0; j <= NN.numHidden; j++)
+                    {
+                        //zmiana(przysrost) wagi z reguly delta
+                        deltaHiddenOutput[j][m] += learningRate * NN.HiddenNeurons[j] * outputErrorGradients[m]
+                            * NN.DerivativeOfOutput(NN.OutputNets[m]);
                     }
 
                     //dla j-tego neuronu warstwy ukrytej
@@ -366,13 +438,13 @@ namespace LearningBPandLM
                         //gradient dla warstwy ukrytej:
                         //y_j*(1-y_j)*Suma(w_jk*delta(j)) //gdzie delta(j) jest gradientem warstwy WY
                         //hiddenErrorGradients[j] = getHiddenErrorGradient(j);
-                        hiddenErrorGradients[h] = outputErrorGradients[m] * 
-                            NN.wHiddenOutput[h][m] * NN.DerivativeOfHidden(NN.HiddenNets[h]);
+                        hiddenErrorGradients[h] = outputErrorGradients[m] * NN.wHiddenOutput[h][m];
 
                         //z i-tym neuronem warstwy WE
                         for (int n = 0; n <= NN.numInput; n++)
                         {
-                            deltaInputHidden[n][h] += learningRate * NN.Inputs[n] * hiddenErrorGradients[h];
+                            deltaInputHidden[n][h] += learningRate * NN.Inputs[n] * hiddenErrorGradients[h]
+                                * NN.DerivativeOfHidden(NN.HiddenNets[h]);
                         }
                     }
                 }
@@ -385,7 +457,7 @@ namespace LearningBPandLM
                 for (int k = 0; k < NN.numOutput; k++)
                 {
                     //gradient (kierunke spadku) dla wyjscia y_k*(1-y_k)*(d_k - y_k)
-                    outputErrorGradients[k] = getOutputErrorGradient(desiredOutputs[k], NN.OutputNeurons[k]);
+                    outputErrorGradients[k] = (desiredOutputs[k] - NN.OutputNeurons[k]);
 
                     //z j-tym neuronem warstwy wejsciowej
                     for (int j = 0; j <= NN.numInput; j++)
@@ -396,7 +468,6 @@ namespace LearningBPandLM
                 }
             }
         }
-
         /// <summary>
         /// Aktualizacja wag
         /// </summary>
@@ -577,7 +648,7 @@ namespace LearningBPandLM
                                     customWeightsOutputFile);
                                 filename = customWeightsOutputFile;
                             }
-                            NN.SaveWeights(customWeightsOutputFile);
+                            NN.SaveWeights(customWeightsOutputFile, false);
                             ShowOptions();
                             break;
                         case 2:
@@ -651,7 +722,7 @@ namespace LearningBPandLM
                                     customWeightsOutputFile);
                                 filename = customWeightsOutputFile;
                             }
-                            NN.SaveWeights(customWeightsOutputFile);
+                            NN.SaveWeights(customWeightsOutputFile, false);
                             ShowOptions();
                             break;
                         default:

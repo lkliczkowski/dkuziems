@@ -16,17 +16,17 @@ namespace LearningBPandLM
         //flagi menu
         private static bool endFlag, BPendFlag, LMendFlag, AMenuFlag,
             readyToZScore, readyToCreateNN, readyToTrain, configured, 
-            LMuseGenSetToo, runAutomated;
+            LMuseDoubleSet, runAutomated;
 
         //parametry konfiguracyjne
-        private static int holdoutPercentagePar, hiddenRatioPar, sampleSizePar;
-        private static double learningRatePar, desiredMSEPar, 
-            coefficientMIpar, adjustmentFactorVpar;
+        private static int holdoutPercentagePar, sampleSizePar, hiddenRatioPar;
+        private static double learningRatePar, desiredMSEPar, coefficientMIpar, 
+            adjustmentFactorVpar, tolerancePar;
         private static ulong maxEpochsPar;
         private static EnumDatasetStructures datasetStructurePar;
         private static SingularMatrixProceeding proceedingWithSingular;
 
-        const string VER = "0.87";
+        const string VER = "0.94";
 
         #endregion
 
@@ -34,17 +34,20 @@ namespace LearningBPandLM
 
         static void Main(string[] args)
         {
+            PrintInfo("Menu główne programu");
+            programInfo();
             while (!endFlag)
             {
                 setOptionsToDefault();
-                PrintInfo("Menu główne programu");
-                programInfo();
                 Menu MainMenu = new Menu();
                 MainMenu.Add("Algorytm wstecznej propagacji błędów", BPAlgorithm);
                 MainMenu.Add("Algorytm Levenberga-Marquardta", LMAlgorithm);
                 MainMenu.Add("Automatyczne testy", automatedRun);
+                MainMenu.Add("Tworzenie statystyk plików wynikowych i skryptów gnuplot", StatisticsConfig.StatisticsMenu);
+
                 MainMenu.Add("Zakończ działanie programu", MainEnd);
 
+                PrintLongLine();
                 MainMenu.Show();
             }
 
