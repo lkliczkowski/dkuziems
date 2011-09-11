@@ -544,7 +544,7 @@ namespace LearningBPandLM
         /// <summary>
         /// Zapisuje wagi do pliku filename
         /// </summary>
-        public void SaveWeights(string filename)
+        public void SaveWeights(string filename, bool doNotShowMsg)
         {
             TextWriter saveWeights = new StreamWriter(filename);
             saveWeights.WriteLine("weights input(+bias):hidden ({0}:{1})", numInput + 1, numHidden);
@@ -570,7 +570,8 @@ namespace LearningBPandLM
                     saveWeights.Flush();
                 }
             saveWeights.Close();
-            Console.WriteLine("Zapisano wagi!");
+            if (!doNotShowMsg)
+                Console.WriteLine("Zapisano wagi!");
         }
 
     }

@@ -20,19 +20,20 @@ namespace LearningBPandLM
             dataType = EnumDataTypes.unknown;
             //flagi menu
             endFlag = BPendFlag = LMendFlag = AMenuFlag = readyToZScore = readyToCreateNN
-                = readyToTrain = configured = LMuseGenSetToo = runAutomated = false;
+                = readyToTrain = configured = LMuseDoubleSet = runAutomated = false;
 
             //parametry konfiguracji            
-            hiddenRatioPar = 2;
+            hiddenRatioPar = 4;
             desiredMSEPar = 0.01;
-            maxEpochsPar = 1000;
+            maxEpochsPar = 1500;
             learningRatePar = 0.01;
             coefficientMIpar = 0.01;
             adjustmentFactorVpar = 10;
             holdoutPercentagePar = 20;
             datasetStructurePar = EnumDatasetStructures.Growing;
             sampleSizePar = 2;
-            proceedingWithSingular = SingularMatrixProceeding.Regularization;
+            proceedingWithSingular = SingularMatrixProceeding.Reg;
+            tolerancePar = 0.0;
         }
 
         private static void SetToHeartDisease()
@@ -93,15 +94,15 @@ namespace LearningBPandLM
                 (inputFile == "") ? "brak" : inputFile, Enum.GetName(typeof(EnumDataTypes), dataType));
 
             Console.WriteLine("\nKonfiguracja sieci:{0}", (configured == false) ? "\n[nie konfigurowano - wartości domyślne]" : "");
-            Console.WriteLine("Współczynnik liczby neuronów w war.ukrytej:\t{0}", hiddenRatioPar);
+            Console.WriteLine("Liczba neuronów w war.ukrytej:\t{0}", hiddenRatioPar);
             Console.WriteLine("Maksymalna liczba epok:\t\t{0}", maxEpochsPar);
             Console.WriteLine("Docelowy błąd MSE:\t{0}\n", desiredMSEPar);
         }
 
         private static void setHiddenRatio()
         {
-            Console.WriteLine("Podaj wpolczynnik liczbę neuronów w warstwie ukrytej, obecna: {0}", hiddenRatioPar);
-            Console.WriteLine("Liczba neuronów zostanie odliczona wg: \n[wspolczynnik]*sqrt([liczba wejść]*[liczba wyjść])");
+            Console.WriteLine("Podaj liczbę neuronów w warstwie ukrytej, obecna: {0}", hiddenRatioPar);
+            //Console.WriteLine("Liczba neuronów zostanie odliczona wg: \n[wspolczynnik]*sqrt([liczba wejść]*[liczba wyjść])");
             try
             {
                 hiddenRatioPar = Int32.Parse(Console.ReadLine());
@@ -110,9 +111,9 @@ namespace LearningBPandLM
             {
                 Console.WriteLine("Niepoprawna wartość, ustawiona wartość poprzednia.");
             }
-            Console.WriteLine("Obecna wspolczynnik liczby neuronów wynosi: {0}.", hiddenRatioPar);
-            Console.WriteLine("Utworzona sieć będzie mieć [{0}] neuronów w warstwie ukrytej.\n\n",
-                (int)(hiddenRatioPar * Math.Sqrt(dataset.sample(0).Length * dataset.target(0).Length)));
+            Console.WriteLine("Obecna liczba neuronów wynosi: {0}.", hiddenRatioPar);
+            //Console.WriteLine("Utworzona sieć będzie mieć [{0}] neuronów w warstwie ukrytej.\n\n",
+            //    (int)(hiddenRatioPar * Math.Sqrt(dataset.sample(0).Length * dataset.target(0).Length)));
         }
 
         private static void setMaxEpoch()
@@ -135,7 +136,7 @@ namespace LearningBPandLM
             Console.WriteLine("Podaj docelowy MSE modelu, obecny: {0}", desiredMSEPar);
             try
             {
-                desiredMSEPar = Double.Parse(Console.ReadLine());
+                desiredMSEPar = Double.Parse((Console.ReadLine().Replace(".", ",")));
             }
             catch
             {
@@ -168,7 +169,7 @@ namespace LearningBPandLM
                 Console.WriteLine("ustawiona na wartość poprzednią ({0}%)", previousHoldout);
                 holdoutPercentagePar = previousHoldout;
             }
-            Console.WriteLine("Obecny podział danych to:\n {0}% - walidacyjny\n{1}% - treningowy\n",
+            Console.WriteLine("Obecny podział danych to:\n {0}% - walidacyjny\n {1}% - treningowy\n",
                 holdoutPercentagePar, 100 - holdoutPercentagePar);
         }
 
@@ -180,7 +181,9 @@ namespace LearningBPandLM
                 (datasetStructurePar == EnumDatasetStructures.Growing) ? "[Opcja obecna]" : "");
             Console.WriteLine("[2]{0} Okienkowy zbiór danych (Windowed Dataset) ",
                 (datasetStructurePar == EnumDatasetStructures.Windowed) ? "[Opcja obecna]" : "");
-            Console.WriteLine("[3]{0} Brak podziału (w każdej epoce analizuj całość danych treningowych) ",
+            Console.WriteLine("[3]{0} Okienkowy zbiór danych (Windowed Dataset) ",
+                (datasetStructurePar == EnumDatasetStructures.WindowedNoRandom) ? "[Opcja obecna]" : "");
+            Console.WriteLine("[4]{0} Brak podziału (w każdej epoce analizuj całość danych treningowych) ",
                 (datasetStructurePar == EnumDatasetStructures.Simple) ? "[Opcja obecna]" : "");
 
             try
@@ -218,6 +221,7 @@ namespace LearningBPandLM
                     getSampleSize(0, 101, sampleSizeDefault);
                     break;
                 case EnumDatasetStructures.Windowed:
+                case EnumDatasetStructures.WindowedNoRandom:
                     if (!configured)
                         sampleSizePar = 15;
                     sampleSizeDefault = 15;
@@ -347,7 +351,7 @@ namespace LearningBPandLM
             Console.WriteLine("Podaj współczynnik uczenia, obecny: {0}, domyślny: {1}", learningRatePar, learningRateDefault);
             try
             {
-                learningRatePar = Double.Parse(Console.ReadLine());
+                learningRatePar = Double.Parse((Console.ReadLine().Replace(".", ",")));
             }
             catch
             {
@@ -479,7 +483,7 @@ namespace LearningBPandLM
                 coefficientMIpar);
             try
             {
-                coefficientMIpar = Double.Parse(Console.ReadLine());
+                coefficientMIpar = Double.Parse((Console.ReadLine().Replace(".", ",")));
             }
             catch
             {
@@ -493,7 +497,7 @@ namespace LearningBPandLM
             Console.WriteLine("Podaj wartość wspolczynnika przystosowania V, obecna {0}", adjustmentFactorVpar);
             try
             {
-                adjustmentFactorVpar = Double.Parse(Console.ReadLine());
+                adjustmentFactorVpar = Double.Parse((Console.ReadLine().Replace(".", ",")));
             }
             catch
             {
@@ -506,7 +510,7 @@ namespace LearningBPandLM
         {
             Console.WriteLine("W jaki sposób ma odbywać się postępowanie w przypadku macierzy osobliwych?");
             Console.WriteLine("[1]{0} Regularyzacja macierzy ",
-                (proceedingWithSingular == SingularMatrixProceeding.Regularization) ? "[Opcja obecna]" : "");
+                (proceedingWithSingular == SingularMatrixProceeding.Reg) ? "[Opcja obecna]" : "");
             Console.WriteLine("[2]{0} Rozkład według wartości osobliwych SVD",
                 (proceedingWithSingular == SingularMatrixProceeding.SVD) ? "[Opcja obecna]" : "");
             Console.WriteLine("[3]{0} Uogólniona macierz odwrotna \"pseudoinwersja\"",
@@ -536,34 +540,51 @@ namespace LearningBPandLM
 
         private static void LMsetUseGenSet()
         {
-            char useGenSetToo = 'n';
+            char useAdditionalSetToo = 'u';
             Console.WriteLine("Czy przy ustalaniu zmian wag algorytm LM ma zwracać także uwagę "
-                + "na celność zbioru walidacyjnego? (t/N) Obecnie: {0}\n", LMuseGenSetToo ? "True" : "False");
-            Console.Write("Domyślnie wyłączona opcja. Info: W trakcie nauczania algorytm może także"
-                + " przyjąć nowe wagi jako dobre jeżeli zmniejszył się Kwadrat Sumy Błędów dla zbioru"
-                + " walidacyjnego, (same zmiany wciąż są oparte tylko i wyłącznie o wyliczenia gradientów"
-                + " na próbkach ze zbioru treningowego). Włączenie tej opcji może znacznie polepszyć"
-                + " końcowe wyniki gdyż algorytm LM potrafi szybko się zakończyć ze względu na"
-                + " ograniczenie przyjmowanych wartości zmiennego współczynnika μ i utknięcie w Minimum"
-                + " Lokalnym(!) \n (t/N)\t");
+                + "na celność zbioru dodatkowego (AdditionalSet)? (t/N) Obecnie: {0}\n", LMuseDoubleSet ? "True" : "False");
+            Console.Write("Domyślnie wyłączona opcja. \n (t/N)\t");
             try
             {
-                useGenSetToo = Char.Parse(Console.ReadLine());
+                useAdditionalSetToo = Char.Parse(Console.ReadLine());
             }
             catch
             {
-                Console.WriteLine("Niepoprawna wartość/lub [Enter], opcja ustawiona na domyślną");
+                Console.WriteLine("Niepoprawna wartość/lub [Enter], opcja ustawiona na poprzednią");
             }
-            if (useGenSetToo == 't' || useGenSetToo == 'T')
+            if (useAdditionalSetToo == 't' || useAdditionalSetToo == 'T')
             {
                 Console.WriteLine("Opcja ustawiona na True");
-                LMuseGenSetToo = true;
+                LMuseDoubleSet = true;
+                setTolerance();
             }
-            else
+            else if (useAdditionalSetToo == 'n' || useAdditionalSetToo == 'N')
             {
                 Console.WriteLine("Opcja ustawiona na False");
-                LMuseGenSetToo = false;
+                LMuseDoubleSet = false;
             }
+            Console.WriteLine("UseAdditionalSet: {0}\n", LMuseDoubleSet ? "True" : "False");
+        }
+
+        private static void setTolerance()
+        {
+            double defaultTolerance = 0.0;
+            Console.WriteLine("Podaj współczynnik tolerancji, obecny: {0}\n Wartości (-1, 1)", tolerancePar);
+            try
+            {
+                tolerancePar = Double.Parse((Console.ReadLine().Replace(".", ",")));
+            }
+            catch
+            {
+                Console.WriteLine("Niepoprawna wartość, ustawiona na poprzednią");
+            }
+            if (!(tolerancePar <= 1 + Double.Epsilon && tolerancePar >= -1 - Double.Epsilon))
+            {
+                Console.WriteLine("t wynosić powinno pomiędzy <-1, 1>");
+                Console.WriteLine("ustawiona na domyślną ({0})", defaultTolerance);
+                tolerancePar = defaultTolerance;
+            }
+            Console.WriteLine("Współczynik tolerancji: t = {0}\n", tolerancePar);
         }
 
         private static void LMCreateNN()
@@ -571,7 +592,7 @@ namespace LearningBPandLM
             if (configured)
                 networkTrainerLM = new TrainerLMImproved(dataset, datasetStructurePar, holdoutPercentagePar,
                     hiddenRatioPar, maxEpochsPar, desiredMSEPar, coefficientMIpar, adjustmentFactorVpar,
-                    sampleSizePar, proceedingWithSingular, LMuseGenSetToo, runAutomated);
+                    sampleSizePar, proceedingWithSingular, LMuseDoubleSet, tolerancePar, runAutomated);
             else
                 networkTrainerLM = new TrainerLMImproved(dataset);
 

@@ -11,7 +11,9 @@ namespace LearningBPandLM
     {
         Growing,
         Windowed,
-        Simple
+        WindowedNoRandom,
+        Simple,
+        Additional
     }
 
     /// <summary>
@@ -28,6 +30,9 @@ namespace LearningBPandLM
         /// zbior sprawdzajacy poprawnosc sieci pod koniec kazdej epoki
         /// </summary>
         protected List<int> generalizationSet;
+
+        //TODO
+        protected List<int> doubleSet;
 
         public const int DefaultGeneralizationSetSize = 20;
 
@@ -46,7 +51,7 @@ namespace LearningBPandLM
         /// </summary>
         protected int actualRange;
 
-        private DatasetStructure() { }
+        protected DatasetStructure() { }
 
         //protected DatasetStructure(int setLength, int gPercent)
         //    :this (setLength, gPercent, 1, true)
@@ -126,6 +131,11 @@ namespace LearningBPandLM
         public int[] GeneralizationSet
         {
             get { return generalizationSet.ToArray(); }
+        }
+
+        public virtual int[] DoubleSet
+        {
+            get { return doubleSet.ToArray(); }
         }
 
         /// <summary>
