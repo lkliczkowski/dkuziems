@@ -1,0 +1,1 @@
+Projekty którymi się zajmuję teraz jeszcze w trakcie studiowania.
